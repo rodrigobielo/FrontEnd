@@ -1,0 +1,64 @@
+<div>
+    <div id="listaEnvios">
+        <table>
+            <thead>
+                <th>NOMBRE</th>
+                <th>APELLIDOS</th>
+                <th>DIP</th>
+                <th>TELEFONO</th>
+                <th>FECHA</th>
+                <th>MONTO</th>
+                <th>CODIGO</th>
+                <th>CIUDAD</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </thead>
+            <tbody>
+                @for (e of envios; track $index)
+                {
+                <tr>
+                    <td>{{e.nombreEmisor}} </td>
+                    <td>{{e.apellidos}} </td>
+                    <td>{{e.dip}} </td>
+                    <td>{{e.telEmisor}} </td>
+                    <td>{{e.fecha}} </td>
+                    <td>{{e.monto}} </td>
+                    <td>{{e.codigo}} </td>
+                    <td>{{e.ciudad}} </td>
+                    <td><button>✒️</button></td>
+                    <td><button> 🔍</button></td>
+                    <td><button>⛔</button></td>
+                </tr>
+                }
+            </tbody>
+        </table>
+
+        <div>
+            <button (click)="accion()">ENVIAR</button>
+        </div>
+    </div>
+
+    @if(funcionalidad=="enviar")
+    {
+        <div id="enviar">
+            <h1>REALIZA TU ENVIO</h1>
+
+            <form>
+                <div><input [(ngModel)]="envio.nombreEmisor" type="text" placeholder="NOMBRE..." name="nomnbreEmisor"></div>
+                <div><input [(ngModel)]="envio.apellidos" type="text" placeholder="APELLIDOS...." name="apellidos"></div>
+                <div><input [(ngModel)]="envio.telEmisor" type="text" placeholder="TELEFONO..." name="telEmisor"></div>
+                <div><input [(ngModel)]="envio.ciudad" type="text" placeholder="CIUDAD...." name="ciudad"></div>
+                <div><input [(ngModel)]="envio.monto" type="text" placeholder="MONTO...." name="monto"></div>
+                <div><input [(ngModel)]="envio.fecha" type="date" placeholder="fecha" name="fecha"></div>
+                <div><input [(ngModel)]="envio.dip" type="text" placeholder="DIP..." name="dip"></div>
+                <div><input [(ngModel)]="envio.codigo" type="text" placeholder="CODIGO..." name="codigo"></div>
+                <div id="btnenviar"><button (click)="enviar()">ENVIAR</button>
+                        <button (click)="cancelar()">❌</button>
+                </div>
+            </form>
+        </div>
+
+    }
+
+</div>

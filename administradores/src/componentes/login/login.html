@@ -1,0 +1,134 @@
+<!-- login.html - Componente de Login para Angular 21 -->
+<div class="login-container min-vh-100 d-flex justify-content-center align-items-center p-3">
+  <div class="card shadow-lg border-0 rounded-4 login-card">
+    <div class="card-header bg-primary text-white text-center py-4 rounded-top-4">
+      <div class="login-icon-container mb-3">
+        <i class="bi bi-person-circle display-4"></i>
+      </div>
+      <h2 class="mb-1">Iniciar Sesión</h2>
+      <p class="mb-0 opacity-75">Ingrese sus credenciales para continuar</p>
+    </div>
+    
+    <div class="card-body p-4 p-md-5">
+      <!-- Formulario de login -->
+      <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)" novalidate>
+        <!-- Campo de usuario -->
+        <div class="mb-4">
+          <label for="usuario" class="form-label fw-medium">Usuario</label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="bi bi-person-fill text-primary"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control border-start-0" 
+              id="usuario" 
+              name="usuario"
+              placeholder="Ingrese su usuario"
+              [(ngModel)]="credentials.usuario"
+              #usuario="ngModel"
+              required
+              [class.is-invalid]="usuario.invalid && (usuario.dirty || usuario.touched || loginForm.submitted)"
+            >
+          </div>
+          <!-- Mensaje de error para el campo usuario -->
+          <div class="invalid-feedback d-block" *ngIf="usuario.invalid && (usuario.dirty || usuario.touched || loginForm.submitted)">
+            <span *ngIf="usuario.errors?.['required']">El usuario es requerido</span>
+          </div>
+        </div>
+        
+        <!-- Campo de contraseña -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <label for="password" class="form-label fw-medium">Contraseña</label>
+            <a href="#" class="text-decoration-none small text-primary">¿Olvidó su contraseña?</a>
+          </div>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="bi bi-lock-fill text-primary"></i>
+            </span>
+            <input 
+              type="password" 
+              class="form-control border-start-0" 
+              id="password" 
+              name="password"
+              placeholder="Ingrese su contraseña"
+              [(ngModel)]="credentials.password"
+              #password="ngModel"
+              required
+              [class.is-invalid]="password.invalid && (password.dirty || password.touched || loginForm.submitted)"
+            >
+            <button class="btn btn-outline-secondary border-start-0" type="button" (click)="togglePasswordVisibility()">
+              <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+            </button>
+          </div>
+          <!-- Mensaje de error para el campo contraseña -->
+          <div class="invalid-feedback d-block" *ngIf="password.invalid && (password.dirty || password.touched || loginForm.submitted)">
+            <span *ngIf="password.errors?.['required']">La contraseña es requerida</span>
+          </div>
+        </div>
+        
+        <!-- Checkbox recordar sesión -->
+        <div class="form-check mb-4">
+          <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe" [(ngModel)]="credentials.rememberMe">
+          <label class="form-check-label" for="rememberMe">
+            Recordar mis datos
+          </label>
+        </div>
+        
+        <!-- Mensaje de error general -->
+        <div *ngIf="loginError" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {{loginError}}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" (click)="loginError = ''"></button>
+        </div>
+        
+        <!-- Botón de inicio de sesión -->
+        <div class="d-grid mb-4">
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-lg fw-semibold py-3"
+            [disabled]="isLoading"
+          >
+            <span *ngIf="!isLoading">
+              <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
+            </span>
+            <span *ngIf="isLoading">
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Iniciando Sesión...
+            </span>
+          </button>
+        </div>
+        
+        <!-- Separador -->
+        <div class="d-flex align-items-center mb-4">
+          <hr class="flex-grow-1">
+          <span class="px-3 small text-muted">O continuar con</span>
+          <hr class="flex-grow-1">
+        </div>
+        
+        <!-- Botones de login alternativos -->
+        <div class="row g-3 mb-4">
+          <div class="col-6">
+            <button type="button" class="btn btn-outline-secondary btn-sm w-100">
+              <i class="bi bi-google me-2"></i> Google
+            </button>
+          </div>
+          <div class="col-6">
+            <button type="button" class="btn btn-outline-secondary btn-sm w-100">
+              <i class="bi bi-microsoft me-2"></i> Microsoft
+            </button>
+          </div>
+        </div>
+        
+        <!-- Enlace a registro -->
+        <div class="text-center pt-3 border-top">
+          <p class="mb-0">
+            ¿No tiene una cuenta? 
+            <a href="#" class="text-decoration-none fw-medium text-primary">Regístrese aquí</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

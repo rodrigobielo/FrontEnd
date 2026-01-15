@@ -1,0 +1,882 @@
+<!-- hoteles.html - Componente de gestión de hoteles -->
+<div class="container-fluid py-4">
+  <!-- Encabezado de la página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 fw-bold mb-0">
+        <i class="bi bi-house-fill text-warning me-2"></i>
+        Gestión de Hoteles
+      </h1>
+      <p class="text-body-secondary mb-0">Administra los establecimientos de hospedaje</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+        <i class="bi bi-arrow-left me-1"></i> Volver
+      </button>
+      <button class="btn btn-warning" (click)="nuevoRegistro()">
+        <i class="bi bi-plus-circle me-1"></i> Nuevo Hotel
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de información -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card border-warning-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-info-circle-fill text-warning-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Total de Hoteles</h5>
+              <p class="card-text display-6 fw-bold text-warning">{{ totalHoteles }}</p>
+              <small class="text-body-tertiary">Registrados en el sistema</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-8">
+      <div class="card border-light-subtle shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-lightbulb-fill text-warning-emphasis me-2"></i>
+            Información importante
+          </h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-warning-emphasis me-2"></i>
+              Los hoteles deben estar asociados a una ciudad específica.
+            </li>
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-warning-emphasis me-2"></i>
+              La categoría indica el nivel de servicio (estrellas o clasificación).
+            </li>
+            <li>
+              <i class="bi bi-check-circle-fill text-warning-emphasis me-2"></i>
+              Puedes agregar múltiples imágenes para cada hotel.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Formulario principal de hoteles -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square text-warning me-2"></i>
+            {{ modoEdicion ? 'Editar Hotel' : 'Nuevo Hotel' }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="hotelForm" (ngSubmit)="guardarHotel()" novalidate>
+            <!-- Campo: Nombre del hotel -->
+            <div class="mb-4">
+              <label for="nombre" class="form-label fw-semibold">
+                <i class="bi bi-tag-fill me-1 text-warning-emphasis"></i>
+                Nombre del hotel <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-house"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nombre"
+                  formControlName="nombre"
+                  [class.is-valid]="hotelForm.get('nombre')?.valid && hotelForm.get('nombre')?.touched"
+                  [class.is-invalid]="hotelForm.get('nombre')?.invalid && hotelForm.get('nombre')?.touched"
+                  placeholder="Ej: Hotel Paraíso, Gran Hotel Mendoza"
+                  maxlength="100"
+                >
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Nombre válido
+                </div>
+                <div class="invalid-feedback">
+                  @if (hotelForm.get('nombre')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El nombre es obligatorio
+                  }
+                  @if (hotelForm.get('nombre')?.hasError('minlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 3 caracteres
+                  }
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Usa el nombre comercial del hotel
+              </div>
+            </div>
+
+            <!-- Campo: Descripción -->
+            <div class="mb-4">
+              <label for="descripcion" class="form-label fw-semibold">
+                <i class="bi bi-card-text me-1 text-warning-emphasis"></i>
+                Descripción <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text align-items-start pt-2">
+                  <i class="bi bi-text-paragraph"></i>
+                </span>
+                <textarea 
+                  class="form-control" 
+                  id="descripcion"
+                  formControlName="descripcion"
+                  [class.is-valid]="hotelForm.get('descripcion')?.valid && hotelForm.get('descripcion')?.touched"
+                  [class.is-invalid]="hotelForm.get('descripcion')?.invalid && hotelForm.get('descripcion')?.touched"
+                  rows="3"
+                  placeholder="Describe las instalaciones, servicios y características del hotel..."
+                  maxlength="500"
+                ></textarea>
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Descripción válida
+                </div>
+                <div class="invalid-feedback">
+                  @if (hotelForm.get('descripcion')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> La descripción es obligatoria
+                  }
+                  @if (hotelForm.get('descripcion')?.hasError('minlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 10 caracteres
+                  }
+                </div>
+              </div>
+              <div class="d-flex justify-content-between mt-1">
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Incluye información relevante para huéspedes
+                </div>
+                <small class="text-body-tertiary">
+                  {{ hotelForm.get('descripcion')?.value?.length || 0 }}/500
+                </small>
+              </div>
+            </div>
+
+            <!-- Campo: Contactos -->
+            <div class="mb-4">
+              <label for="contactos" class="form-label fw-semibold">
+                <i class="bi bi-telephone-fill me-1 text-warning-emphasis"></i>
+                Contactos <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-envelope-fill"></i>
+                </span>
+                <textarea 
+                  class="form-control" 
+                  id="contactos"
+                  formControlName="contactos"
+                  [class.is-valid]="hotelForm.get('contactos')?.valid && hotelForm.get('contactos')?.touched"
+                  [class.is-invalid]="hotelForm.get('contactos')?.invalid && hotelForm.get('contactos')?.touched"
+                  rows="2"
+                  placeholder="Teléfono: +54 11 1234-5678&#10;Email: reservas@hotel.com&#10;Dirección: Calle Principal 123"
+                ></textarea>
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Contactos válidos
+                </div>
+                <div class="invalid-feedback">
+                  @if (hotelForm.get('contactos')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Los contactos son obligatorios
+                  }
+                  @if (hotelForm.get('contactos')?.hasError('minlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 10 caracteres
+                  }
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Incluye teléfono, email y dirección (uno por línea)
+              </div>
+            </div>
+
+            <!-- Campos en fila: Ciudad y Categoría -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label for="ciudad" class="form-label fw-semibold">
+                  <i class="bi bi-building-fill me-1 text-warning-emphasis"></i>
+                  Ciudad <span class="text-danger">*</span>
+                </label>
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-geo-alt-fill"></i>
+                  </span>
+                  <select 
+                    class="form-select" 
+                    id="ciudad"
+                    formControlName="ciudadId"
+                    [class.is-valid]="hotelForm.get('ciudadId')?.valid && hotelForm.get('ciudadId')?.touched"
+                    [class.is-invalid]="hotelForm.get('ciudadId')?.invalid && hotelForm.get('ciudadId')?.touched"
+                  >
+                    <option value="" disabled selected>Selecciona una ciudad</option>
+                    @for (ciudad of ciudades; track ciudad.id) {
+                      <option [value]="ciudad.id">{{ ciudad.nombre }}</option>
+                    }
+                  </select>
+                  <div class="valid-feedback">
+                    <i class="bi bi-check-circle-fill me-1"></i> Ciudad seleccionada
+                  </div>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar una ciudad
+                  </div>
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Ciudad donde se ubica el hotel
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="categoria" class="form-label fw-semibold">
+                  <i class="bi bi-star-fill me-1 text-warning-emphasis"></i>
+                  Categoría <span class="text-danger">*</span>
+                </label>
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-trophy-fill"></i>
+                  </span>
+                  <select 
+                    class="form-select" 
+                    id="categoria"
+                    formControlName="categoria"
+                    [class.is-valid]="hotelForm.get('categoria')?.valid && hotelForm.get('categoria')?.touched"
+                    [class.is-invalid]="hotelForm.get('categoria')?.invalid && hotelForm.get('categoria')?.touched"
+                  >
+                    <option value="" disabled selected>Selecciona una categoría</option>
+                    <option value="1">⭐ 1 Estrella (Económico)</option>
+                    <option value="2">⭐⭐ 2 Estrellas (Básico)</option>
+                    <option value="3">⭐⭐⭐ 3 Estrellas (Confort)</option>
+                    <option value="4">⭐⭐⭐⭐ 4 Estrellas (Superior)</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5 Estrellas (Lujo)</option>
+                    <option value="boutique">🏨 Boutique</option>
+                    <option value="apart">🏢 Apart Hotel</option>
+                    <option value="hostel">🛏️ Hostel</option>
+                  </select>
+                  <div class="valid-feedback">
+                    <i class="bi bi-check-circle-fill me-1"></i> Categoría seleccionada
+                  </div>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar una categoría
+                  </div>
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Clasificación del hotel
+                </div>
+              </div>
+            </div>
+
+            <!-- Campos en fila: Habitaciones y Precio -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label for="habitaciones" class="form-label fw-semibold">
+                  <i class="bi bi-door-closed-fill me-1 text-body-secondary"></i>
+                  Habitaciones (opcional)
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-house-door-fill"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="habitaciones"
+                    formControlName="habitaciones"
+                    placeholder="Ej: 50"
+                    min="0"
+                    step="1"
+                  >
+                  <span class="input-group-text">unidades</span>
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Número total de habitaciones
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="precioPromedio" class="form-label fw-semibold">
+                  <i class="bi bi-currency-dollar me-1 text-body-secondary"></i>
+                  Precio promedio (opcional)
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-cash-stack"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="precioPromedio"
+                    formControlName="precioPromedio"
+                    placeholder="Ej: 150"
+                    min="0"
+                    step="0.01"
+                  >
+                  <span class="input-group-text">USD/noche</span>
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Precio por noche en dólares
+                </div>
+              </div>
+            </div>
+
+            <!-- Formulario anidado para imágenes -->
+            <div class="card border-secondary-subtle mb-4">
+              <div class="card-header bg-light-subtle border-0 py-3">
+                <h6 class="mb-0">
+                  <i class="bi bi-images text-warning me-2"></i>
+                  Gestión de Imágenes
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <!-- Campo: Imagen Principal -->
+                  <div class="col-12">
+                    <label for="imagenPrincipal" class="form-label fw-semibold">
+                      <i class="bi bi-camera-fill me-1 text-body-secondary"></i>
+                      Imagen Principal (URL)
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-image"></i>
+                      </span>
+                      <input 
+                        type="url" 
+                        class="form-control" 
+                        id="imagenPrincipal"
+                        formControlName="imagenPrincipal"
+                        placeholder="https://ejemplo.com/imagen-principal.jpg"
+                      >
+                      <button 
+                        class="btn btn-outline-secondary" 
+                        type="button"
+                        (click)="previewImagen('principal')"
+                      >
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </div>
+                    @if (hotelForm.get('imagenPrincipal')?.value) {
+                      <div class="mt-2">
+                        <small class="text-success">
+                          <i class="bi bi-check-circle-fill me-1"></i> URL de imagen válida
+                        </small>
+                      </div>
+                    }
+                    <div class="form-text">
+                      <i class="bi bi-info-circle me-1"></i> URL de la imagen principal del hotel
+                    </div>
+                  </div>
+
+                  <!-- Campo: Imagen Secundaria -->
+                  <div class="col-12">
+                    <label for="imagenSecundaria" class="form-label fw-semibold">
+                      <i class="bi bi-camera me-1 text-body-secondary"></i>
+                      Imagen Secundaria (URL)
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-image-alt"></i>
+                      </span>
+                      <input 
+                        type="url" 
+                        class="form-control" 
+                        id="imagenSecundaria"
+                        formControlName="imagenSecundaria"
+                        placeholder="https://ejemplo.com/imagen-secundaria.jpg"
+                      >
+                      <button 
+                        class="btn btn-outline-secondary" 
+                        type="button"
+                        (click)="previewImagen('secundaria')"
+                      >
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </div>
+                    @if (hotelForm.get('imagenSecundaria')?.value) {
+                      <div class="mt-2">
+                        <small class="text-success">
+                          <i class="bi bi-check-circle-fill me-1"></i> URL de imagen válida
+                        </small>
+                      </div>
+                    }
+                    <div class="form-text">
+                      <i class="bi bi-info-circle me-1"></i> URL de una imagen adicional del hotel
+                    </div>
+                  </div>
+
+                  <!-- Vista previa de imágenes -->
+                  @if (hotelForm.get('imagenPrincipal')?.value || hotelForm.get('imagenSecundaria')?.value) {
+                    <div class="col-12 mt-3">
+                      <h6 class="fw-semibold mb-2">
+                        <i class="bi bi-card-image me-1"></i>
+                        Vista previa
+                      </h6>
+                      <div class="row g-2">
+                        @if (hotelForm.get('imagenPrincipal')?.value) {
+                          <div class="col-md-6">
+                            <div class="border rounded p-2">
+                              <small class="d-block mb-1 text-body-secondary">Principal</small>
+                              <img 
+                                [src]="hotelForm.get('imagenPrincipal')?.value" 
+                                alt="Imagen principal" 
+                                class="img-fluid rounded"
+                                (error)="onImageError($event)"
+                                style="max-height: 150px; object-fit: cover;"
+                              >
+                            </div>
+                          </div>
+                        }
+                        @if (hotelForm.get('imagenSecundaria')?.value) {
+                          <div class="col-md-6">
+                            <div class="border rounded p-2">
+                              <small class="d-block mb-1 text-body-secondary">Secundaria</small>
+                              <img 
+                                [src]="hotelForm.get('imagenSecundaria')?.value" 
+                                alt="Imagen secundaria" 
+                                class="img-fluid rounded"
+                                (error)="onImageError($event)"
+                                style="max-height: 150px; object-fit: cover;"
+                              >
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Subida de archivos alternativa -->
+                  <div class="col-12">
+                    <div class="mt-3 pt-3 border-top">
+                      <label class="form-label fw-semibold">
+                        <i class="bi bi-upload me-1 text-body-secondary"></i>
+                        Subir imágenes desde archivo
+                      </label>
+                      <div class="row g-2">
+                        <div class="col-md-6">
+                          <div class="input-group">
+                            <input 
+                              type="file" 
+                              class="form-control" 
+                              id="filePrincipal"
+                              accept="image/*"
+                              (change)="onFileSelected($event, 'principal')"
+                            >
+                            <label class="input-group-text" for="filePrincipal">
+                              <i class="bi bi-upload"></i>
+                            </label>
+                          </div>
+                          <div class="form-text">
+                            Imagen principal
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="input-group">
+                            <input 
+                              type="file" 
+                              class="form-control" 
+                              id="fileSecundaria"
+                              accept="image/*"
+                              (change)="onFileSelected($event, 'secundaria')"
+                            >
+                            <label class="input-group-text" for="fileSecundaria">
+                              <i class="bi bi-upload"></i>
+                            </label>
+                          </div>
+                          <div class="form-text">
+                            Imagen secundaria
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones del formulario -->
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+              <button 
+                type="submit" 
+                class="btn btn-warning flex-fill"
+                [disabled]="hotelForm.invalid || guardando"
+              >
+                @if (guardando) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Guardando...
+                } @else {
+                  <i class="bi bi-save me-1"></i>
+                  {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                }
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="cancelarEdicion()"
+                [disabled]="guardando"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancelar
+              </button>
+            </div>
+            
+            <!-- Información de campos requeridos -->
+            <div class="mt-3 pt-2">
+              <small class="text-body-tertiary">
+                <i class="bi bi-asterisk text-danger me-1"></i>
+                Campos marcados con asterisco (*) son obligatorios
+              </small>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de hoteles -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul text-warning me-2"></i>
+              Hoteles Registrados
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="min-width: 200px;">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Buscar hotel..."
+                  (input)="filtrarHoteles($event)"
+                >
+              </div>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-funnel-fill me-1"></i> Filtrar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" (click)="filtrarPorCategoria('')">Todas las categorías</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  @for (categoria of categorias; track categoria.value) {
+                    <li>
+                      <a class="dropdown-item" href="#" (click)="filtrarPorCategoria(categoria.value)">
+                        <i class="bi bi-star-fill me-2"></i> {{ categoria.label }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+              <button class="btn btn-sm btn-outline-warning" (click)="cargarHoteles()" title="Recargar">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          @if (cargando) {
+            <!-- Estado de carga -->
+            <div class="text-center py-5">
+              <div class="spinner-border text-warning mb-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-body-secondary">Cargando hoteles...</p>
+            </div>
+          } @else if (hotelesFiltrados.length === 0) {
+            <!-- Estado sin datos -->
+            <div class="text-center py-5">
+              <i class="bi bi-house display-1 text-body-tertiary mb-3"></i>
+              <h5 class="text-body-secondary mb-2">No hay hoteles registrados</h5>
+              <p class="text-body-tertiary mb-0">Comienza agregando un nuevo hotel</p>
+            </div>
+          } @else {
+            <!-- Tabla de hoteles -->
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-3" style="width: 30%;">
+                      <i class="bi bi-sort-alpha-down text-warning-emphasis me-1"></i>
+                      Hotel
+                    </th>
+                    <th scope="col" style="width: 25%;">
+                      <i class="bi bi-building-fill text-warning-emphasis me-1"></i>
+                      Ciudad
+                    </th>
+                    <th scope="col" style="width: 20%;">
+                      <i class="bi bi-star-fill text-warning-emphasis me-1"></i>
+                      Categoría
+                    </th>
+                    <th scope="col" class="text-end" style="width: 15%;">
+                      <i class="bi bi-cash text-warning-emphasis me-1"></i>
+                      Precio
+                    </th>
+                    <th scope="col" class="text-center pe-3" style="width: 10%;">
+                      <i class="bi bi-gear-fill text-warning-emphasis me-1"></i>
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (hotel of hotelesFiltrados; track hotel.id) {
+                    <tr [class.table-warning-subtle]="hotel.id === hotelEditando?.id">
+                      <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                          @if (hotel.imagenPrincipal) {
+                            <div class="flex-shrink-0 me-2">
+                              <img 
+                                [src]="hotel.imagenPrincipal" 
+                                alt="{{ hotel.nombre }}"
+                                class="rounded"
+                                style="width: 50px; height: 50px; object-fit: cover;"
+                                (error)="onImageError($event)"
+                              >
+                            </div>
+                          }
+                          <div class="flex-grow-1">
+                            <strong class="d-block">{{ hotel.nombre }}</strong>
+                            <small class="text-body-tertiary text-truncate d-block" style="max-width: 200px;">
+                              {{ hotel.descripcion | slice:0:50 }}...
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-geo-alt-fill text-info"></i>
+                          </div>
+                          <div class="flex-grow-1 ms-2">
+                            <span class="badge text-bg-info-subtle text-info-emphasis">
+                              {{ obtenerNombreCiudad(hotel.ciudadId) }}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span [class]="getCategoriaBadgeClass(hotel.categoria)">
+                          {{ getCategoriaLabel(hotel.categoria) }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        @if (hotel.precioPromedio) {
+                          <span class="fw-semibold">${{ hotel.precioPromedio | number }}</span>
+                          <small class="text-body-tertiary d-block">USD/noche</small>
+                        } @else {
+                          <span class="text-body-tertiary fst-italic">Consultar</span>
+                        }
+                      </td>
+                      <td class="text-center pe-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-warning"
+                            (click)="editarHotel(hotel)"
+                            title="Editar hotel"
+                          >
+                            <i class="bi bi-pencil-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-primary"
+                            (click)="verDetalles(hotel)"
+                            title="Ver detalles"
+                          >
+                            <i class="bi bi-eye-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarHotel(hotel)"
+                            title="Eliminar hotel"
+                          >
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        
+        <!-- Paginación -->
+        @if (hotelesFiltrados.length > 0 && !cargando) {
+          <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+              <small class="text-body-secondary">
+                Mostrando {{ hotelesFiltrados.length }} de {{ totalHoteles }} hoteles
+                @if (filtroCategoria) {
+                  <span class="badge text-bg-warning-subtle text-warning-emphasis ms-2">
+                    <i class="bi bi-funnel-fill me-1"></i>
+                    {{ getCategoriaLabel(filtroCategoria) }}
+                  </span>
+                }
+              </small>
+              <nav aria-label="Navegación de hoteles">
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <i class="bi bi-chevron-left"></i>
+                    </a>
+                  </li>
+                  <li class="page-item active" aria-current="page">
+                    <span class="page-link">1</span>
+                  </li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      <i class="bi bi-chevron-right"></i>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-warning text-white">
+          <h1 class="modal-title fs-5" id="detallesModalLabel">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Detalles del Hotel
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          @if (hotelDetalles) {
+            <div class="row">
+              <div class="col-md-4 text-center mb-3 mb-md-0">
+                @if (hotelDetalles.imagenPrincipal) {
+                  <img [src]="hotelDetalles.imagenPrincipal" 
+                       alt="{{ hotelDetalles.nombre }}" 
+                       class="img-fluid rounded-3 shadow"
+                       (error)="onImageError($event)"
+                       style="max-height: 200px; object-fit: cover;">
+                } @else {
+                  <div class="bg-warning-subtle p-4 rounded-3">
+                    <i class="bi bi-house display-1 text-warning"></i>
+                  </div>
+                }
+              </div>
+              <div class="col-md-8">
+                <h3 class="text-warning-emphasis mb-2">{{ hotelDetalles.nombre }}</h3>
+                <div class="mb-3">
+                  <span [class]="getCategoriaBadgeClass(hotelDetalles.categoria) + ' fs-6'">
+                    {{ getCategoriaLabel(hotelDetalles.categoria) }}
+                  </span>
+                </div>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Ciudad:</strong>
+                    <span class="ms-2">
+                      <span class="badge text-bg-info-subtle text-info-emphasis">
+                        {{ obtenerNombreCiudad(hotelDetalles.ciudadId) }}
+                      </span>
+                    </span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Descripción:</strong>
+                    <p class="mt-1">{{ hotelDetalles.descripcion }}</p>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Contactos:</strong>
+                    <pre class="mt-1 bg-light-subtle p-2 rounded">{{ hotelDetalles.contactos }}</pre>
+                  </div>
+                  <div class="col-md-6">
+                    <strong class="text-body-emphasis">Habitaciones:</strong>
+                    <p class="mb-0">{{ hotelDetalles.habitaciones || 'No especificado' }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <strong class="text-body-emphasis">Precio promedio:</strong>
+                    <p class="mb-0">{{ hotelDetalles.precioPromedio ? '$' + (hotelDetalles.precioPromedio | number) + ' USD/noche' : 'Consultar' }}</p>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Fecha de Registro:</strong>
+                    <p class="mb-0">{{ hotelDetalles.fechaCreacion | date:'longDate' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-danger text-white">
+          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <i class="bi bi-trash-fill text-danger display-4"></i>
+          </div>
+          <h5 class="text-center mb-3">¿Estás seguro de eliminar este hotel?</h5>
+          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
+            Se eliminarán todos los datos relacionados con este hotel.
+          </div>
+          @if (hotelAEliminar) {
+            <div class="card border-danger-subtle">
+              <div class="card-body">
+                <h6 class="card-title text-danger-emphasis mb-3">
+                  <i class="bi bi-trash-fill me-2"></i>
+                  Hotel a eliminar
+                </h6>
+                <div class="row g-2">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Nombre:</strong>
+                    <span class="ms-2">{{ hotelAEliminar.nombre }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Ciudad:</strong>
+                    <span class="ms-2">{{ obtenerNombreCiudad(hotelAEliminar.ciudadId) }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Categoría:</strong>
+                    <span class="ms-2">{{ getCategoriaLabel(hotelAEliminar.categoria) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash-fill me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

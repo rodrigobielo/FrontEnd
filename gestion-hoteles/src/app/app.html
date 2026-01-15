@@ -1,0 +1,30 @@
+<app-navbar 
+  (mostrarInicio)="mostrarInicio()"
+  (mostrarHoteles)="mostrarHoteles()"
+  (mostrarContactos)="mostrarContactos()">
+</app-navbar>
+
+<!-- Contenido según sección activa -->
+
+<!-- Sección Inicio -->
+<div *ngIf="seccionActiva === 'inicio'">
+  <app-carrusel></app-carrusel>
+  <app-lugares-turisticos></app-lugares-turisticos>
+</div>
+
+<!-- Sección Hoteles -->
+<div *ngIf="seccionActiva === 'hoteles'" class="container-fluid mt-4 px-3">
+  <app-hoteles></app-hoteles>
+</div>
+
+<!-- Sección Contactos (solo muestra footer) -->
+<div *ngIf="seccionActiva === 'contactos'">
+  <!-- Puedes agregar contenido específico de contactos aquí si lo deseas -->
+  <div class="container mt-5 text-center">
+    <h2>Información de Contacto</h2>
+    <p>Para más información, consulta la sección de contacto en el footer.</p>
+  </div>
+</div>
+
+<!-- Footer siempre visible -->
+<app-footer></app-footer>

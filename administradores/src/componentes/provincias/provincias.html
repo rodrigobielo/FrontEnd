@@ -1,0 +1,528 @@
+<!-- provincias.html - Componente de gestión de provincias -->
+<div class="container-fluid py-4">
+  <!-- Encabezado de la página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 fw-bold mb-0">
+        <i class="bi bi-map-fill text-success me-2"></i>
+        Gestión de Provincias
+      </h1>
+      <p class="text-body-secondary mb-0">Administra las provincias de cada región</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+        <i class="bi bi-arrow-left me-1"></i> Volver
+      </button>
+      <button class="btn btn-success" (click)="nuevoRegistro()">
+        <i class="bi bi-plus-circle me-1"></i> Nueva Provincia
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de información -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card border-success-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-info-circle-fill text-success-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Total de Provincias</h5>
+              <p class="card-text display-6 fw-bold text-success">{{ totalProvincias }}</p>
+              <small class="text-body-tertiary">Registradas en el sistema</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-8">
+      <div class="card border-light-subtle shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-lightbulb-fill text-warning-emphasis me-2"></i>
+            Información importante
+          </h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-success-emphasis me-2"></i>
+              Las provincias son subdivisiones administrativas dentro de cada región.
+            </li>
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-success-emphasis me-2"></i>
+              Cada provincia debe estar asociada a una región específica.
+            </li>
+            <li>
+              <i class="bi bi-check-circle-fill text-success-emphasis me-2"></i>
+              Las provincias pueden contener múltiples ciudades y municipios.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Formulario de provincias -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square text-success me-2"></i>
+            {{ modoEdicion ? 'Editar Provincia' : 'Nueva Provincia' }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="provinciaForm" (ngSubmit)="guardarProvincia()" novalidate>
+            <!-- Campo: Nombre de la provincia -->
+            <div class="mb-4">
+              <label for="nombre" class="form-label fw-semibold">
+                <i class="bi bi-tag-fill me-1 text-success-emphasis"></i>
+                Nombre de la provincia <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-geo-alt-fill"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nombre"
+                  formControlName="nombre"
+                  [class.is-valid]="provinciaForm.get('nombre')?.valid && provinciaForm.get('nombre')?.touched"
+                  [class.is-invalid]="provinciaForm.get('nombre')?.invalid && provinciaForm.get('nombre')?.touched"
+                  placeholder="Ej: Jujuy, Salta, Mendoza"
+                  maxlength="100"
+                >
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Nombre válido
+                </div>
+                <div class="invalid-feedback">
+                  @if (provinciaForm.get('nombre')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El nombre es obligatorio
+                  }
+                  @if (provinciaForm.get('nombre')?.hasError('minlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 3 caracteres
+                  }
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Usa el nombre oficial de la provincia
+              </div>
+            </div>
+
+            <!-- Campo: Región (select) -->
+            <div class="mb-4">
+              <label for="region" class="form-label fw-semibold">
+                <i class="bi bi-globe-americas me-1 text-success-emphasis"></i>
+                Región <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-diagram-3-fill"></i>
+                </span>
+                <select 
+                  class="form-select" 
+                  id="region"
+                  formControlName="regionId"
+                  [class.is-valid]="provinciaForm.get('regionId')?.valid && provinciaForm.get('regionId')?.touched"
+                  [class.is-invalid]="provinciaForm.get('regionId')?.invalid && provinciaForm.get('regionId')?.touched"
+                >
+                  <option value="" disabled selected>Selecciona una región</option>
+                  @for (region of regiones; track region.id) {
+                    <option [value]="region.id">{{ region.nombre }}</option>
+                  }
+                </select>
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Región seleccionada
+                </div>
+                <div class="invalid-feedback">
+                  <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar una región
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Selecciona la región a la que pertenece
+              </div>
+            </div>
+
+            <!-- Campo opcional: Código de provincia -->
+            <div class="mb-4">
+              <label for="codigo" class="form-label fw-semibold">
+                <i class="bi bi-hash me-1 text-body-secondary"></i>
+                Código (opcional)
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-key-fill"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="codigo"
+                  formControlName="codigo"
+                  placeholder="Ej: JUJ, SAL, MEN"
+                  maxlength="10"
+                >
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Código abreviado para identificar la provincia
+              </div>
+            </div>
+
+            <!-- Campos en fila: Población y Área -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label for="poblacion" class="form-label fw-semibold">
+                  <i class="bi bi-people-fill me-1 text-body-secondary"></i>
+                  Población (opcional)
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-person-badge-fill"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="poblacion"
+                    formControlName="poblacion"
+                    placeholder="Ej: 1000000"
+                    min="0"
+                    step="1000"
+                  >
+                  <span class="input-group-text">hab.</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="area" class="form-label fw-semibold">
+                  <i class="bi bi-rulers me-1 text-body-secondary"></i>
+                  Área (opcional)
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-aspect-ratio-fill"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="area"
+                    formControlName="area"
+                    placeholder="Ej: 53219"
+                    min="0"
+                    step="0.01"
+                  >
+                  <span class="input-group-text">km²</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones del formulario -->
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+              <button 
+                type="submit" 
+                class="btn btn-success flex-fill"
+                [disabled]="provinciaForm.invalid || guardando"
+              >
+                @if (guardando) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Guardando...
+                } @else {
+                  <i class="bi bi-save me-1"></i>
+                  {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                }
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="cancelarEdicion()"
+                [disabled]="guardando"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancelar
+              </button>
+            </div>
+            
+            <!-- Información de campos requeridos -->
+            <div class="mt-3 pt-2">
+              <small class="text-body-tertiary">
+                <i class="bi bi-asterisk text-danger me-1"></i>
+                Campos marcados con asterisco (*) son obligatorios
+              </small>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de provincias -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul text-success me-2"></i>
+              Provincias Registradas
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="min-width: 200px;">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Buscar provincia..."
+                  (input)="filtrarProvincias($event)"
+                >
+              </div>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-funnel-fill me-1"></i> Filtrar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" (click)="filtrarPorRegion(0)">Todas las regiones</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  @for (region of regiones; track region.id) {
+                    <li>
+                      <a class="dropdown-item" href="#" (click)="filtrarPorRegion(region.id)">
+                        <i class="bi bi-globe-americas me-2"></i> {{ region.nombre }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+              <button class="btn btn-sm btn-outline-success" (click)="cargarProvincias()" title="Recargar">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          @if (cargando) {
+            <!-- Estado de carga -->
+            <div class="text-center py-5">
+              <div class="spinner-border text-success mb-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-body-secondary">Cargando provincias...</p>
+            </div>
+          } @else if (provinciasFiltradas.length === 0) {
+            <!-- Estado sin datos -->
+            <div class="text-center py-5">
+              <i class="bi bi-map display-1 text-body-tertiary mb-3"></i>
+              <h5 class="text-body-secondary mb-2">No hay provincias registradas</h5>
+              <p class="text-body-tertiary mb-0">Comienza agregando una nueva provincia</p>
+            </div>
+          } @else {
+            <!-- Tabla de provincias -->
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-3">
+                      <i class="bi bi-sort-alpha-down text-success-emphasis me-1"></i>
+                      Provincia
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-globe-americas text-success-emphasis me-1"></i>
+                      Región
+                    </th>
+                    <th scope="col" class="text-end">
+                      <i class="bi bi-people-fill text-success-emphasis me-1"></i>
+                      Población
+                    </th>
+                    <th scope="col" class="text-end">
+                      <i class="bi bi-rulers text-success-emphasis me-1"></i>
+                      Área
+                    </th>
+                    <th scope="col" class="text-center pe-3">
+                      <i class="bi bi-gear-fill text-success-emphasis me-1"></i>
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (provincia of provinciasFiltradas; track provincia.id) {
+                    <tr [class.table-success-subtle]="provincia.id === provinciaEditando?.id">
+                      <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-geo-alt-fill text-success fs-5"></i>
+                          </div>
+                          <div class="flex-grow-1 ms-2">
+                            <strong class="d-block">{{ provincia.nombre }}</strong>
+                            @if (provincia.codigo) {
+                              <small class="text-body-tertiary">Código: {{ provincia.codigo }}</small>
+                            }
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-globe-americas text-primary"></i>
+                          </div>
+                          <div class="flex-grow-1 ms-2">
+                            <span class="badge text-bg-primary-subtle text-primary-emphasis">
+                              {{ obtenerNombreRegion(provincia.regionId) }}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-end">
+                        @if (provincia.poblacion) {
+                          <span class="fw-semibold">{{ provincia.poblacion | number }}</span>
+                          <small class="text-body-tertiary d-block">hab.</small>
+                        } @else {
+                          <span class="text-body-tertiary fst-italic">-</span>
+                        }
+                      </td>
+                      <td class="text-end">
+                        @if (provincia.area) {
+                          <span class="fw-semibold">{{ provincia.area | number }}</span>
+                          <small class="text-body-tertiary d-block">km²</small>
+                        } @else {
+                          <span class="text-body-tertiary fst-italic">-</span>
+                        }
+                      </td>
+                      <td class="text-center pe-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-success"
+                            (click)="editarProvincia(provincia)"
+                            title="Editar provincia"
+                          >
+                            <i class="bi bi-pencil-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-info"
+                            (click)="verDetalles(provincia)"
+                            title="Ver detalles"
+                          >
+                            <i class="bi bi-eye-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarProvincia(provincia)"
+                            title="Eliminar provincia"
+                          >
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        
+        <!-- Paginación -->
+        @if (provinciasFiltradas.length > 0 && !cargando) {
+          <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+              <small class="text-body-secondary">
+                Mostrando {{ provinciasFiltradas.length }} de {{ totalProvincias }} provincias
+                @if (filtroRegion > 0) {
+                  <span class="badge text-bg-primary-subtle text-primary-emphasis ms-2">
+                    <i class="bi bi-funnel-fill me-1"></i>
+                    {{ obtenerNombreRegion(filtroRegion) }}
+                  </span>
+                }
+              </small>
+              <nav aria-label="Navegación de provincias">
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <i class="bi bi-chevron-left"></i>
+                    </a>
+                  </li>
+                  <li class="page-item active" aria-current="page">
+                    <span class="page-link">1</span>
+                  </li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      <i class="bi bi-chevron-right"></i>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-danger text-white">
+          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <i class="bi bi-trash-fill text-danger display-4"></i>
+          </div>
+          <h5 class="text-center mb-3">¿Estás seguro de eliminar esta provincia?</h5>
+          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
+            Si la provincia tiene ciudades asociadas, también se eliminarán.
+          </div>
+          @if (provinciaAEliminar) {
+            <div class="card border-danger-subtle">
+              <div class="card-body">
+                <h6 class="card-title text-danger-emphasis mb-3">
+                  <i class="bi bi-trash-fill me-2"></i>
+                  Provincia a eliminar
+                </h6>
+                <div class="row g-2">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Nombre:</strong>
+                    <span class="ms-2">{{ provinciaAEliminar.nombre }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Región:</strong>
+                    <span class="ms-2">{{ obtenerNombreRegion(provinciaAEliminar.regionId) }}</span>
+                  </div>
+                  @if (provinciaAEliminar.codigo) {
+                    <div class="col-12">
+                      <strong class="text-body-emphasis">Código:</strong>
+                      <span class="ms-2">{{ provinciaAEliminar.codigo }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash-fill me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

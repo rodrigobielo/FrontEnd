@@ -1,0 +1,257 @@
+<!-- hoteles.html -->
+<div class="container-fluid py-4 px-3">
+  <!-- Header -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+      <h1 class="display-6 fw-bold text-primary">
+        <i class="bi bi-building me-2"></i>Hoteles Disponibles
+      </h1>
+      <p class="text-muted mb-0">Encuentra el alojamiento perfecto para tu próximo viaje</p>
+    </div>
+    <div class="col-md-4">
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-search"></i>
+        </span>
+        <input type="text" class="form-control" placeholder="Buscar hotel..." [(ngModel)]="searchTerm">
+        <button class="btn btn-outline-secondary" type="button" (click)="buscarHoteles()">
+          Buscar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex flex-wrap gap-2">
+        <div class="dropdown">
+          <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-funnel me-1"></i>Ordenar por
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" (click)="ordenarPor('precio'); $event.preventDefault()">Precio: Menor a Mayor</a></li>
+            <li><a class="dropdown-item" href="#" (click)="ordenarPor('-precio'); $event.preventDefault()">Precio: Mayor a Menor</a></li>
+            <li><a class="dropdown-item" href="#" (click)="ordenarPor('calificacion'); $event.preventDefault()">Mejor Calificación</a></li>
+            <li><a class="dropdown-item" href="#" (click)="ordenarPor('nombre'); $event.preventDefault()">Nombre A-Z</a></li>
+          </ul>
+        </div>
+        
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-geo-alt me-1"></i>Ubicación
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorUbicacion('todas'); $event.preventDefault()">Todas</a></li>
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorUbicacion('centro'); $event.preventDefault()">Centro</a></li>
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorUbicacion('playa'); $event.preventDefault()">Playa</a></li>
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorUbicacion('aeropuerto'); $event.preventDefault()">Aeropuerto</a></li>
+          </ul>
+        </div>
+
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-star me-1"></i>Estrellas
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorEstrellas(0); $event.preventDefault()">Todas</a></li>
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorEstrellas(5); $event.preventDefault()">5 Estrellas</a></li>
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorEstrellas(4); $event.preventDefault()">4 Estrellas</a></li>
+            <li><a class="dropdown-item" href="#" (click)="filtrarPorEstrellas(3); $event.preventDefault()">3 Estrellas</a></li>
+          </ul>
+        </div>
+
+        <div class="ms-auto d-flex align-items-center">
+          <span class="text-muted me-2">{{ hoteles.length }} hoteles encontrados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Hoteles -->
+  <div class="row g-4">
+    @for (hotel of hotelesFiltrados; track hotel.id) {
+      <div class="col-12">
+        <div class="card border-0 shadow-sm mb-3 hover-card">
+          <div class="row g-0">
+            <!-- Columna Imagen -->
+            <div class="col-md-4 position-relative">
+              <img [src]="hotel.imagen" 
+                   class="img-fluid h-100 w-100 object-fit-cover" 
+                   [alt]="hotel.nombre"
+                   (error)="cargarImagenDefault($event)">
+              <div class="position-absolute top-0 start-0 m-3">
+                <span [ngClass]="getBadgeClass(hotel.calificacion)" class="badge">
+                  <i class="bi bi-star-fill me-1"></i>{{ hotel.calificacion }}
+                </span>
+              </div>
+              <div class="position-absolute top-0 end-0 m-3">
+                @if (hotel.descuento) {
+                  <span class="badge bg-danger">
+                    -{{ hotel.descuento }}%
+                  </span>
+                }
+              </div>
+              <div class="position-absolute bottom-0 start-0 m-3">
+                <span class="badge bg-dark bg-opacity-75 text-white">
+                  {{ hotel.estrellas }} <i class="bi bi-star-fill text-warning"></i>
+                </span>
+              </div>
+            </div>
+
+            <!-- Columna Información -->
+            <div class="col-md-5">
+              <div class="card-body h-100 d-flex flex-column">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <h3 class="h5 fw-bold mb-1">{{ hotel.nombre }}</h3>
+                    <button class="btn btn-link text-decoration-none p-0" 
+                            (click)="toggleFavorito(hotel)">
+                      <i class="bi" 
+                         [ngClass]="{'bi-heart-fill text-danger': hotel.favorito, 'bi-heart': !hotel.favorito}">
+                      </i>
+                    </button>
+                  </div>
+                  
+                  <div class="d-flex align-items-center text-muted mb-2">
+                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                    <span>{{ hotel.ubicacion }}</span>
+                  </div>
+
+                  <div class="d-flex align-items-center mb-3">
+                    <span class="me-3">
+                      <i class="bi bi-signpost-fill text-warning me-1"></i>
+                      <small>{{ hotel.distancia }}</small>
+                    </span>
+                    <span class="me-3">
+                      <i class="bi bi-wifi text-success me-1"></i>
+                      <small>WiFi Gratis</small>
+                    </span>
+                    <span>
+                      <i class="bi bi-check-circle text-success me-1"></i>
+                      <small>Cancelación gratis</small>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Características -->
+                <div class="mb-3">
+                  <h6 class="text-muted mb-2">
+                    <i class="bi bi-list-check me-1"></i>Características
+                  </h6>
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (caracteristica of hotel.caracteristicas; track caracteristica) {
+                      <span class="badge bg-light text-dark border">
+                        <i [class]="getIconoCaracteristica(caracteristica)"></i>
+                        {{ caracteristica }}
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Servicios incluidos -->
+                <div class="mt-auto">
+                  <div class="row g-2">
+                    @for (servicio of hotel.serviciosIncluidos; track servicio) {
+                      <div class="col-6">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-check-circle-fill text-success me-2"></i>
+                          <small>{{ servicio }}</small>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna Precio y Reserva -->
+            <div class="col-md-3 bg-light">
+              <div class="card-body h-100 d-flex flex-column justify-content-between">
+                <div>
+                  <div class="text-end mb-3">
+                    <small class="text-muted d-block">Precio por noche</small>
+                    @if (hotel.descuento) {
+                      <div class="d-flex justify-content-end align-items-baseline">
+                        <span class="text-decoration-line-through text-muted me-2">
+                          ${{ hotel.precioOriginal }}
+                        </span>
+                        <h2 class="text-primary mb-0">${{ hotel.precio }}</h2>
+                      </div>
+                    }
+                    @if (!hotel.descuento) {
+                      <h2 class="text-primary mb-0">${{ hotel.precio }}</h2>
+                    }
+                    <small class="text-muted">Impuestos incluidos</small>
+                  </div>
+                  
+                  <div class="text-center mb-3">
+                    <div class="d-flex justify-content-center align-items-center mb-2">
+                      <i class="bi bi-award text-warning me-2"></i>
+                      <small class="text-success fw-bold">Reserva segura garantizada</small>
+                    </div>
+                    <small class="text-muted">
+                      <i class="bi bi-shield-check me-1"></i>Protección de datos
+                    </small>
+                  </div>
+                </div>
+
+                <div>
+                  <button class="btn btn-primary w-100 py-2 mb-2 fw-bold" 
+                          (click)="reservarHotel(hotel)">
+                    <i class="bi bi-calendar-check me-2"></i>RESERVAR AHORA
+                  </button>
+                  <button class="btn btn-outline-primary w-100 py-2" 
+                          (click)="verDetalles(hotel)">
+                    <i class="bi bi-info-circle me-2"></i>Ver Detalles Completos
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Mensaje si no hay hoteles -->
+  @if (hotelesFiltrados.length === 0) {
+    <div class="text-center py-5">
+      <i class="bi bi-building-x display-1 text-muted mb-3"></i>
+      <h3 class="text-muted mb-3">No se encontraron hoteles</h3>
+      <p class="text-muted mb-4">Intenta con otros filtros o términos de búsqueda</p>
+      <button class="btn btn-primary" (click)="limpiarFiltros()">
+        <i class="bi bi-arrow-clockwise me-2"></i>Limpiar Filtros
+      </button>
+    </div>
+  }
+
+  <!-- Paginación -->
+  @if (hotelesFiltrados.length > 0) {
+    <div class="row mt-5">
+      <div class="col-12">
+        <nav aria-label="Navegación de hoteles">
+          <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <a class="page-link" href="javascript:void(0)" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+            @for (pagina of getPaginas(); track pagina) {
+              <li class="page-item" [class.active]="pagina === paginaActual">
+                <a class="page-link" href="javascript:void(0)" (click)="cambiarPagina(pagina); $event.preventDefault()">
+                  {{ pagina }}
+                </a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+              <a class="page-link" href="javascript:void(0)" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  }
+</div>

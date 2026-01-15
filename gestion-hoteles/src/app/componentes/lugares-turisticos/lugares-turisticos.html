@@ -1,0 +1,174 @@
+<!-- Contenedor principal con Bootstrap 5 -->
+<div class="container-fluid py-3 px-3 px-md-4 bg-light">
+  
+  <!-- Título con color azul fuerte usando Bootstrap -->
+  <div class="row mb-4">
+    <div class="col-12 text-center">
+      <h1 class="fw-bold mb-3 text-primary">
+        <i class="bi bi-geo-alt-fill me-2"></i>Lugares Turísticos de Guinea Ecuatorial
+      </h1>
+      <p class="lead text-muted mb-4">
+        Descubre las maravillas naturales y culturales de este hermoso país africano.
+      </p>
+      <div class="d-flex justify-content-center align-items-center mb-3">
+        <span class="badge bg-primary me-2 p-2">
+          <i class="bi bi-signpost-split me-1"></i>{{lugares.length}} destinos
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor principal del carrusel con posición relativa -->
+  <div class="position-relative mb-4">
+    
+    <!-- Flecha izquierda - Posicionada sobre las tarjetas -->
+    <button class="btn btn-outline-primary rounded-circle p-3 shadow position-absolute start-0 top-50 translate-middle-y z-3 d-none d-md-flex" 
+            (click)="scrollLeft()"
+            aria-label="Ver tarjetas anteriores"
+            style="left: 15px;">
+      <i class="bi bi-chevron-left fs-4"></i>
+    </button>
+
+    <!-- Contenedor de tarjetas con scroll horizontal -->
+    <div class="cards-container d-flex flex-nowrap overflow-auto py-3 px-4" 
+         style="scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+      
+      <!-- Tarjeta individual para cada lugar -->
+      <div class="me-4" *ngFor="let lugar of lugares" style="flex: 0 0 auto;">
+        <div class="card h-100 border-0 shadow-sm" style="width: 280px;">
+          
+          <!-- Imagen con badge de país -->
+          <div class="position-relative overflow-hidden rounded-top" style="height: 160px;">
+            <img 
+              [src]="lugar.imagen" 
+              [alt]="lugar.nombre"
+              class="card-img-top h-100 w-100"
+              style="object-fit: cover;"
+            >
+            
+            <!-- Badge de país con Bootstrap -->
+            <div class="position-absolute top-0 end-0 m-2">
+              <span class="badge bg-dark bg-opacity-75 px-2 py-1">
+                <i class="bi bi-flag me-1"></i>G.E.
+              </span>
+            </div>
+          </div>
+
+          <!-- Cuerpo de la tarjeta -->
+          <div class="card-body d-flex flex-column p-3">
+            <!-- Título con color primario de Bootstrap -->
+            <h5 class="card-title fw-bold mb-2 text-primary">
+              {{lugar.nombre}}
+            </h5>
+            
+            <!-- Descripción truncada -->
+            <p class="card-text text-muted flex-grow-1 mb-3 small">
+              {{lugar.descripcion.length > 80 ? (lugar.descripcion | slice:0:80) + '...' : lugar.descripcion}}
+            </p>
+
+            <!-- Botones de acción -->
+            <div class="row g-2 mt-auto">
+              <div class="col-6">
+                <button 
+                  class="btn btn-success w-100 d-flex align-items-center justify-content-center py-2"
+                  (click)="visitarLugar(lugar)"
+                >
+                  <i class="bi bi-airplane me-1"></i>
+                  <span class="small fw-semibold">Visitar</span>
+                </button>
+              </div>
+              <div class="col-6">
+                <button 
+                  class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center py-2"
+                  (click)="mostrarInformacion(lugar)"
+                >
+                  <i class="bi bi-info-circle me-1"></i>
+                  <span class="small fw-semibold">Más info</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie de tarjeta -->
+          <div class="card-footer bg-transparent border-top-0 py-2 px-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                <i class="bi bi-geo me-1"></i>Destino {{lugar.id}}
+              </small>
+              <span class="badge bg-light text-primary border">
+                <i class="bi bi-heart"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flecha derecha - Posicionada sobre las tarjetas -->
+    <button class="btn btn-outline-primary rounded-circle p-3 shadow position-absolute end-0 top-50 translate-middle-y z-3 d-none d-md-flex" 
+            (click)="scrollRight()"
+            aria-label="Ver siguientes tarjetas"
+            style="right: 15px;">
+      <i class="bi bi-chevron-right fs-4"></i>
+    </button>
+  </div>
+
+  <!-- Indicadores de navegación para móviles -->
+  <div class="row mt-3 d-md-none">
+    <div class="col-12">
+      <div class="d-flex justify-content-center align-items-center gap-3">
+        <button class="btn btn-outline-primary btn-sm rounded-circle p-2" 
+                (click)="scrollLeft()">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <div class="text-center">
+          <small class="text-muted d-block">
+            <i class="bi bi-arrows-expand"></i>
+          </small>
+          <small class="text-muted">
+            Desliza para ver más
+          </small>
+        </div>
+        <button class="btn btn-outline-primary btn-sm rounded-circle p-2" 
+                (click)="scrollRight()">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información adicional -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="alert alert-info border-0 rounded-3 shadow">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-compass fs-3 me-3"></i>
+          <div>
+            <h6 class="alert-heading mb-1 fw-bold">Consejo de viaje</h6>
+            <p class="mb-0">
+              Haz clic en "Visitar" para planificar tu viaje o en "Más información" 
+              para conocer detalles de cada destino. 
+              <span class="fw-bold text-primary">¡Explora Guinea Ecuatorial!</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicadores de progreso -->
+  <div class="row mt-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-center align-items-center">
+        <div class="progress w-50" style="height: 5px;">
+          <div class="progress-bar bg-primary" role="progressbar" style="width: 25%;" 
+               aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <small class="text-muted ms-3">
+          <i class="bi bi-eye me-1"></i>
+          {{lugares.length}} lugares por descubrir
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
