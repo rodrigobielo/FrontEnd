@@ -3,84 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrusel de Hoteles - Diseño Premium</title>
+    <title>Carrusel de Hoteles Premium - Guinea Ecuatorial</title>
+    
+    <!-- Bootstrap 5.3.0 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* Importamos Bootstrap */
-        @import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css');
-        
-        /* Estilos personalizados premium */
         :root {
+            --primary: #0A2463;
+            --secondary: #FF6B6B;
+            --accent: #4ECDC4;
             --gold: #D4AF37;
-            --gold-light: #FFD700;
-            --gold-dark: #B8860B;
-            --dark-bg: #0A0A0A;
-            --light-text: #F8F9FA;
-            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
-            --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --dark: #1A1A2E;
+            --light: #F8F9FA;
         }
         
-        body, html {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--dark);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        /* Carrusel principal - posición más alta */
+        .carousel-section {
+            height: 85vh;
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            margin-top: 5vh;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .carousel-main {
+            height: 85vh;
+            position: relative;
+        }
+        
+        .carousel-item {
+            height: 85vh;
+            position: relative;
+        }
+        
+        .carousel-img {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            background: var(--dark-bg);
+            object-fit: cover;
+            object-position: center;
+            filter: brightness(0.7);
+            transition: transform 8s ease-out;
         }
         
-        /* Tipografía premium */
-        .display-title {
+        .carousel-item.active .carousel-img {
+            transform: scale(1.05);
+        }
+        
+        /* Overlay para texto en la parte inferior - ocupando toda la parte baja */
+        .text-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(
+                to top,
+                rgba(10, 36, 99, 0.98) 0%,
+                rgba(10, 36, 99, 0.85) 30%,
+                rgba(10, 36, 99, 0.4) 70%,
+                transparent 100%
+            );
+            padding: 2.5rem 3rem 2rem;
+            z-index: 2;
+            height: 50%; /* Aumentado para que ocupe más espacio en la parte inferior */
+            display: flex;
+            align-items: flex-end;
+        }
+        
+        /* Contenedor de contenido en la parte inferior */
+        .content-bottom {
+            width: 100%;
+        }
+        
+        /* Efecto glass para texto */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border-bottom: none;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        /* Tipografía - Nombre del hotel en negrita extra */
+        .hotel-title {
             font-family: 'Playfair Display', serif;
-            font-weight: 700;
+            font-weight: 900;
+            font-size: 3.2rem;
+            color: white;
+            margin-bottom: 0.8rem;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.6);
             line-height: 1.1;
+            letter-spacing: -0.5px;
         }
         
-        .text-gradient {
-            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        /* Ubicación */
+        .hotel-location {
+            font-size: 1.2rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .hotel-location i {
+            color: var(--gold);
+            margin-right: 8px;
+            font-size: 1.3rem;
+        }
+        
+        /* Estrellas - color dorado brillante */
+        .stars-container {
+            margin-bottom: 1.2rem;
+        }
+        
+        .star {
+            color: var(--gold);
+            font-size: 1.4rem;
+            margin-right: 6px;
+            text-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+            filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.5));
+        }
+        
+        /* Precio */
+        .price-tag {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: white;
+            background: linear-gradient(135deg, #FFD166, var(--gold));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin-bottom: 0.3rem;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
         
-        /* Efectos visuales */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .price-label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 600;
         }
         
-        .gradient-overlay {
-            background: linear-gradient(
-                to top,
-                rgba(0, 0, 0, 0.95) 0%,
-                rgba(0, 0, 0, 0.7) 25%,
-                rgba(0, 0, 0, 0.3) 50%,
-                transparent 100%
-            );
+        /* Botones */
+        .btn-group-custom {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.8rem;
         }
         
-        .gold-gradient {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-            color: #000;
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--accent), #2CA9A1);
+            border: none;
+            padding: 0.9rem 2.2rem;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
         }
         
-        .gold-border {
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(78, 205, 196, 0.6);
+        }
+        
+        .btn-outline-custom {
+            background: rgba(255, 255, 255, 0.1);
             border: 2px solid var(--gold);
+            color: white;
+            padding: 0.9rem 2.2rem;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            transition: all 0.3s ease;
         }
         
-        /* Animaciones suaves */
+        .btn-outline-custom:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #FFD166;
+            transform: translateY(-3px);
+        }
+        
+        /* Controles del carrusel */
+        .carousel-control-custom {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            opacity: 0.9;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-control-custom:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-50%) scale(1.1);
+            opacity: 1;
+        }
+        
+        .carousel-control-prev-custom {
+            left: 25px;
+        }
+        
+        .carousel-control-next-custom {
+            right: 25px;
+        }
+        
+        /* Indicadores personalizados - posicionados justo encima del texto */
+        .carousel-indicators-custom {
+            position: absolute;
+            bottom: 52%; /* Colocados justo encima del overlay de texto */
+            left: 0;
+            right: 0;
+            z-index: 15;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .indicator {
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+        
+        .indicator.active {
+            background: var(--secondary);
+            transform: scale(1.4);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.7);
+        }
+        
+        /* Animaciones */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(40px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -88,128 +291,680 @@
             }
         }
         
-        @keyframes scaleIn {
-            from {
-                transform: scale(0.95);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        
         .animate-fadeInUp {
-            animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: fadeInUp 0.6s ease-out forwards;
         }
         
-        .animate-scaleIn {
-            animation: scaleIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .carousel-section {
+                height: 80vh;
+                margin-top: 8vh;
+            }
+            
+            .carousel-main, .carousel-item {
+                height: 80vh;
+            }
+            
+            .hotel-title {
+                font-size: 2.8rem;
+            }
+            
+            .text-overlay {
+                padding: 2rem 2.5rem 1.5rem;
+                height: 55%;
+            }
+            
+            .carousel-indicators-custom {
+                bottom: 55%;
+            }
         }
         
-        .transition-all {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        @media (max-width: 992px) {
+            .carousel-section {
+                height: 75vh;
+                margin-top: 10vh;
+            }
+            
+            .carousel-main, .carousel-item {
+                height: 75vh;
+            }
+            
+            .hotel-title {
+                font-size: 2.4rem;
+            }
+            
+            .price-tag {
+                font-size: 2.4rem;
+            }
+            
+            .text-overlay {
+                padding: 1.8rem 2rem 1.5rem;
+                height: 60%;
+            }
+            
+            .glass-card {
+                padding: 1.8rem;
+            }
+            
+            .carousel-control-custom {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .carousel-indicators-custom {
+                bottom: 60%;
+            }
         }
         
-        .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .carousel-section {
+                height: 70vh;
+                margin-top: 12vh;
+                border-radius: 15px;
+            }
+            
+            .carousel-main, .carousel-item {
+                height: 70vh;
+            }
+            
+            .hotel-title {
+                font-size: 2rem;
+            }
+            
+            .price-tag {
+                font-size: 2rem;
+            }
+            
+            .text-overlay {
+                padding: 1.5rem 1.5rem 1.2rem;
+                height: 65%;
+            }
+            
+            .glass-card {
+                padding: 1.5rem;
+            }
+            
+            .btn-group-custom {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+            
+            .btn-primary-custom, .btn-outline-custom {
+                padding: 0.8rem 1.5rem;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .carousel-indicators-custom {
+                bottom: 65%;
+            }
+            
+            .carousel-control-custom {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .carousel-control-prev-custom {
+                left: 15px;
+            }
+            
+            .carousel-control-next-custom {
+                right: 15px;
+            }
+            
+            .star {
+                font-size: 1.2rem;
+            }
         }
         
-        /* Spinner personalizado */
-        .spinner-gold {
-            width: 3rem;
-            height: 3rem;
-            border: 3px solid rgba(212, 175, 55, 0.3);
-            border-top-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        @media (max-width: 576px) {
+            .carousel-section {
+                height: 65vh;
+                margin-top: 15vh;
+            }
+            
+            .carousel-main, .carousel-item {
+                height: 65vh;
+            }
+            
+            .hotel-title {
+                font-size: 1.8rem;
+            }
+            
+            .text-overlay {
+                padding: 1.2rem 1.2rem 1rem;
+                height: 70%;
+            }
+            
+            .price-tag {
+                font-size: 1.8rem;
+            }
+            
+            .carousel-indicators-custom {
+                bottom: 70%;
+                gap: 8px;
+            }
+            
+            .indicator {
+                width: 10px;
+                height: 10px;
+            }
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Indicadores personalizados */
-        .indicator-active {
-            width: 12px;
-            height: 12px;
-            background: var(--gold);
-            box-shadow: 0 0 15px var(--gold);
-        }
-        
-        .indicator-inactive {
-            width: 10px;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .indicator-inactive:hover {
-            background: rgba(255, 255, 255, 0.6);
-        }
-        
-        /* Mejoras de imagen */
-        .hotel-image {
-            object-fit: cover;
-            object-position: center;
-            transition: transform 8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .hotel-image.zoomed {
-            transform: scale(1.05);
-        }
-        
-        /* Badge de estrellas */
-        .star-badge {
-            background: rgba(212, 175, 55, 0.15);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-        }
-        
-        /* Precio destacado */
-        .price-display {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .price-display::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -10px;
-            right: -10px;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
-            border-radius: 8px;
-            z-index: -1;
+        @media (max-height: 700px) {
+            .carousel-section {
+                height: 80vh;
+                margin-top: 5vh;
+            }
+            
+            .carousel-main, .carousel-item {
+                height: 80vh;
+            }
+            
+            .text-overlay {
+                padding: 1.5rem 2rem 1.2rem;
+                height: 60%;
+            }
+            
+            .hotel-title {
+                font-size: 2.2rem;
+            }
+            
+            .carousel-indicators-custom {
+                bottom: 60%;
+            }
         }
     </style>
 </head>
 <body>
-    <app-root></app-root>
-    
-    <!-- Polyfills para compatibilidad -->
-    <script src="https://unpkg.com/core-js-bundle@3.6.5/minified.js"></script>
-    <script src="https://unpkg.com/zone.js@0.11.4/dist/zone.js"></script>
-    
-    <!-- Configuración de Angular 21 -->
-    <script type="module">
-        import { bootstrapApplication } from '@angular/platform-browser';
-        import { provideAnimations } from '@angular/platform-browser/animations';
-        import { Carrusel } from './carrusel.js';
+
+<!-- Carrusel principal -->
+<section class="carousel-section">
+    <div id="hotelCarousel" class="carousel slide carousel-main" data-bs-ride="carousel" data-bs-interval="5000">
+        <!-- Indicadores -->
+        <div class="carousel-indicators-custom">
+            <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="0" class="indicator active"></button>
+            <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="1" class="indicator"></button>
+            <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="2" class="indicator"></button>
+            <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="3" class="indicator"></button>
+            <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="4" class="indicator"></button>
+            <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="5" class="indicator"></button>
+            <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="6" class="indicator"></button>
+        </div>
         
-        // Componente raíz
-        const AppComponent = {
-            selector: 'app-root',
-            template: `
-                <app-carrusel></app-carrusel>
-            `
-        };
+        <!-- Slides -->
+        <div class="carousel-inner">
+            <!-- Hotel 1 -->
+            <div class="carousel-item active">
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                     class="carousel-img" alt="Hotel 3 de Agosto">
+                <div class="text-overlay">
+                    <div class="content-bottom">
+                        <div class="glass-card animate-fadeInUp">
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="hotel-location me-4">
+                                    <i class="bi bi-geo-alt-fill"></i> Malabo, Bioko Norte
+                                </div>
+                                <div class="stars-container">
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                </div>
+                            </div>
+                            <h1 class="hotel-title">HOTEL 3 DE AGOSTO</h1>
+                            <p class="text-white mb-3" style="opacity: 0.9; max-width: 600px; font-weight: 500;">
+                                Experimente el lujo y confort en el corazón de Malabo. Servicios premium y atención personalizada de clase mundial.
+                            </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="price-tag">195.000</div>
+                                <div class="price-label ms-2">CFA / noche</div>
+                            </div>
+                            <div class="btn-group-custom">
+                                <button class="btn btn-primary-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check me-2"></i> RESERVAR AHORA
+                                </button>
+                                <button class="btn btn-outline-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-info-circle me-2"></i> MÁS INFORMACIÓN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hotel 2 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1564501049418-3c27787d01e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                     class="carousel-img" alt="Hotel Sofitel">
+                <div class="text-overlay">
+                    <div class="content-bottom">
+                        <div class="glass-card animate-fadeInUp">
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="hotel-location me-4">
+                                    <i class="bi bi-geo-alt-fill"></i> Sipopo, Bioko Norte
+                                </div>
+                                <div class="stars-container">
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                </div>
+                            </div>
+                            <h1 class="hotel-title">HOTEL SOFITEL</h1>
+                            <p class="text-white mb-3" style="opacity: 0.9; max-width: 600px; font-weight: 500;">
+                                Elegancia francesa en Sipopo. Arquitectura moderna y servicios de lujo internacional.
+                            </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="price-tag">295.000</div>
+                                <div class="price-label ms-2">CFA / noche</div>
+                            </div>
+                            <div class="btn-group-custom">
+                                <button class="btn btn-primary-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check me-2"></i> RESERVAR AHORA
+                                </button>
+                                <button class="btn btn-outline-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-info-circle me-2"></i> MÁS INFORMACIÓN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hotel 3 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                     class="carousel-img" alt="Hotel Panáfrica">
+                <div class="text-overlay">
+                    <div class="content-bottom">
+                        <div class="glass-card animate-fadeInUp">
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="hotel-location me-4">
+                                    <i class="bi bi-geo-alt-fill"></i> Bata, Litoral
+                                </div>
+                                <div class="stars-container">
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                </div>
+                            </div>
+                            <h1 class="hotel-title">PANÁFRICA HOTEL</h1>
+                            <p class="text-white mb-3" style="opacity: 0.9; max-width: 600px; font-weight: 500;">
+                                Hospitalidad africana de lujo. Fusión perfecta entre tradición y modernidad en Bata.
+                            </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="price-tag">230.000</div>
+                                <div class="price-label ms-2">CFA / noche</div>
+                            </div>
+                            <div class="btn-group-custom">
+                                <button class="btn btn-primary-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check me-2"></i> RESERVAR AHORA
+                                </button>
+                                <button class="btn btn-outline-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-info-circle me-2"></i> MÁS INFORMACIÓN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hotel 4 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                     class="carousel-img" alt="Bisila Palace">
+                <div class="text-overlay">
+                    <div class="content-bottom">
+                        <div class="glass-card animate-fadeInUp">
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="hotel-location me-4">
+                                    <i class="bi bi-geo-alt-fill"></i> Malabo, Bioko Norte
+                                </div>
+                                <div class="stars-container">
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                </div>
+                            </div>
+                            <h1 class="hotel-title">BISILA PALACE</h1>
+                            <p class="text-white mb-3" style="opacity: 0.9; max-width: 600px; font-weight: 500;">
+                                Palacio de lujo en Malabo. Diseño arquitectónico impresionante y servicios exclusivos.
+                            </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="price-tag">275.000</div>
+                                <div class="price-label ms-2">CFA / noche</div>
+                            </div>
+                            <div class="btn-group-custom">
+                                <button class="btn btn-primary-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check me-2"></i> RESERVAR AHORA
+                                </button>
+                                <button class="btn btn-outline-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-info-circle me-2"></i> MÁS INFORMACIÓN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hotel 5 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                     class="carousel-img" alt="Grand Hotel Bata">
+                <div class="text-overlay">
+                    <div class="content-bottom">
+                        <div class="glass-card animate-fadeInUp">
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="hotel-location me-4">
+                                    <i class="bi bi-geo-alt-fill"></i> Bata, Litoral
+                                </div>
+                                <div class="stars-container">
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                </div>
+                            </div>
+                            <h1 class="hotel-title">GRAND HOTEL BATA</h1>
+                            <p class="text-white mb-3" style="opacity: 0.9; max-width: 600px; font-weight: 500;">
+                                Grandiosidad en el litoral. El hotel más icónico de Bata con vistas espectaculares.
+                            </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="price-tag">210.000</div>
+                                <div class="price-label ms-2">CFA / noche</div>
+                            </div>
+                            <div class="btn-group-custom">
+                                <button class="btn btn-primary-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check me-2"></i> RESERVAR AHORA
+                                </button>
+                                <button class="btn btn-outline-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-info-circle me-2"></i> MÁS INFORMACIÓN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hotel 6 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                     class="carousel-img" alt="Hotel Anda China">
+                <div class="text-overlay">
+                    <div class="content-bottom">
+                        <div class="glass-card animate-fadeInUp">
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="hotel-location me-4">
+                                    <i class="bi bi-geo-alt-fill"></i> Malabo, Bioko Norte
+                                </div>
+                                <div class="stars-container">
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                </div>
+                            </div>
+                            <h1 class="hotel-title">HOTEL ANDA CHINA</h1>
+                            <p class="text-white mb-3" style="opacity: 0.9; max-width: 600px; font-weight: 500;">
+                                Fusión oriental y africana. Experiencia única que combina la hospitalidad china con el calor ecuatoguineano.
+                            </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="price-tag">185.000</div>
+                                <div class="price-label ms-2">CFA / noche</div>
+                            </div>
+                            <div class="btn-group-custom">
+                                <button class="btn btn-primary-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check me-2"></i> RESERVAR AHORA
+                                </button>
+                                <button class="btn btn-outline-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-info-circle me-2"></i> MÁS INFORMACIÓN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hotel 7 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                     class="carousel-img" alt="Hotel Moka">
+                <div class="text-overlay">
+                    <div class="content-bottom">
+                        <div class="glass-card animate-fadeInUp">
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="hotel-location me-4">
+                                    <i class="bi bi-geo-alt-fill"></i> Moka, Bioko Sur
+                                </div>
+                                <div class="stars-container">
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                    <i class="bi bi-star-fill star"></i>
+                                </div>
+                            </div>
+                            <h1 class="hotel-title">HOTEL MOKA</h1>
+                            <p class="text-white mb-3" style="opacity: 0.9; max-width: 600px; font-weight: 500;">
+                                Naturaleza y confort en Bioko Sur. Refugio de lujo rodeado de selva tropical y vistas espectaculares.
+                            </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="price-tag">145.000</div>
+                                <div class="price-label ms-2">CFA / noche</div>
+                            </div>
+                            <div class="btn-group-custom">
+                                <button class="btn btn-primary-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check me-2"></i> RESERVAR AHORA
+                                </button>
+                                <button class="btn btn-outline-custom d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-info-circle me-2"></i> MÁS INFORMACIÓN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        bootstrapApplication(AppComponent, {
-            providers: [provideAnimations()]
-        }).catch(err => console.error(err));
-    </script>
+        <!-- Controles de navegación -->
+        <button class="carousel-control-custom carousel-control-prev-custom" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
+            <i class="bi bi-chevron-left fs-3 text-white"></i>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-custom carousel-control-next-custom" type="button" data-bs-target="#hotelCarousel" data-bs-slide="next">
+            <i class="bi bi-chevron-right fs-3 text-white"></i>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
+    </div>
+</section>
+
+<!-- Bootstrap JS Bundle con Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- JavaScript personalizado -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const carousel = document.getElementById('hotelCarousel');
+        const indicators = document.querySelectorAll('.indicator');
+        
+        // Actualizar indicadores cuando cambia el slide
+        carousel.addEventListener('slid.bs.carousel', function(event) {
+            const activeIndex = Array.from(document.querySelectorAll('.carousel-item')).indexOf(event.relatedTarget);
+            
+            // Actualizar indicadores
+            indicators.forEach((indicator, index) => {
+                if (index === activeIndex) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+            
+            // Reaplicar animación al texto
+            const glassCard = event.relatedTarget.querySelector('.glass-card');
+            glassCard.classList.remove('animate-fadeInUp');
+            void glassCard.offsetWidth; // Trigger reflow
+            glassCard.classList.add('animate-fadeInUp');
+        });
+        
+        // Efecto de zoom en imagen activa
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        carouselItems.forEach(item => {
+            const img = item.querySelector('.carousel-img');
+            
+            item.addEventListener('mouseenter', function() {
+                if (this.classList.contains('active')) {
+                    img.style.transform = 'scale(1.08)';
+                }
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                if (this.classList.contains('active')) {
+                    img.style.transform = 'scale(1.05)';
+                } else {
+                    img.style.transform = 'scale(1)';
+                }
+            });
+        });
+        
+        // Funcionalidad para botones de reserva
+        document.querySelectorAll('.btn-primary-custom').forEach(button => {
+            button.addEventListener('click', function() {
+                const hotelTitle = this.closest('.glass-card').querySelector('.hotel-title').textContent;
+                const price = this.closest('.glass-card').querySelector('.price-tag').textContent;
+                const location = this.closest('.glass-card').querySelector('.hotel-location').textContent.replace('📍', '').trim();
+                
+                // Simulación de reserva
+                const modalHtml = `
+                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+                        <div style="background: linear-gradient(135deg, #0A2463, #1A1A2E); border-radius: 20px; padding: 30px; max-width: 500px; width: 90%; border: 2px solid #D4AF37;">
+                            <h3 style="color: #D4AF37; font-weight: 700; margin-bottom: 20px;">🏨 Reserva Confirmada</h3>
+                            <div style="margin-bottom: 25px;">
+                                <p style="color: white; margin-bottom: 8px;"><strong>Hotel:</strong> ${hotelTitle}</p>
+                                <p style="color: white; margin-bottom: 8px;"><strong>Ubicación:</strong> ${location}</p>
+                                <p style="color: white; margin-bottom: 8px;"><strong>Precio:</strong> ${price} CFA / noche</p>
+                            </div>
+                            <p style="color: #4ECDC4; margin-bottom: 25px; font-size: 0.95rem;">
+                                Recibirá un correo electrónico de confirmación con todos los detalles de su reserva en los próximos minutos.
+                            </p>
+                            <button onclick="this.parentElement.parentElement.remove()" style="background: #D4AF37; color: #0A2463; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%;">
+                                CERRAR
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                const modal = document.createElement('div');
+                modal.innerHTML = modalHtml;
+                document.body.appendChild(modal);
+            });
+        });
+        
+        // Funcionalidad para botones de información
+        document.querySelectorAll('.btn-outline-custom').forEach(button => {
+            button.addEventListener('click', function() {
+                const hotelTitle = this.closest('.glass-card').querySelector('.hotel-title').textContent;
+                const location = this.closest('.glass-card').querySelector('.hotel-location').textContent.replace('📍', '').trim();
+                const price = this.closest('.glass-card').querySelector('.price-tag').textContent;
+                const stars = '★★★★★';
+                
+                const info = `
+                    🏨 ${hotelTitle}
+                    
+                    📍 ${location}
+                    
+                    ⭐ ${stars}
+                    
+                    💰 ${price} CFA por noche
+                    
+                    ✨ SERVICIOS PREMIUM:
+                    • Habitaciones de lujo con vista panorámica
+                    • Restaurante gourmet internacional
+                    • Piscina infinity con bar
+                    • Spa & Wellness Center
+                    • Gimnasio 24/7 equipado
+                    • Wi-Fi de alta velocidad
+                    • Concierge personal 24 horas
+                    • Room service las 24 horas
+                    • Business center
+                    • Valet parking
+                    
+                    📞 Contacto: +240 222 000 000
+                    📧 Email: reservas@${hotelTitle.toLowerCase().replace(/ /g, '')}.gq
+                `;
+                
+                // Mostrar información en un modal más atractivo
+                const modalHtml = `
+                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+                        <div style="background: linear-gradient(135deg, #1A1A2E, #0A2463); border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border: 2px solid #4ECDC4;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                                <h3 style="color: #D4AF37; font-weight: 700; margin: 0;">🏨 ${hotelTitle}</h3>
+                                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: none; border: none; color: #FF6B6B; font-size: 24px; cursor: pointer;">×</button>
+                            </div>
+                            <div style="color: white; line-height: 1.6;">
+                                ${info.split('\n').map(line => `<p style="margin-bottom: 10px;">${line}</p>`).join('')}
+                            </div>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #4ECDC4; color: #0A2463; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px;">
+                                CERRAR
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                const modal = document.createElement('div');
+                modal.innerHTML = modalHtml;
+                document.body.appendChild(modal);
+            });
+        });
+        
+        // Pausar carrusel al hacer hover
+        carousel.addEventListener('mouseenter', function() {
+            const carouselInstance = bootstrap.Carousel.getInstance(carousel);
+            carouselInstance.pause();
+        });
+        
+        carousel.addEventListener('mouseleave', function() {
+            const carouselInstance = bootstrap.Carousel.getInstance(carousel);
+            carouselInstance.cycle();
+        });
+        
+        // Navegación con teclado
+        document.addEventListener('keydown', function(e) {
+            const carouselInstance = bootstrap.Carousel.getInstance(carousel);
+            
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                carouselInstance.prev();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                carouselInstance.next();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                // Pausar/reanudar con espacio
+                if (carouselInstance._isSliding) return;
+                
+                if (carouselInstance._interval) {
+                    carouselInstance.pause();
+                } else {
+                    carouselInstance.cycle();
+                }
+            }
+        });
+    });
+</script>
+
 </body>
 </html>

@@ -1,0 +1,129 @@
+/* Estilos personalizados para el componente de reservas */
+
+/* Estilo para las tarjetas de estado */
+.card {
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Estilo para los headers de las tarjetas */
+.card-header {
+  font-weight: 600;
+}
+
+/* Estilo para los elementos de la lista de reservas */
+.list-group-item {
+  border-left: none;
+  border-right: none;
+  transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Estilo para el modal */
+.modal-content {
+  border-radius: 12px;
+  border: none;
+}
+
+.modal-header {
+  border-radius: 12px 12px 0 0;
+}
+
+/* Estilo para los badges de estado */
+.badge {
+  padding: 0.4em 0.8em;
+  font-weight: 500;
+}
+
+/* Estilo para los íconos */
+ng-icon {
+  vertical-align: middle;
+}
+
+/* Estilo para el botón de nueva reserva */
+.btn-primary {
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .display-5 {
+    font-size: 1.8rem;
+  }
+}
+
+/* Animación para mostrar/ocultar el modal */
+.modal {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Estilo para las fechas en las tarjetas */
+.text-muted small {
+  font-size: 0.85rem;
+}
+
+/* Estilo para el dropdown de acciones */
+.dropdown-menu {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-item {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Estilo para el formulario */
+.form-control:focus, .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Estilo para los totales de reservas */
+.card-text.fs-2 {
+  color: #2c3e50;
+}
+
+/* Estilo para los botones de acción en las tarjetas */
+.btn-outline-secondary {
+  border-color: #dee2e6;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+/* Estilo para el resumen total */
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+/* Estilo para los bordes de las secciones */
+.border-top {
+  border-top-color: #e9ecef !important;
+}
