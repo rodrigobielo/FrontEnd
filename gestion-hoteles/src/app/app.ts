@@ -6,6 +6,7 @@ import { Hoteles } from './componentes/hoteles/hoteles';
 import { Carrusel } from './componentes/carrusel/carrusel';
 import { LugaresTuristicos } from './componentes/lugares-turisticos/lugares-turisticos';
 import { Footer } from './componentes/footer/footer';
+import { ReservasComponent } from './componentes/reservas/reservas';
 
 @Component({
   selector: 'app-root',
@@ -17,13 +18,14 @@ import { Footer } from './componentes/footer/footer';
     Hoteles,
     Carrusel,
     LugaresTuristicos,
-    Footer
+    Footer,
+    ReservasComponent
   ],
   templateUrl: './app.html'
 })
 export class App {
   // Control de qué sección mostrar
-  seccionActiva: 'inicio' | 'hoteles' | 'contactos' = 'inicio';
+  seccionActiva: 'inicio' | 'hoteles' | 'contactos' | 'reservas' = 'inicio';
   
   // Métodos para cambiar sección
   mostrarInicio(): void {
@@ -39,5 +41,11 @@ export class App {
   mostrarContactos(): void {
     console.log('✅ APP: Mostrando sección Contactos');
     this.seccionActiva = 'contactos';
+  }
+
+  // NUEVO MÉTODO AGREGADO para mostrar reservas
+  mostrarReservas(): void {
+    console.log('✅ APP: Mostrando sección Reservas');
+    this.seccionActiva = 'reservas';
   }
 }

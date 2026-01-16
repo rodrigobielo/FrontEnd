@@ -1,3 +1,4 @@
+// Agrega Reservas al import si existe, o déjalo como está
 import { Component, OnInit, HostListener, Inject, PLATFORM_ID, Output, EventEmitter } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -12,10 +13,11 @@ import { Login } from '../login/login';
   styleUrls: ['./navbar.css']
 })
 export class Navbar implements OnInit {
-  // Outputs para todas las secciones
+  // Outputs para todas las secciones - AGREGAR NUEVO OUTPUT
   @Output() mostrarInicio = new EventEmitter<void>();
   @Output() mostrarHoteles = new EventEmitter<void>();
   @Output() mostrarContactos = new EventEmitter<void>();
+  @Output() mostrarReservas = new EventEmitter<void>(); // NUEVO OUTPUT AGREGADO
   
   usuarioLogueado: boolean = false;
   usuarioNombre: string = '';
@@ -187,6 +189,13 @@ export class Navbar implements OnInit {
   onMostrarContactos(): void {
     console.log('🔵 NAVBAR: Mostrando Contactos');
     this.mostrarContactos.emit();
+    this.cerrarMenuMobile();
+  }
+  
+  // NUEVO MÉTODO AGREGADO PARA RESERVAS
+  onMostrarReservas(): void {
+    console.log('🔵 NAVBAR: Mostrando Reservas');
+    this.mostrarReservas.emit();
     this.cerrarMenuMobile();
   }
   

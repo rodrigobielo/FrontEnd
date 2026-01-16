@@ -1,20 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-interface Reserva {
-  id: number;
-  fechaReserva: Date;
-  hotel: string;
-  tipoHabitacion: string;
-  fechaEntrada: Date;
-  fechaSalida: Date;
-  numHuespedes: number;
-  precio: number;
-  pedidoEspecial: string;
-  estado: 'pendiente' | 'aceptada' | 'rechazada';
-  codigoReserva: string;
-}
+// Declaración para TypeScript - Bootstrap está disponible globalmente
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-reservas',
@@ -24,281 +13,309 @@ interface Reserva {
   styleUrls: ['./reservas.css']
 })
 export class ReservasComponent implements OnInit {
-  mostrarFormulario = signal(false);
-  modoEdicion = signal(false);
-  reservaEditando = signal<number | null>(null);
-
-  // Datos para formulario
-  hoteles = [
-    'Hotel Plaza Central',
-    'Grand Luxury Resort',
-    'Seaside Paradise',
-    'Mountain View Lodge',
-    'City Business Hotel'
-  ];
-
-  tiposHabitacion = [
-    { tipo: 'Individual', precio: 80 },
-    { tipo: 'Doble', precio: 120 },
-    { tipo: 'Suite', precio: 200 },
-    { tipo: 'Suite Presidencial', precio: 350 },
-    { tipo: 'Familiar', precio: 180 }
-  ];
-
-  // Nueva reserva (formulario)
-  nuevaReserva = {
-    fechaReserva: new Date().toISOString().split('T')[0],
-    hotel: '',
-    tipoHabitacion: '',
-    fechaEntrada: '',
-    fechaSalida: '',
-    numHuespedes: 1,
-    precio: 0,
-    pedidoEspecial: '',
-    estado: 'pendiente' as 'pendiente' | 'aceptada' | 'rechazada',
-    codigoReserva: ''
+  // Datos de ejemplo para reservas
+  reservas = {
+    pendientes: [
+      {
+        id: 1,
+        hotel: 'Hotel Plaza Malabo',
+        tipo: 'Habitación Deluxe',
+        checkIn: '2024-03-15',
+        checkOut: '2024-03-20',
+        huespedes: '2 adultos',
+        total: 450.00,
+        codigo: 'RES-MAL-2024-00123',
+        estado: 'pendiente'
+      },
+      {
+        id: 2,
+        hotel: 'Hotel Bahía Bata',
+        tipo: 'Suite Ejecutiva',
+        checkIn: '2024-04-10',
+        checkOut: '2024-04-12',
+        huespedes: '1 adulto',
+        total: 320.00,
+        codigo: 'RES-BAT-2024-00245',
+        estado: 'pendiente'
+      }
+    ],
+    confirmadas: [
+      {
+        id: 3,
+        hotel: 'Hotel Mongomo Palace',
+        tipo: 'Habitación Standard',
+        checkIn: '2024-04-10',
+        checkOut: '2024-04-18',
+        huespedes: '2 adultos, 1 niño',
+        total: 1200.00,
+        codigo: 'RES-MON-2024-00456',
+        estado: 'confirmada'
+      },
+      {
+        id: 4,
+        hotel: 'Hotel Utonde',
+        tipo: 'Suite Presidencial',
+        checkIn: '2024-05-05',
+        checkOut: '2024-05-10',
+        huespedes: '4 adultos',
+        total: 1800.00,
+        codigo: 'RES-UTO-2024-00567',
+        estado: 'confirmada'
+      }
+    ],
+    canceladas: [
+      {
+        id: 5,
+        hotel: 'Hotel Continental',
+        tipo: 'Habitación Standard',
+        checkIn: '2024-02-05',
+        checkOut: '2024-02-12',
+        huespedes: '1 adulto',
+        total: 280.00,
+        codigo: 'RES-CON-2024-00321',
+        estado: 'cancelada'
+      }
+    ]
   };
 
-  // Lista de reservas
-  reservas = signal<Reserva[]>([
-    {
-      id: 1,
-      fechaReserva: new Date('2024-03-10'),
-      hotel: 'Hotel Plaza Central',
-      tipoHabitacion: 'Doble',
-      fechaEntrada: new Date('2024-04-15'),
-      fechaSalida: new Date('2024-04-20'),
-      numHuespedes: 2,
-      precio: 120,
-      pedidoEspecial: 'Cama king size',
-      estado: 'pendiente',
-      codigoReserva: 'RES-001-P'
+  filtroEstado: string = '';
+  filtroDesde: string = '';
+  filtroHasta: string = '';
+
+  // Modelo para nueva reserva
+  nuevaReserva = {
+    hotel: '',
+    tipo: '',
+    checkIn: '',
+    checkOut: '',
+    adultos: 2,
+    ninos: 0,
+    noches: 1,
+    servicios: {
+      desayuno: false,
+      parking: false,
+      wifi: false
     },
-    {
-      id: 2,
-      fechaReserva: new Date('2024-03-12'),
-      hotel: 'Grand Luxury Resort',
-      tipoHabitacion: 'Suite',
-      fechaEntrada: new Date('2024-05-10'),
-      fechaSalida: new Date('2024-05-17'),
-      numHuespedes: 2,
-      precio: 200,
-      pedidoEspecial: 'Vista al mar',
-      estado: 'aceptada',
-      codigoReserva: 'RES-002-A'
-    },
-    {
-      id: 3,
-      fechaReserva: new Date('2024-03-08'),
-      hotel: 'Seaside Paradise',
-      tipoHabitacion: 'Familiar',
-      fechaEntrada: new Date('2024-06-01'),
-      fechaSalida: new Date('2024-06-10'),
-      numHuespedes: 4,
-      precio: 180,
-      pedidoEspecial: 'Cuna para bebé',
-      estado: 'rechazada',
-      codigoReserva: 'RES-003-R'
-    },
-    {
-      id: 4,
-      fechaReserva: new Date('2024-03-15'),
-      hotel: 'City Business Hotel',
-      tipoHabitacion: 'Individual',
-      fechaEntrada: new Date('2024-04-05'),
-      fechaSalida: new Date('2024-04-08'),
-      numHuespedes: 1,
-      precio: 80,
-      pedidoEspecial: 'Despertador a las 7:00 AM',
-      estado: 'aceptada',
-      codigoReserva: 'RES-004-A'
+    comentarios: ''
+  };
+
+  // Precios - usando tipo Record para evitar error de TypeScript
+  precios: Record<string, number> = {
+    'Habitación Standard': 100,
+    'Habitación Deluxe': 150,
+    'Suite Ejecutiva': 250,
+    'Suite Presidencial': 400
+  };
+
+  // Fecha mínima para reservas (hoy)
+  minDate: string;
+
+  constructor() { 
+    const today = new Date();
+    this.minDate = today.toISOString().split('T')[0];
+  }
+
+  ngOnInit(): void {
+    console.log('Componente Reservas cargado');
+    // Calcular noches iniciales
+    this.calcularNoches();
+  }
+
+  // Métodos para calcular noches cuando cambian las fechas
+  calcularNoches(): void {
+    if (this.nuevaReserva.checkIn && this.nuevaReserva.checkOut) {
+      const checkInDate = new Date(this.nuevaReserva.checkIn);
+      const checkOutDate = new Date(this.nuevaReserva.checkOut);
+      
+      // Validar que la fecha de salida sea posterior a la de entrada
+      if (checkOutDate <= checkInDate) {
+        this.nuevaReserva.noches = 1;
+        return;
+      }
+      
+      const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      this.nuevaReserva.noches = diffDays > 0 ? diffDays : 1;
+    } else {
+      this.nuevaReserva.noches = 1;
     }
-  ]);
-
-  ngOnInit() {
-    this.generarCodigoReserva();
   }
 
-  // Filtrar reservas por estado
-  get reservasPendientes() {
-    return this.reservas().filter(r => r.estado === 'pendiente');
+  // Método llamado cuando cambian las fechas en el formulario
+  onFechaChange(): void {
+    this.calcularNoches();
   }
 
-  get reservasAceptadas() {
-    return this.reservas().filter(r => r.estado === 'aceptada');
+  // Calcular total de la habitación - CORREGIDO
+  calcularTotal(): number {
+    // Usar aserción de tipo para evitar error de TypeScript
+    const precioNoche = (this.precios as any)[this.nuevaReserva.tipo] || 0;
+    return precioNoche * (this.nuevaReserva.noches || 1);
   }
 
-  get reservasRechazadas() {
-    return this.reservas().filter(r => r.estado === 'rechazada');
-  }
-
-  // Calcular total por tipo de reserva
-  get totalPendientes() {
-    return this.reservasPendientes.reduce((sum, r) => sum + r.precio, 0);
-  }
-
-  get totalAceptadas() {
-    return this.reservasAceptadas.reduce((sum, r) => sum + r.precio, 0);
-  }
-
-  get totalRechazadas() {
-    return this.reservasRechazadas.reduce((sum, r) => sum + r.precio, 0);
-  }
-
-  // Generar código de reserva automático
-  generarCodigoReserva() {
-    const prefix = 'RES';
-    const randomNum = Math.floor(Math.random() * 900) + 100;
-    const estadoCode = this.nuevaReserva.estado === 'pendiente' ? 'P' : 
-                      this.nuevaReserva.estado === 'aceptada' ? 'A' : 'R';
-    this.nuevaReserva.codigoReserva = `${prefix}-${randomNum}-${estadoCode}`;
-  }
-
-  // Actualizar precio según tipo de habitación
-  actualizarPrecio() {
-    const tipo = this.tiposHabitacion.find(t => t.tipo === this.nuevaReserva.tipoHabitacion);
-    if (tipo) {
-      this.nuevaReserva.precio = tipo.precio;
+  // Calcular servicios adicionales
+  calcularServicios(): number {
+    let serviciosTotal = 0;
+    
+    // Desayuno: €25 por persona por día
+    if (this.nuevaReserva.servicios.desayuno) {
+      const totalPersonas = this.nuevaReserva.adultos + this.nuevaReserva.ninos;
+      serviciosTotal += totalPersonas * 25 * (this.nuevaReserva.noches || 1);
     }
-    this.generarCodigoReserva();
+    
+    // Parking: €15 por día
+    if (this.nuevaReserva.servicios.parking) {
+      serviciosTotal += 15 * (this.nuevaReserva.noches || 1);
+    }
+    
+    // WiFi: €10 por estancia
+    if (this.nuevaReserva.servicios.wifi) {
+      serviciosTotal += 10;
+    }
+    
+    return serviciosTotal;
   }
 
-  // Abrir formulario para nueva reserva
-  abrirFormulario() {
-    this.mostrarFormulario.set(true);
-    this.modoEdicion.set(false);
-    this.reservaEditando.set(null);
+  // Método para crear nueva reserva
+  crearReserva(): void {
+    console.log('Creando nueva reserva:', this.nuevaReserva);
+    
+    // Validar campos requeridos
+    if (!this.nuevaReserva.hotel || !this.nuevaReserva.tipo) {
+      alert('Por favor, seleccione un hotel y tipo de habitación');
+      return;
+    }
+    
+    // Validar fechas
+    if (!this.nuevaReserva.checkIn || !this.nuevaReserva.checkOut) {
+      alert('Por favor, seleccione fechas de check-in y check-out');
+      return;
+    }
+    
+    // Validar que check-out sea posterior a check-in
+    const checkInDate = new Date(this.nuevaReserva.checkIn);
+    const checkOutDate = new Date(this.nuevaReserva.checkOut);
+    if (checkOutDate <= checkInDate) {
+      alert('La fecha de check-out debe ser posterior a la fecha de check-in');
+      return;
+    }
+    
+    // Calcular total
+    const totalReserva = this.calcularTotal() + this.calcularServicios();
+    
+    // Generar código de reserva único
+    const hotelAbrev = this.nuevaReserva.hotel
+      .replace('Hotel ', '')
+      .substring(0, 3)
+      .toUpperCase();
+    
+    const codigoReserva = 'RES-' + 
+      hotelAbrev + 
+      '-' + new Date().getFullYear() + '-' +
+      Math.floor(1000 + Math.random() * 9000);
+    
+    // Crear nueva reserva
+    const nuevaReservaObj = {
+      id: this.reservas.pendientes.length + this.reservas.confirmadas.length + this.reservas.canceladas.length + 1,
+      hotel: this.nuevaReserva.hotel,
+      tipo: this.nuevaReserva.tipo,
+      checkIn: this.nuevaReserva.checkIn,
+      checkOut: this.nuevaReserva.checkOut,
+      huespedes: `${this.nuevaReserva.adultos} adulto${this.nuevaReserva.adultos > 1 ? 's' : ''}` +
+                (this.nuevaReserva.ninos > 0 ? `, ${this.nuevaReserva.ninos} niño${this.nuevaReserva.ninos > 1 ? 's' : ''}` : ''),
+      total: totalReserva,
+      codigo: codigoReserva,
+      estado: 'pendiente'
+    };
+    
+    // Agregar a reservas pendientes
+    this.reservas.pendientes.push(nuevaReservaObj);
     
     // Resetear formulario
-    this.nuevaReserva = {
-      fechaReserva: new Date().toISOString().split('T')[0],
-      hotel: '',
-      tipoHabitacion: '',
-      fechaEntrada: '',
-      fechaSalida: '',
-      numHuespedes: 1,
-      precio: 0,
-      pedidoEspecial: '',
-      estado: 'pendiente',
-      codigoReserva: ''
-    };
-    this.generarCodigoReserva();
-  }
-
-  // Cerrar formulario
-  cerrarFormulario() {
-    this.mostrarFormulario.set(false);
-  }
-
-  // Enviar formulario (crear o actualizar reserva)
-  enviarFormulario() {
-    if (!this.validarFormulario()) return;
-
-    if (this.modoEdicion() && this.reservaEditando() !== null) {
-      // Modo edición
-      const index = this.reservas().findIndex(r => r.id === this.reservaEditando());
-      if (index !== -1) {
-        const reservasActualizadas = [...this.reservas()];
-        reservasActualizadas[index] = {
-          ...this.nuevaReserva,
-          id: this.reservaEditando()!,
-          fechaReserva: new Date(this.nuevaReserva.fechaReserva),
-          fechaEntrada: new Date(this.nuevaReserva.fechaEntrada),
-          fechaSalida: new Date(this.nuevaReserva.fechaSalida)
-        };
-        this.reservas.set(reservasActualizadas);
-      }
-    } else {
-      // Crear nueva reserva
-      const nuevaReservaCompleta: Reserva = {
-        id: this.reservas().length + 1,
-        ...this.nuevaReserva,
-        fechaReserva: new Date(this.nuevaReserva.fechaReserva),
-        fechaEntrada: new Date(this.nuevaReserva.fechaEntrada),
-        fechaSalida: new Date(this.nuevaReserva.fechaSalida)
-      };
-      this.reservas.set([...this.reservas(), nuevaReservaCompleta]);
-    }
-
-    this.cerrarFormulario();
-  }
-
-  // Validar formulario
-  validarFormulario(): boolean {
-    if (!this.nuevaReserva.hotel || 
-        !this.nuevaReserva.tipoHabitacion || 
-        !this.nuevaReserva.fechaEntrada || 
-        !this.nuevaReserva.fechaSalida ||
-        this.nuevaReserva.numHuespedes < 1) {
-      alert('Por favor, complete todos los campos obligatorios');
-      return false;
-    }
-
-    const fechaEntrada = new Date(this.nuevaReserva.fechaEntrada);
-    const fechaSalida = new Date(this.nuevaReserva.fechaSalida);
+    this.resetearFormulario();
     
-    if (fechaSalida <= fechaEntrada) {
-      alert('La fecha de salida debe ser posterior a la fecha de entrada');
-      return false;
-    }
-
-    return true;
+    // Cerrar modal usando Bootstrap JavaScript
+    this.cerrarModal();
+    
+    // Mostrar mensaje de éxito
+    alert(`¡Reserva creada exitosamente!\nCódigo: ${codigoReserva}\nTotal: €${totalReserva.toFixed(2)}`);
+    
+    console.log('Nueva reserva agregada:', nuevaReservaObj);
   }
 
-  // Editar reserva existente
-  editarReserva(reserva: Reserva) {
-    this.mostrarFormulario.set(true);
-    this.modoEdicion.set(true);
-    this.reservaEditando.set(reserva.id);
+  // Método para cerrar el modal de Bootstrap
+  cerrarModal(): void {
+    const modalElement = document.getElementById('nuevaReservaModal');
+    if (modalElement) {
+      // Obtener la instancia del modal de Bootstrap
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      if (modal) {
+        modal.hide();
+      } else {
+        // Si no existe instancia, crear una nueva y esconderla
+        const newModal = new bootstrap.Modal(modalElement);
+        newModal.hide();
+      }
+    }
+  }
 
+  // Resetear formulario
+  resetearFormulario(): void {
     this.nuevaReserva = {
-      fechaReserva: reserva.fechaReserva.toISOString().split('T')[0],
-      hotel: reserva.hotel,
-      tipoHabitacion: reserva.tipoHabitacion,
-      fechaEntrada: reserva.fechaEntrada.toISOString().split('T')[0],
-      fechaSalida: reserva.fechaSalida.toISOString().split('T')[0],
-      numHuespedes: reserva.numHuespedes,
-      precio: reserva.precio,
-      pedidoEspecial: reserva.pedidoEspecial,
-      estado: reserva.estado,
-      codigoReserva: reserva.codigoReserva
+      hotel: '',
+      tipo: '',
+      checkIn: '',
+      checkOut: '',
+      adultos: 2,
+      ninos: 0,
+      noches: 1,
+      servicios: {
+        desayuno: false,
+        parking: false,
+        wifi: false
+      },
+      comentarios: ''
     };
   }
 
-  // Eliminar reserva
-  eliminarReserva(id: number) {
-    if (confirm('¿Está seguro de que desea eliminar esta reserva?')) {
-      this.reservas.set(this.reservas().filter(r => r.id !== id));
+  // Métodos existentes (sin cambios)
+  confirmarReserva(reservaId: number): void {
+    console.log('Confirmando reserva:', reservaId);
+    // Lógica para confirmar reserva
+    const reservaIndex = this.reservas.pendientes.findIndex(r => r.id === reservaId);
+    if (reservaIndex !== -1) {
+      const reserva = this.reservas.pendientes[reservaIndex];
+      reserva.estado = 'confirmada';
+      this.reservas.confirmadas.push(reserva);
+      this.reservas.pendientes.splice(reservaIndex, 1);
+      alert(`Reserva ${reserva.codigo} confirmada exitosamente`);
     }
   }
 
-  // Cambiar estado de una reserva
-  cambiarEstado(reserva: Reserva, nuevoEstado: 'pendiente' | 'aceptada' | 'rechazada') {
-    const index = this.reservas().findIndex(r => r.id === reserva.id);
-    if (index !== -1) {
-      const reservasActualizadas = [...this.reservas()];
-      reservasActualizadas[index] = {
-        ...reserva,
-        estado: nuevoEstado,
-        codigoReserva: reserva.codigoReserva.slice(0, -1) + 
-          (nuevoEstado === 'pendiente' ? 'P' : nuevoEstado === 'aceptada' ? 'A' : 'R')
-      };
-      this.reservas.set(reservasActualizadas);
+  cancelarReserva(reservaId: number): void {
+    console.log('Cancelando reserva:', reservaId);
+    // Lógica para cancelar reserva
+    const reservaIndex = this.reservas.pendientes.findIndex(r => r.id === reservaId);
+    if (reservaIndex !== -1) {
+      const reserva = this.reservas.pendientes[reservaIndex];
+      reserva.estado = 'cancelada';
+      this.reservas.canceladas.push(reserva);
+      this.reservas.pendientes.splice(reservaIndex, 1);
+      alert(`Reserva ${reserva.codigo} cancelada`);
     }
   }
 
-  // Formatear fecha para mostrar
-  formatearFecha(fecha: Date): string {
-    return fecha.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  filtrarReservas(): void {
+    console.log('Filtrando reservas...');
+    console.log('Estado:', this.filtroEstado);
+    console.log('Desde:', this.filtroDesde);
+    console.log('Hasta:', this.filtroHasta);
+    // Lógica de filtrado (se implementará si es necesario)
   }
 
-  // Calcular noches de estancia
-  calcularNoches(fechaEntrada: Date, fechaSalida: Date): number {
-    const diferencia = fechaSalida.getTime() - fechaEntrada.getTime();
-    return Math.ceil(diferencia / (1000 * 3600 * 24));
+  // Método para abrir nueva reserva (opcional)
+  abrirNuevaReserva(): void {
+    // Este método ya no es necesario porque el modal se abre con data-bs-toggle
+    console.log('Abrir nueva reserva - método deprecado');
   }
 }

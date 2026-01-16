@@ -1,391 +1,423 @@
 <div class="container-fluid py-4">
-  <!-- Encabezado -->
+  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="display-5 fw-bold text-primary">
-      <ng-icon name="bootstrapCalendar3" class="me-2"></ng-icon>
-      Gestión de Reservas de Hotel
-    </h1>
-    <button class="btn btn-primary btn-lg" (click)="abrirFormulario()">
-      <ng-icon name="bootstrapPlusCircle" class="me-2"></ng-icon>
+    <h2 class="mb-0">
+      <i class="bi bi-calendar3 me-2"></i>
+      Mis Reservas
+    </h2>
+    <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#nuevaReservaModal">
+      <i class="bi bi-plus-circle me-2"></i>
       Nueva Reserva
     </button>
   </div>
 
-  <!-- Resumen de reservas -->
-  <div class="row mb-5">
-    <div class="col-md-4">
-      <div class="card border-warning shadow">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h5 class="card-title text-warning">Pendientes</h5>
-              <p class="card-text fs-2 fw-bold">{{reservasPendientes.length}} reservas</p>
-              <p class="card-text">Total: {{totalPendientes | currency:'EUR'}}</p>
-            </div>
-            <ng-icon name="bootstrapCalendar" class="text-warning" size="3rem"></ng-icon>
-          </div>
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Estado</label>
+          <select class="form-select" [(ngModel)]="filtroEstado">
+            <option value="">Todos</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="confirmada">Confirmadas</option>
+            <option value="cancelada">Canceladas</option>
+          </select>
         </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card border-success shadow">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h5 class="card-title text-success">Aceptadas</h5>
-              <p class="card-text fs-2 fw-bold">{{reservasAceptadas.length}} reservas</p>
-              <p class="card-text">Total: {{totalAceptadas | currency:'EUR'}}</p>
-            </div>
-            <ng-icon name="bootstrapCheckCircle" class="text-success" size="3rem"></ng-icon>
-          </div>
+        <div class="col-md-3">
+          <label class="form-label">Desde</label>
+          <input type="date" class="form-control" [(ngModel)]="filtroDesde">
         </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card border-danger shadow">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h5 class="card-title text-danger">Rechazadas</h5>
-              <p class="card-text fs-2 fw-bold">{{reservasRechazadas.length}} reservas</p>
-              <p class="card-text">Total: {{totalRechazadas | currency:'EUR'}}</p>
-            </div>
-            <ng-icon name="bootstrapXCircle" class="text-danger" size="3rem"></ng-icon>
-          </div>
+        <div class="col-md-3">
+          <label class="form-label">Hasta</label>
+          <input type="date" class="form-control" [(ngModel)]="filtroHasta">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-outline-primary w-100" (click)="filtrarReservas()">Filtrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Formulario para nueva reserva (modal) -->
-  @if (mostrarFormulario()) {
-  <div class="modal show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title">
-            <ng-icon name="bootstrapPlusCircle" class="me-2"></ng-icon>
-            {{modoEdicion() ? 'Editar Reserva' : 'Nueva Reserva'}}
-          </h5>
-          <button type="button" class="btn-close btn-close-white" (click)="cerrarFormulario()"></button>
-        </div>
-        <div class="modal-body">
-          <form (ngSubmit)="enviarFormulario()" #reservaForm="ngForm">
-            <div class="row g-3">
-              <!-- Fecha de Reserva -->
-              <div class="col-md-6">
-                <label class="form-label">Fecha de Reserva</label>
-                <input type="date" class="form-control" [(ngModel)]="nuevaReserva.fechaReserva" name="fechaReserva" required>
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" id="reservasTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="pendientes-tab" data-bs-toggle="tab" data-bs-target="#pendientes" type="button" role="tab">
+        <i class="bi bi-clock me-1"></i> Pendientes (3)
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="confirmadas-tab" data-bs-toggle="tab" data-bs-target="#confirmadas" type="button" role="tab">
+        <i class="bi bi-check-circle me-1"></i> Confirmadas (5)
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="canceladas-tab" data-bs-toggle="tab" data-bs-target="#canceladas" type="button" role="tab">
+        <i class="bi bi-x-circle me-1"></i> Canceladas (2)
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">
+        <i class="bi bi-archive me-1"></i> Historial
+      </button>
+    </li>
+  </ul>
+
+  <!-- Contenido de Tabs -->
+  <div class="tab-content" id="reservasTabContent">
+    <!-- Pendientes -->
+    <div class="tab-pane fade show active" id="pendientes" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let reserva of reservas.pendientes">
+          <div class="card h-100 border-warning">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <span class="badge bg-warning text-dark mb-2">Pendiente</span>
+                  <h5 class="card-title mb-1">{{reserva.hotel}}</h5>
+                  <p class="text-muted mb-0">{{reserva.tipo}}</p>
+                </div>
+                <i class="bi bi-clock text-warning fs-4"></i>
               </div>
               
-              <!-- Hotel -->
-              <div class="col-md-6">
-                <label class="form-label">Hotel</label>
-                <select class="form-select" [(ngModel)]="nuevaReserva.hotel" name="hotel" required>
-                  <option value="" disabled selected>Seleccione un hotel</option>
-                  @for (hotel of hoteles; track hotel) {
-                  <option [value]="hotel">{{hotel}}</option>
-                  }
-                </select>
-              </div>
-              
-              <!-- Tipo de Habitación -->
-              <div class="col-md-6">
-                <label class="form-label">Tipo de Habitación</label>
-                <select class="form-select" [(ngModel)]="nuevaReserva.tipoHabitacion" name="tipoHabitacion" 
-                        (change)="actualizarPrecio()" required>
-                  <option value="" disabled selected>Seleccione tipo de habitación</option>
-                  @for (tipo of tiposHabitacion; track tipo.tipo) {
-                  <option [value]="tipo.tipo">{{tipo.tipo}} - {{tipo.precio | currency:'EUR'}}/noche</option>
-                  }
-                </select>
-              </div>
-              
-              <!-- Precio -->
-              <div class="col-md-6">
-                <label class="form-label">Precio por noche</label>
-                <div class="input-group">
-                  <span class="input-group-text">€</span>
-                  <input type="number" class="form-control" [(ngModel)]="nuevaReserva.precio" name="precio" readonly>
+              <div class="reservation-details mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-calendar me-2 text-primary"></i>
+                  <small><strong>Check-in:</strong> {{reserva.checkIn | date:'dd MMM yyyy'}}</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-calendar me-2 text-primary"></i>
+                  <small><strong>Check-out:</strong> {{reserva.checkOut | date:'dd MMM yyyy'}}</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-person me-2 text-primary"></i>
+                  <small><strong>Huéspedes:</strong> {{reserva.huespedes}}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-cash me-2 text-primary"></i>
+                  <small><strong>Total:</strong> €{{reserva.total | number:'1.2-2'}}</small>
                 </div>
               </div>
               
-              <!-- Fecha de Entrada -->
-              <div class="col-md-6">
-                <label class="form-label">Fecha de Entrada</label>
-                <input type="date" class="form-control" [(ngModel)]="nuevaReserva.fechaEntrada" name="fechaEntrada" required>
+              <div class="reservation-code mb-3">
+                <small class="text-muted">Código: {{reserva.codigo}}</small>
               </div>
               
-              <!-- Fecha de Salida -->
-              <div class="col-md-6">
-                <label class="form-label">Fecha de Salida</label>
-                <input type="date" class="form-control" [(ngModel)]="nuevaReserva.fechaSalida" name="fechaSalida" required>
-              </div>
-              
-              <!-- Número de Huéspedes -->
-              <div class="col-md-6">
-                <label class="form-label">Número de Huéspedes</label>
-                <input type="number" class="form-control" min="1" max="10" 
-                       [(ngModel)]="nuevaReserva.numHuespedes" name="numHuespedes" required>
-              </div>
-              
-              <!-- Estado de la Reserva -->
-              <div class="col-md-6">
-                <label class="form-label">Estado de la Reserva</label>
-                <select class="form-select" [(ngModel)]="nuevaReserva.estado" name="estado" 
-                        (change)="generarCodigoReserva()">
-                  <option value="pendiente">Pendiente</option>
-                  <option value="aceptada">Aceptada</option>
-                  <option value="rechazada">Rechazada</option>
-                </select>
-              </div>
-              
-              <!-- Código de Reserva -->
-              <div class="col-md-6">
-                <label class="form-label">Código de Reserva</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevaReserva.codigoReserva" name="codigoReserva" readonly>
-                <div class="form-text">Código generado automáticamente</div>
-              </div>
-              
-              <!-- Pedido Especial -->
-              <div class="col-12">
-                <label class="form-label">Pedido Especial</label>
-                <textarea class="form-control" rows="3" placeholder="Ej: Cama king size, vista al mar, despertador..."
-                          [(ngModel)]="nuevaReserva.pedidoEspecial" name="pedidoEspecial"></textarea>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-success flex-fill d-flex align-items-center justify-content-center" 
+                        (click)="confirmarReserva(reserva.id)">
+                  <i class="bi bi-check-circle me-1"></i> Confirmar
+                </button>
+                <button class="btn btn-sm btn-outline-danger flex-fill d-flex align-items-center justify-content-center"
+                        (click)="cancelarReserva(reserva.id)">
+                  <i class="bi bi-x-circle me-1"></i> Cancelar
+                </button>
               </div>
             </div>
-            
-            <div class="modal-footer mt-4">
-              <button type="button" class="btn btn-secondary" (click)="cerrarFormulario()">Cancelar</button>
-              <button type="submit" class="btn btn-primary">
-                {{modoEdicion() ? 'Actualizar Reserva' : 'Crear Reserva'}}
-              </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmadas -->
+    <div class="tab-pane fade" id="confirmadas" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let reserva of reservas.confirmadas">
+          <div class="card h-100 border-success">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <span class="badge bg-success mb-2">Confirmada</span>
+                  <h5 class="card-title mb-1">{{reserva.hotel}}</h5>
+                  <p class="text-muted mb-0">{{reserva.tipo}}</p>
+                </div>
+                <i class="bi bi-check-circle text-success fs-4"></i>
+              </div>
+              
+              <div class="reservation-details mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-calendar me-2 text-primary"></i>
+                  <small><strong>Check-in:</strong> {{reserva.checkIn | date:'dd MMM yyyy'}}</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-calendar me-2 text-primary"></i>
+                  <small><strong>Check-out:</strong> {{reserva.checkOut | date:'dd MMM yyyy'}}</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-person me-2 text-primary"></i>
+                  <small><strong>Huéspedes:</strong> {{reserva.huespedes}}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-cash me-2 text-primary"></i>
+                  <small><strong>Total:</strong> €{{reserva.total | number:'1.2-2'}}</small>
+                </div>
+              </div>
+              
+              <div class="reservation-code mb-3">
+                <small class="text-muted">Código: {{reserva.codigo}}</small>
+              </div>
+              
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary flex-fill d-flex align-items-center justify-content-center">
+                  <i class="bi bi-printer me-1"></i> Imprimir
+                </button>
+                <button class="btn btn-sm btn-outline-warning flex-fill d-flex align-items-center justify-content-center">
+                  <i class="bi bi-pencil me-1"></i> Modificar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canceladas -->
+    <div class="tab-pane fade" id="canceladas" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let reserva of reservas.canceladas">
+          <div class="card h-100 border-danger">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <span class="badge bg-danger mb-2">Cancelada</span>
+                  <h5 class="card-title mb-1">{{reserva.hotel}}</h5>
+                  <p class="text-muted mb-0">{{reserva.tipo}}</p>
+                </div>
+                <i class="bi bi-x-circle text-danger fs-4"></i>
+              </div>
+              
+              <div class="reservation-details mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-calendar me-2 text-primary"></i>
+                  <small><strong>Check-in:</strong> {{reserva.checkIn | date:'dd MMM yyyy'}}</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-calendar me-2 text-primary"></i>
+                  <small><strong>Check-out:</strong> {{reserva.checkOut | date:'dd MMM yyyy'}}</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-person me-2 text-primary"></i>
+                  <small><strong>Huéspedes:</strong> {{reserva.huespedes}}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-cash me-2 text-primary"></i>
+                  <small><strong>Total:</strong> €{{reserva.total | number:'1.2-2'}}</small>
+                </div>
+              </div>
+              
+              <div class="reservation-code mb-3">
+                <small class="text-muted">Código: {{reserva.codigo}}</small>
+              </div>
+              
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary flex-fill d-flex align-items-center justify-content-center">
+                  <i class="bi bi-arrow-repeat me-1"></i> Reagendar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="tab-pane fade" id="historial" role="tabpanel">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Reserva</th>
+              <th>Hotel</th>
+              <th>Fechas</th>
+              <th>Estado</th>
+              <th>Total</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>RES-MAL-2024-00123</td>
+              <td>Hotel Plaza Malabo</td>
+              <td>15-20 Mar 2024</td>
+              <td><span class="badge bg-success">Confirmada</span></td>
+              <td>€450.00</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de nueva reserva -->
+  <div class="modal fade" id="nuevaReservaModal" tabindex="-1" aria-labelledby="nuevaReservaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="nuevaReservaModalLabel">
+            <i class="bi bi-plus-circle me-2"></i>
+            Nueva Reserva de Hotel
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form #reservaForm="ngForm" (ngSubmit)="crearReserva()">
+            <div class="row g-3">
+              <!-- Hotel -->
+              <div class="col-md-6">
+                <label for="hotel" class="form-label">
+                  <i class="bi bi-building me-1"></i>Hotel
+                </label>
+                <select class="form-select" id="hotel" name="hotel" [(ngModel)]="nuevaReserva.hotel" required>
+                  <option value="" disabled selected>Seleccione un hotel</option>
+                  <option value="Hotel Plaza Malabo">Hotel Plaza Malabo</option>
+                  <option value="Hotel Bahía Bata">Hotel Bahía Bata</option>
+                  <option value="Hotel Mongomo Palace">Hotel Mongomo Palace</option>
+                  <option value="Hotel Utonde">Hotel Utonde</option>
+                  <option value="Hotel Continental">Hotel Continental</option>
+                </select>
+              </div>
+
+              <!-- Tipo de Habitación -->
+              <div class="col-md-6">
+                <label for="tipoHabitacion" class="form-label">
+                  <i class="bi bi-door-open me-1"></i>Tipo de Habitación
+                </label>
+                <select class="form-select" id="tipoHabitacion" name="tipoHabitacion" [(ngModel)]="nuevaReserva.tipo" required>
+                  <option value="" disabled selected>Seleccione tipo</option>
+                  <option value="Habitación Standard">Habitación Standard</option>
+                  <option value="Habitación Deluxe">Habitación Deluxe</option>
+                  <option value="Suite Ejecutiva">Suite Ejecutiva</option>
+                  <option value="Suite Presidencial">Suite Presidencial</option>
+                </select>
+              </div>
+
+              <!-- Fechas -->
+              <div class="col-md-6">
+                <label for="checkIn" class="form-label">
+                  <i class="bi bi-calendar-check me-1"></i>Fecha Check-in
+                </label>
+                <input type="date" class="form-control" id="checkIn" name="checkIn" 
+                       [(ngModel)]="nuevaReserva.checkIn" required
+                       [min]="minDate">
+              </div>
+
+              <div class="col-md-6">
+                <label for="checkOut" class="form-label">
+                  <i class="bi bi-calendar-x me-1"></i>Fecha Check-out
+                </label>
+                <input type="date" class="form-control" id="checkOut" name="checkOut" 
+                       [(ngModel)]="nuevaReserva.checkOut" required
+                       [min]="nuevaReserva.checkIn || minDate">
+              </div>
+
+              <!-- Huéspedes -->
+              <div class="col-md-4">
+                <label for="adultos" class="form-label">
+                  <i class="bi bi-person me-1"></i>Adultos
+                </label>
+                <input type="number" class="form-control" id="adultos" name="adultos" 
+                       [(ngModel)]="nuevaReserva.adultos" min="1" max="4" value="2" required>
+                <small class="text-muted">Máximo 4 por habitación</small>
+              </div>
+
+              <div class="col-md-4">
+                <label for="ninos" class="form-label">
+                  <i class="bi bi-person me-1"></i>Niños
+                </label>
+                <input type="number" class="form-control" id="ninos" name="ninos" 
+                       [(ngModel)]="nuevaReserva.ninos" min="0" max="3" value="0">
+                <small class="text-muted">Edad 0-12 años</small>
+              </div>
+
+              <div class="col-md-4">
+                <label for="noches" class="form-label">
+                  <i class="bi bi-moon me-1"></i>Noches
+                </label>
+                <input type="number" class="form-control" id="noches" name="noches" 
+                       [(ngModel)]="nuevaReserva.noches" min="1" max="30" readonly>
+                <small class="text-muted">Cálculo automático</small>
+              </div>
+
+              <!-- Servicios Adicionales -->
+              <div class="col-12">
+                <label class="form-label">
+                  <i class="bi bi-list-check me-1"></i>Servicios Adicionales
+                </label>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="desayuno" 
+                         [(ngModel)]="nuevaReserva.servicios.desayuno" name="desayuno">
+                  <label class="form-check-label" for="desayuno">
+                    Desayuno incluido (+€25 por persona/día)
+                  </label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="parking" 
+                         [(ngModel)]="nuevaReserva.servicios.parking" name="parking">
+                  <label class="form-check-label" for="parking">
+                    Parking privado (+€15 por día)
+                  </label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="wifi" 
+                         [(ngModel)]="nuevaReserva.servicios.wifi" name="wifi">
+                  <label class="form-check-label" for="wifi">
+                    WiFi Premium (+€10 por estancia)
+                  </label>
+                </div>
+              </div>
+
+              <!-- Comentarios -->
+              <div class="col-12">
+                <label for="comentarios" class="form-label">
+                  <i class="bi bi-chat-text me-1"></i>Comentarios Adicionales
+                </label>
+                <textarea class="form-control" id="comentarios" name="comentarios" 
+                          [(ngModel)]="nuevaReserva.comentarios" rows="3"
+                          placeholder="Solicitudes especiales, preferencias, etc."></textarea>
+              </div>
+
+              <!-- Resumen del Precio -->
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                      <i class="bi bi-calculator me-2"></i>Resumen del Precio
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Habitación x {{nuevaReserva.noches}} noches</span>
+                      <strong>€{{calcularTotal() | number:'1.2-2'}}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Servicios adicionales</span>
+                      <strong>€{{calcularServicios() | number:'1.2-2'}}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fs-5">
+                      <span class="fw-bold">Total</span>
+                      <strong class="text-primary">€{{(calcularTotal() + calcularServicios()) | number:'1.2-2'}}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </form>
         </div>
-      </div>
-    </div>
-  </div>
-  }
-
-  <!-- Lista de reservas por estado -->
-  <div class="row">
-    <!-- Reservas Pendientes -->
-    <div class="col-lg-4 mb-4">
-      <div class="card border-warning">
-        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            <ng-icon name="bootstrapCalendar" class="me-2"></ng-icon>
-            Pendientes ({{reservasPendientes.length}})
-          </h5>
-          <span class="badge bg-dark">{{totalPendientes | currency:'EUR'}}</span>
-        </div>
-        <div class="card-body p-0">
-          @if (reservasPendientes.length === 0) {
-          <div class="text-center py-5 text-muted">
-            <ng-icon name="bootstrapCalendar" size="3rem"></ng-icon>
-            <p class="mt-2">No hay reservas pendientes</p>
-          </div>
-          } @else {
-          <div class="list-group list-group-flush">
-            @for (reserva of reservasPendientes; track reserva.id) {
-            <div class="list-group-item">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <h6 class="mb-1">{{reserva.hotel}}</h6>
-                  <small class="text-muted">Código: {{reserva.codigoReserva}}</small>
-                </div>
-                <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                          data-bs-toggle="dropdown" aria-expanded="false">
-                    Acciones
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" (click)="editarReserva(reserva)">Editar</a></li>
-                    <li><a class="dropdown-item text-success" (click)="cambiarEstado(reserva, 'aceptada')">Aceptar</a></li>
-                    <li><a class="dropdown-item text-danger" (click)="cambiarEstado(reserva, 'rechazada')">Rechazar</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" (click)="eliminarReserva(reserva.id)">Eliminar</a></li>
-                  </ul>
-                </div>
-              </div>
-              <p class="mb-1">{{reserva.tipoHabitacion}} - {{reserva.numHuespedes}} huésped(es)</p>
-              <p class="mb-1">
-                <ng-icon name="bootstrapCalendarCheck" class="me-1"></ng-icon>
-                {{formatearFecha(reserva.fechaEntrada)}} 
-                <ng-icon name="bootstrapCalendarX" class="ms-2 me-1"></ng-icon>
-                {{formatearFecha(reserva.fechaSalida)}}
-                <span class="ms-2">({{calcularNoches(reserva.fechaEntrada, reserva.fechaSalida)}} noches)</span>
-              </p>
-              <div class="d-flex justify-content-between align-items-center">
-                <strong class="text-warning">{{reserva.precio | currency:'EUR'}}/noche</strong>
-                <span class="badge bg-warning">Pendiente</span>
-              </div>
-              @if (reserva.pedidoEspecial) {
-              <div class="mt-2">
-                <small><strong>Pedido especial:</strong> {{reserva.pedidoEspecial}}</small>
-              </div>
-              }
-            </div>
-            }
-          </div>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Reservas Aceptadas -->
-    <div class="col-lg-4 mb-4">
-      <div class="card border-success">
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            <ng-icon name="bootstrapCheckCircle" class="me-2"></ng-icon>
-            Aceptadas ({{reservasAceptadas.length}})
-          </h5>
-          <span class="badge bg-light text-success">{{totalAceptadas | currency:'EUR'}}</span>
-        </div>
-        <div class="card-body p-0">
-          @if (reservasAceptadas.length === 0) {
-          <div class="text-center py-5 text-muted">
-            <ng-icon name="bootstrapCheckCircle" size="3rem"></ng-icon>
-            <p class="mt-2">No hay reservas aceptadas</p>
-          </div>
-          } @else {
-          <div class="list-group list-group-flush">
-            @for (reserva of reservasAceptadas; track reserva.id) {
-            <div class="list-group-item">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <h6 class="mb-1">{{reserva.hotel}}</h6>
-                  <small class="text-muted">Código: {{reserva.codigoReserva}}</small>
-                </div>
-                <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                          data-bs-toggle="dropdown" aria-expanded="false">
-                    Acciones
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" (click)="editarReserva(reserva)">Editar</a></li>
-                    <li><a class="dropdown-item text-warning" (click)="cambiarEstado(reserva, 'pendiente')">Marcar como Pendiente</a></li>
-                    <li><a class="dropdown-item text-danger" (click)="cambiarEstado(reserva, 'rechazada')">Rechazar</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" (click)="eliminarReserva(reserva.id)">Eliminar</a></li>
-                  </ul>
-                </div>
-              </div>
-              <p class="mb-1">{{reserva.tipoHabitacion}} - {{reserva.numHuespedes}} huésped(es)</p>
-              <p class="mb-1">
-                <ng-icon name="bootstrapCalendarCheck" class="me-1"></ng-icon>
-                {{formatearFecha(reserva.fechaEntrada)}} 
-                <ng-icon name="bootstrapCalendarX" class="ms-2 me-1"></ng-icon>
-                {{formatearFecha(reserva.fechaSalida)}}
-                <span class="ms-2">({{calcularNoches(reserva.fechaEntrada, reserva.fechaSalida)}} noches)</span>
-              </p>
-              <div class="d-flex justify-content-between align-items-center">
-                <strong class="text-success">{{reserva.precio | currency:'EUR'}}/noche</strong>
-                <span class="badge bg-success">Aceptada</span>
-              </div>
-              @if (reserva.pedidoEspecial) {
-              <div class="mt-2">
-                <small><strong>Pedido especial:</strong> {{reserva.pedidoEspecial}}</small>
-              </div>
-              }
-            </div>
-            }
-          </div>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Reservas Rechazadas -->
-    <div class="col-lg-4 mb-4">
-      <div class="card border-danger">
-        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            <ng-icon name="bootstrapXCircle" class="me-2"></ng-icon>
-            Rechazadas ({{reservasRechazadas.length}})
-          </h5>
-          <span class="badge bg-light text-danger">{{totalRechazadas | currency:'EUR'}}</span>
-        </div>
-        <div class="card-body p-0">
-          @if (reservasRechazadas.length === 0) {
-          <div class="text-center py-5 text-muted">
-            <ng-icon name="bootstrapXCircle" size="3rem"></ng-icon>
-            <p class="mt-2">No hay reservas rechazadas</p>
-          </div>
-          } @else {
-          <div class="list-group list-group-flush">
-            @for (reserva of reservasRechazadas; track reserva.id) {
-            <div class="list-group-item">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <h6 class="mb-1">{{reserva.hotel}}</h6>
-                  <small class="text-muted">Código: {{reserva.codigoReserva}}</small>
-                </div>
-                <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                          data-bs-toggle="dropdown" aria-expanded="false">
-                    Acciones
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" (click)="editarReserva(reserva)">Editar</a></li>
-                    <li><a class="dropdown-item text-warning" (click)="cambiarEstado(reserva, 'pendiente')">Marcar como Pendiente</a></li>
-                    <li><a class="dropdown-item text-success" (click)="cambiarEstado(reserva, 'aceptada')">Aceptar</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" (click)="eliminarReserva(reserva.id)">Eliminar</a></li>
-                  </ul>
-                </div>
-              </div>
-              <p class="mb-1">{{reserva.tipoHabitacion}} - {{reserva.numHuespedes}} huésped(es)</p>
-              <p class="mb-1">
-                <ng-icon name="bootstrapCalendarCheck" class="me-1"></ng-icon>
-                {{formatearFecha(reserva.fechaEntrada)}} 
-                <ng-icon name="bootstrapCalendarX" class="ms-2 me-1"></ng-icon>
-                {{formatearFecha(reserva.fechaSalida)}}
-                <span class="ms-2">({{calcularNoches(reserva.fechaEntrada, reserva.fechaSalida)}} noches)</span>
-              </p>
-              <div class="d-flex justify-content-between align-items-center">
-                <strong class="text-danger">{{reserva.precio | currency:'EUR'}}/noche</strong>
-                <span class="badge bg-danger">Rechazada</span>
-              </div>
-              @if (reserva.pedidoEspecial) {
-              <div class="mt-2">
-                <small><strong>Pedido especial:</strong> {{reserva.pedidoEspecial}}</small>
-              </div>
-              }
-            </div>
-            }
-          </div>
-          }
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Pie de página informativo -->
-  <div class="mt-5 pt-4 border-top">
-    <div class="row">
-      <div class="col-md-8">
-        <h6>Instrucciones de uso:</h6>
-        <ul class="text-muted">
-          <li>Haga clic en "Nueva Reserva" para crear una nueva reserva de hotel</li>
-          <li>Seleccione el hotel, tipo de habitación y fechas para calcular automáticamente el precio</li>
-          <li>El código de reserva se genera automáticamente según el estado</li>
-          <li>Puede editar, cambiar el estado o eliminar reservas usando el menú "Acciones" en cada tarjeta</li>
-        </ul>
-      </div>
-      <div class="col-md-4 text-end">
-        <div class="card bg-light">
-          <div class="card-body">
-            <h6 class="card-title">Resumen total</h6>
-            <p class="card-text fs-4 fw-bold text-primary">
-              {{reservas().length}} reservas
-            </p>
-            <p class="card-text">
-              Total: {{totalPendientes + totalAceptadas + totalRechazadas | currency:'EUR'}}
-            </p>
-          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i>Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" 
+                  (click)="crearReserva()"
+                  [disabled]="!reservaForm.form.valid">
+            <i class="bi bi-check-circle me-1"></i>Confirmar Reserva
+          </button>
         </div>
       </div>
     </div>

@@ -155,7 +155,10 @@
                   <i class="bi bi-person me-2" style="color: #1a365d;"></i>
                   Mi Perfil
                 </button>
-                <button class="dropdown-item d-flex align-items-center border-0 bg-transparent" style="color: #2d3748;">
+                <!-- Botón Mis Reservas con evento click agregado -->
+                <button class="dropdown-item d-flex align-items-center border-0 bg-transparent" 
+                        (click)="onMostrarReservas()"
+                        style="color: #2d3748;">
                   <i class="bi bi-calendar-check me-2" style="color: #1a365d;"></i>
                   Mis Reservas
                 </button>

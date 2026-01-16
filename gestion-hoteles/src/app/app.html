@@ -1,10 +1,9 @@
 <app-navbar 
   (mostrarInicio)="mostrarInicio()"
   (mostrarHoteles)="mostrarHoteles()"
-  (mostrarContactos)="mostrarContactos()">
+  (mostrarContactos)="mostrarContactos()"
+  (mostrarReservas)="mostrarReservas()">
 </app-navbar>
-
-<!-- Contenido según sección activa -->
 
 <!-- Sección Inicio -->
 <div *ngIf="seccionActiva === 'inicio'">
@@ -24,6 +23,11 @@
     <h2>Información de Contacto</h2>
     <p>Para más información, consulta la sección de contacto en el footer.</p>
   </div>
+</div>
+
+<!-- Sección Reservas -->
+<div *ngIf="seccionActiva === 'reservas'" class="container-fluid mt-4 px-3">
+  <app-reservas></app-reservas>
 </div>
 
 <!-- Footer siempre visible -->
