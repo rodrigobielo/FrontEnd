@@ -74,8 +74,9 @@
         </li>
       </ul>
 
-      <!-- Botones de Acción (mantener igual) -->
+      <!-- Botones de Acción -->
       <div class="navbar-actions d-flex align-items-center">
+        <!-- Usuario NO logueado -->
         <ng-container *ngIf="!usuarioLogueado">
           <div class="d-flex align-items-center gap-3">
             <button class="btn btn-outline-primary d-flex align-items-center gap-2 px-4 py-2"
@@ -94,6 +95,7 @@
           </div>
         </ng-container>
 
+        <!-- Usuario SÍ logueado -->
         <ng-container *ngIf="usuarioLogueado">
           <div class="d-flex align-items-center gap-3">
             <!-- Notificaciones -->
@@ -110,7 +112,7 @@
                   <span class="visually-hidden">notificaciones</span>
                 </span>
               </button>
-              <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-3">
+              <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-3" style="min-width: 300px;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="mb-0 fw-bold" style="color: #1a365d;">Notificaciones</h6>
                   <span class="badge rounded-pill" style="background-color: #1a365d;">{{ notificaciones.length }}</span>
@@ -135,7 +137,7 @@
                 </div>
                 <i class="bi bi-chevron-down" style="color: #1a365d;"></i>
               </button>
-              <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-3">
+              <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-3" style="min-width: 250px;">
                 <div class="user-info mb-3">
                   <div class="d-flex align-items-center">
                     <div class="avatar-circle fw-bold d-flex align-items-center justify-content-center rounded-circle me-3" 
@@ -149,23 +151,25 @@
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item d-flex align-items-center" style="color: #2d3748;">
+                <button class="dropdown-item d-flex align-items-center border-0 bg-transparent" style="color: #2d3748;">
                   <i class="bi bi-person me-2" style="color: #1a365d;"></i>
                   Mi Perfil
-                </a>
-                <a class="dropdown-item d-flex align-items-center" style="color: #2d3748;">
+                </button>
+                <button class="dropdown-item d-flex align-items-center border-0 bg-transparent" style="color: #2d3748;">
                   <i class="bi bi-calendar-check me-2" style="color: #1a365d;"></i>
                   Mis Reservas
-                </a>
-                <a class="dropdown-item d-flex align-items-center" style="color: #2d3748;">
+                </button>
+                <button class="dropdown-item d-flex align-items-center border-0 bg-transparent" style="color: #2d3748;">
                   <i class="bi bi-gear me-2" style="color: #1a365d;"></i>
                   Configuración
-                </a>
+                </button>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item d-flex align-items-center" (click)="cerrarSesion()" style="color: #dc2626;">
+                <button class="dropdown-item d-flex align-items-center border-0 bg-transparent" 
+                        (click)="cerrarSesion()" 
+                        style="color: #dc2626;">
                   <i class="bi bi-box-arrow-right me-2"></i>
                   Cerrar Sesión
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -178,7 +182,7 @@
 <!-- Espacio para navbar fijo -->
 <div class="navbar-spacer"></div>
 
-<!-- Modales (mantener igual) -->
+<!-- Modal Login -->
 <div *ngIf="mostrarLoginForm" class="modal-backdrop fade show" style="z-index: 1045;" (click)="onOcultarLogin()"></div>
 <div *ngIf="mostrarLoginForm" class="modal fade show d-block" tabindex="-1" style="z-index: 1050; background: rgba(0,0,0,0.3);">
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document" (click)="$event.stopPropagation()">
@@ -187,12 +191,17 @@
         <button type="button" class="btn-close ms-auto" (click)="onOcultarLogin()"></button>
       </div>
       <div class="modal-body p-0">
-        <app-login (cerrar)="onOcultarLogin()" (cambiarARegistro)="onMostrarRegistro()"></app-login>
+        <app-login 
+          (cerrar)="onOcultarLogin()" 
+          (cambiarARegistro)="onMostrarRegistro()"
+          (loginExitoso)="onLoginExitoso($event)">
+        </app-login>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Modal Registro -->
 <div *ngIf="mostrarRegistroForm" class="modal-backdrop fade show" style="z-index: 1045;" (click)="onOcultarRegistro()"></div>
 <div *ngIf="mostrarRegistroForm" class="modal fade show d-block" tabindex="-1" style="z-index: 1050; background: rgba(0,0,0,0.3);">
   <div class="modal-dialog modal-dialog-centered modal-xl" role="document" (click)="$event.stopPropagation()">
@@ -201,7 +210,11 @@
         <button type="button" class="btn-close ms-auto" (click)="onOcultarRegistro()"></button>
       </div>
       <div class="modal-body p-0">
-        <app-registro (cerrar)="onOcultarRegistro()" (cambiarALogin)="onMostrarLogin()"></app-registro>
+        <app-registro 
+          (cerrar)="onOcultarRegistro()" 
+          (cambiarALogin)="onMostrarLogin()"
+          (registroExitoso)="onRegistroExitoso($event)">
+        </app-registro>
       </div>
     </div>
   </div>

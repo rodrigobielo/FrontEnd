@@ -18,11 +18,11 @@ export class Navbar implements OnInit {
   @Output() mostrarContactos = new EventEmitter<void>();
   
   usuarioLogueado: boolean = false;
-  usuarioNombre: string = 'Ana García';
-  usuarioEmail: string = 'ana@email.com';
-  usuarioIniciales: string = 'AG';
+  usuarioNombre: string = '';
+  usuarioEmail: string = '';
+  usuarioIniciales: string = '';
   
-  tieneNotificaciones: boolean = true;
+  tieneNotificaciones: boolean = false;
   notificaciones = [
     {
       id: 1,
@@ -69,22 +69,32 @@ export class Navbar implements OnInit {
   }
   
   verificarAutenticacion(): void {
-    const usuarioMock = {
-      logueado: false,
-      nombre: 'Ana García',
-      email: 'ana@email.com'
-    };
-    
-    this.usuarioLogueado = usuarioMock.logueado;
-    
-    if (usuarioMock.logueado) {
-      this.usuarioNombre = usuarioMock.nombre;
-      this.usuarioEmail = usuarioMock.email;
-      this.usuarioIniciales = this.obtenerIniciales(usuarioMock.nombre);
+    // Verificar si hay datos de usuario en localStorage
+    if (isPlatformBrowser(this.platformId)) {
+      const usuarioGuardado = localStorage.getItem('usuarioTurismo');
+      
+      if (usuarioGuardado) {
+        try {
+          const usuario = JSON.parse(usuarioGuardado);
+          this.usuarioLogueado = true;
+          this.usuarioNombre = usuario.nombre;
+          this.usuarioEmail = usuario.email;
+          this.usuarioIniciales = this.obtenerIniciales(usuario.nombre);
+          this.tieneNotificaciones = true;
+          console.log('🔐 Usuario recuperado de localStorage:', usuario);
+        } catch (error) {
+          console.error('Error al parsear usuario:', error);
+          this.limpiarSesion();
+        }
+      } else {
+        console.log('🔐 No hay usuario en localStorage');
+        this.limpiarSesion();
+      }
     }
   }
   
   obtenerIniciales(nombreCompleto: string): string {
+    if (!nombreCompleto) return '';
     return nombreCompleto
       .split(' ')
       .map(nombre => nombre[0])
@@ -94,13 +104,71 @@ export class Navbar implements OnInit {
   }
   
   cerrarSesion(): void {
+    this.limpiarSesion();
+    
+    // Redirigir a inicio
+    this.mostrarInicio.emit();
+    
+    console.log('🚪 Sesión cerrada exitosamente - Redirigiendo a Inicio');
+  }
+  
+  limpiarSesion(): void {
+    // Limpiar datos de autenticación
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('usuarioTurismo');
+    }
+    
+    // Resetear estado del componente
     this.usuarioLogueado = false;
     this.usuarioNombre = '';
     this.usuarioEmail = '';
     this.usuarioIniciales = '';
     this.tieneNotificaciones = false;
+  }
+  
+  // Método para manejar login exitoso desde el componente Login
+  onLoginExitoso(usuario: any): void {
+    console.log('✅ LOGIN EXITOSO en Navbar:', usuario);
     
-    console.log('Sesión cerrada exitosamente');
+    this.usuarioLogueado = true;
+    this.usuarioNombre = usuario.nombre;
+    this.usuarioEmail = usuario.email;
+    this.usuarioIniciales = this.obtenerIniciales(usuario.nombre);
+    this.tieneNotificaciones = true;
+    
+    // Guardar en localStorage
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('usuarioTurismo', JSON.stringify(usuario));
+      console.log('💾 Usuario guardado en localStorage');
+    }
+    
+    // Cerrar modal
+    this.onOcultarLogin();
+    
+    // Emitir evento para redirigir si es necesario
+    this.mostrarInicio.emit();
+  }
+  
+  // Método para manejar registro exitoso desde el componente Registro
+  onRegistroExitoso(usuario: any): void {
+    console.log('✅ REGISTRO EXITOSO en Navbar:', usuario);
+    
+    this.usuarioLogueado = true;
+    this.usuarioNombre = usuario.nombre;
+    this.usuarioEmail = usuario.email;
+    this.usuarioIniciales = this.obtenerIniciales(usuario.nombre);
+    this.tieneNotificaciones = true;
+    
+    // Guardar en localStorage
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('usuarioTurismo', JSON.stringify(usuario));
+    }
+    
+    // Cerrar modal
+    this.onOcultarRegistro();
+    
+    // Emitir evento para redirigir si es necesario
+    this.mostrarInicio.emit();
   }
   
   // Métodos para cambiar secciones
@@ -131,15 +199,7 @@ export class Navbar implements OnInit {
     }
   }
   
-  simularLogin(): void {
-    this.usuarioLogueado = true;
-    this.usuarioNombre = 'Ana García';
-    this.usuarioIniciales = 'AG';
-    this.tieneNotificaciones = true;
-    
-    console.log('Login simulado exitosamente');
-  }
-  
+  // Métodos para mostrar/ocultar modales
   onMostrarLogin(): void {
     this.mostrarLoginForm = true;
     this.mostrarRegistroForm = false;
@@ -158,5 +218,14 @@ export class Navbar implements OnInit {
   
   onOcultarRegistro(): void {
     this.mostrarRegistroForm = false;
+  }
+  
+  // Método para pruebas rápidas
+  simularLoginRapido(): void {
+    const usuarioMock = {
+      nombre: 'Rodrigo García',
+      email: 'rodrigo@email.com'
+    };
+    this.onLoginExitoso(usuarioMock);
   }
 }
