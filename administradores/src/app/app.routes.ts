@@ -5,6 +5,7 @@ import { Regiones } from '../componentes/regiones/regiones';
 import { Provincias } from '../componentes/provincias/provincias';
 import { Ciudades } from '../componentes/ciudades/ciudades';
 import { Hoteles } from '../componentes/hoteles/hoteles';
+import { Categorias } from '../componentes/categorias/categorias'; // NUEVA IMPORTACIÓN
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -14,5 +15,6 @@ export const routes: Routes = [
   { path: 'provincias', component: Provincias },
   { path: 'ciudades', component: Ciudades },
   { path: 'hoteles', component: Hoteles },
+  { path: 'categorias', component: Categorias }, // NUEVA RUTA
   { path: '**', redirectTo: '/login' }
 ];

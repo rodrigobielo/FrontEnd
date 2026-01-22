@@ -1,3 +1,4 @@
+// src/app/componentes/dashboard/dashboard.ts
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -39,6 +40,13 @@ export class Dashboard implements OnInit, AfterViewInit {
       change: -3, 
       icon: 'house-door', 
       color: 'warning'
+    },
+    { 
+      title: 'Categorías', 
+      count: 8, 
+      change: 15, 
+      icon: 'tags', 
+      color: 'danger'
     }
   ];
 
@@ -48,9 +56,16 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     // Verificar si el usuario está autenticado
+    this.verificarAutenticacion();
+  }
+
+  private verificarAutenticacion(): void {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (isLoggedIn !== 'true') {
-      this.router.navigate(['/login']);
+      console.warn('Usuario no autenticado. Redirigiendo al dashboard con datos de demostración...');
+      
+      // Para desarrollo/demostración, crear un usuario demo automáticamente
+      this.crearUsuarioDemo();
       return;
     }
     
@@ -59,44 +74,50 @@ export class Dashboard implements OnInit, AfterViewInit {
     this.currentUser = userData ? JSON.parse(userData) : { name: 'Administrador' };
   }
 
+  private crearUsuarioDemo(): void {
+    // Crear un usuario de demostración automáticamente
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', JSON.stringify({ 
+      name: 'Administrador Demo',
+      email: 'admin@demo.com'
+    }));
+    
+    this.currentUser = { name: 'Administrador Demo' };
+    
+    console.log('Usuario demo creado automáticamente para desarrollo');
+  }
+
   ngAfterViewInit(): void {
-    // Mostrar modal de bienvenida después de 1 segundo, solo si no se ha mostrado antes
     setTimeout(() => {
       this.showWelcomeModal();
     }, 1000);
   }
 
-  // Método para mostrar el modal de bienvenida - MODIFICADO
   private showWelcomeModal(): void {
-    // Verificar si ya se ha mostrado el modal en esta sesión
     const modalAlreadyShown = sessionStorage.getItem('welcomeModalShown');
     
     if (modalAlreadyShown === 'true') {
-      return; // Ya se mostró, no volver a mostrar
+      return;
     }
     
     const modalElement = document.getElementById('welcomeModal');
     if (modalElement) {
       const modal = new (window as any).bootstrap.Modal(modalElement);
       
-      // Marcar que el modal se ha mostrado
       sessionStorage.setItem('welcomeModalShown', 'true');
-      
       modal.show();
-      
-      // Limpiar la marca cuando se cierre el modal (opcional)
-      modalElement.addEventListener('hidden.bs.modal', () => {
-        // Puedes mantener la marca si quieres que solo aparezca una vez por sesión
-        // Si quieres que aparezca cada vez que entras al dashboard, comenta la línea de sessionStorage
-      });
     }
   }
 
-  // Métodos para los botones - CORREGIDOS para redirigir correctamente
   onAddClick(cardType: string): void {
     console.log(`Añadir nuevo ${cardType}`);
     
-    // Redirigir a la página correspondiente para añadir
+    // Verificar autenticación antes de redirigir
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn !== 'true') {
+      this.crearUsuarioDemo(); // Crear usuario demo si no existe
+    }
+    
     switch(cardType.toLowerCase()) {
       case 'regiones':
         this.router.navigate(['/regiones'], { queryParams: { modo: 'nuevo' } });
@@ -110,13 +131,21 @@ export class Dashboard implements OnInit, AfterViewInit {
       case 'hoteles':
         this.router.navigate(['/hoteles'], { queryParams: { modo: 'nuevo' } });
         break;
+      case 'categorías':
+        this.router.navigate(['/categorias'], { queryParams: { modo: 'nuevo' } });
+        break;
     }
   }
 
   onListClick(cardType: string): void {
     console.log(`Ver lista de ${cardType}`);
     
-    // Redirigir a la página correspondiente para ver la lista
+    // Verificar autenticación antes de redirigir
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn !== 'true') {
+      this.crearUsuarioDemo(); // Crear usuario demo si no existe
+    }
+    
     switch(cardType.toLowerCase()) {
       case 'regiones':
         this.router.navigate(['/regiones']);
@@ -130,37 +159,35 @@ export class Dashboard implements OnInit, AfterViewInit {
       case 'hoteles':
         this.router.navigate(['/hoteles']);
         break;
+      case 'categorías':
+        this.router.navigate(['/categorias']);
+        break;
     }
   }
 
-  // Método para determinar la clase de badge según el cambio
   getChangeBadgeClass(change: number): string {
     return change >= 0 ? 'bg-success' : 'bg-danger';
   }
 
-  // Método para determinar el ícono de cambio
   getChangeIcon(change: number): string {
     return change >= 0 ? 'arrow-up' : 'arrow-down';
   }
 
-  // Método para cerrar sesión - MEJORADO para limpiar sessionStorage
   cerrarSesion(event?: Event): void {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
     
-    // Mostrar confirmación
     if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-      // Eliminar datos de sesión
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('currentUser');
-      
-      // También limpiar sessionStorage para que el modal aparezca en el próximo login
       sessionStorage.removeItem('welcomeModalShown');
       
-      // Redirigir al login
-      this.router.navigate(['/login']);
+      // Redirigir al dashboard (se creará usuario demo automáticamente)
+      this.router.navigate(['/dashboard']).then(() => {
+        window.location.reload(); // Recargar para limpiar estado
+      });
     }
   }
 }

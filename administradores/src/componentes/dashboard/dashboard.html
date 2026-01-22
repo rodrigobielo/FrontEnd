@@ -90,6 +90,13 @@
                 Hoteles
               </a>
             </li>
+            <!-- NUEVO ENLACE DE CATEGORÍAS -->
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/categorias" routerLinkActive="active">
+                <i class="bi bi-tags me-2"></i>
+                Categorías
+              </a>
+            </li>
           </ul>
           
           <!-- Botón de cerrar sesión en sidebar -->
@@ -267,6 +274,40 @@
               </div>
             </div>
           </div>
+
+          <!-- NUEVA TARJETA: Categorías -->
+          <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger border-3 border-start border-0 shadow-sm h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col me-2">
+                    <div class="text-xs fw-bold text-danger text-uppercase mb-1">
+                      Categorías
+                    </div>
+                    <div class="h5 mb-0 fw-bold text-gray-800">{{summaryCards[4].count}}</div>
+                    <div class="mt-2">
+                      <span class="badge" [ngClass]="getChangeBadgeClass(summaryCards[4].change)">
+                        <i class="bi" [class]="'bi-' + getChangeIcon(summaryCards[4].change) + ' me-1'"></i> 
+                        {{summaryCards[4].change}}%
+                      </span>
+                      <small class="text-muted ms-2">vs mes pasado</small>
+                    </div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="bi bi-tags fs-1 text-danger opacity-75"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
+                <button class="btn btn-sm btn-danger" (click)="onAddClick('Categorías')">
+                  <i class="bi bi-plus-circle me-1"></i> Añadir
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="onListClick('Categorías')">
+                  <i class="bi bi-list me-1"></i> Lista
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Mensaje informativo -->
@@ -322,7 +363,7 @@
         <h4 class="mb-3">Inicio de sesión exitoso</h4>
         <p class="text-muted">
           Has accedido al panel de administración del Sistema Turístico como <strong>{{currentUser?.name || 'Administrador'}}</strong>.
-          Desde aquí puedes gestionar regiones, provincias, ciudades y hoteles.
+          Desde aquí puedes gestionar regiones, provincias, ciudades, hoteles y categorías.
         </p>
       </div>
       <div class="modal-footer justify-content-center">
