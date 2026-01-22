@@ -1,68 +1,66 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpClientModule } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-interface Ciudad {
-  id: number;
-  nombre: string;
-  provinciaId: number;
-  descripcion: string;
-  codigoPostal?: string;
-}
+// Servicios
+import { HotelService } from '../../servicios/hotel.service';
+import { CiudadService } from '../../servicios/ciudades.service';
+import { CategoriaService } from '../../servicios/categoria.service';
+import { ImagenService } from '../../servicios/imagen.service';
+import { UsuarioService } from '../../servicios/usuario.service';
 
-interface Hotel {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  contactos: string;
-  ciudadId: number;
-  categoria: string;
-  habitaciones?: number;
-  precioPromedio?: number;
-  imagenPrincipal?: string;
-  imagenSecundaria?: string;
-  fechaCreacion: Date;
-}
+// Modelos
+import { Ciudad } from '../../modelos/ciudad.model';
+import { Categoria } from '../../modelos/categoria.model';
+import { Imagen } from '../../modelos/imagen.model';
+import { Usuario } from '../../modelos/usuario.model';
+import { Hotel } from '../../modelos/hotel.model';
 
 @Component({
   selector: 'app-hoteles',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, HttpClientModule],
   templateUrl: './hoteles.html',
   styleUrls: ['./hoteles.css']
 })
 export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
-  // Formulario reactivo
+  // Inyección de servicios
+  private hotelService = inject(HotelService);
+  private ciudadService = inject(CiudadService);
+  private categoriaService = inject(CategoriaService);
+  private imagenService = inject(ImagenService);
+  private usuarioService = inject(UsuarioService);
+  private fb = inject(FormBuilder);
+  
+  // Formularios
   hotelForm: FormGroup;
+  usuarioForm: FormGroup;
   
   // Variables de estado
   modoEdicion: boolean = false;
   guardando: boolean = false;
   cargando: boolean = false;
-  filtroCategoria: string = '';
+  guardandoUsuario: boolean = false;
+  filtroCategoria: number | null = null;
   filtroTexto: string = '';
   
   // Datos
   ciudades: Ciudad[] = [];
+  categorias: Categoria[] = []; // Categorías reales desde BD
   hoteles: Hotel[] = [];
   hotelesFiltrados: Hotel[] = [];
   hotelEditando: Hotel | null = null;
   hotelDetalles: Hotel | null = null;
   hotelAEliminar: Hotel | null = null;
   
-  // Categorías predefinidas
-  categorias = [
-    { value: '1', label: '1 Estrella' },
-    { value: '2', label: '2 Estrellas' },
-    { value: '3', label: '3 Estrellas' },
-    { value: '4', label: '4 Estrellas' },
-    { value: '5', label: '5 Estrellas' },
-    { value: 'boutique', label: 'Boutique' },
-    { value: 'apart', label: 'Apart Hotel' },
-    { value: 'hostel', label: 'Hostel' }
-  ];
+  // Imágenes del hotel actual
+  imagenesHotel: Imagen[] = [];
+  
+  // Usuarios
+  usuarios: Usuario[] = [];
   
   // Estadísticas
   totalHoteles: number = 0;
@@ -74,7 +72,8 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('detallesModal') detallesModalRef!: ElementRef;
   @ViewChild('confirmarEliminarModal') confirmarModalRef!: ElementRef;
 
-  constructor(private fb: FormBuilder) {
+  constructor() {
+    // Formulario de hotel
     this.hotelForm = this.fb.group({
       nombre: ['', [
         Validators.required, 
@@ -90,8 +89,9 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
         Validators.required, 
         Validators.minLength(10)
       ]],
+      contrasena: ['hotel123', [Validators.required]],
       ciudadId: ['', [Validators.required]],
-      categoria: ['', [Validators.required]],
+      categoriaId: ['', [Validators.required]],
       habitaciones: [null, [
         Validators.min(0),
         Validators.max(10000)
@@ -100,25 +100,72 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
         Validators.min(0),
         Validators.max(10000)
       ]],
-      imagenPrincipal: ['', [
-        Validators.pattern(/^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))$/i)
-      ]],
-      imagenSecundaria: ['', [
-        Validators.pattern(/^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))$/i)
-      ]]
+      imagenes: this.fb.array([])
     });
 
-    // Suscripción para filtrado en tiempo real
-    this.hotelForm.get('nombre')?.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe(() => {
-        this.aplicarFiltros();
-      });
+    // Formulario de usuario
+    this.usuarioForm = this.fb.group({
+      nombre: ['', [Validators.required, Validators.minLength(2)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2)]],
+      telefono: ['', [Validators.required, Validators.pattern(/^[+]?[\d\s\-()]+$/)]],
+      nacionalidad: ['', [Validators.required]],
+      numPasaporte: ['', [Validators.required]],
+      contrasena: ['', [Validators.required, Validators.minLength(6)]],
+      rol: ['usuario', [Validators.required]]
+    });
+  }
+
+  // Getter para el FormArray de imágenes
+  get imagenesArray(): FormArray {
+    return this.hotelForm.get('imagenes') as FormArray;
+  }
+
+  // Método para agregar imagen
+  agregarImagen(url: string): void {
+    if (url && url.trim() !== '') {
+      this.imagenesArray.push(this.fb.control(url.trim()));
+    }
+  }
+
+  // Método para eliminar imagen
+  eliminarImagen(index: number): void {
+    this.imagenesArray.removeAt(index);
+  }
+
+  // Método para vista previa de imagen
+  previewImagen(url: string): void {
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
+
+  // Método para manejar la selección de archivos
+  onFileSelected(event: Event, tipo: 'principal' | 'secundaria'): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = (e: any) => {
+        // En producción, aquí subirías la imagen al servidor
+        // Por ahora, simulamos una URL
+        const fakeUrl = `https://fakeimg.pl/600x400/?text=Imagen+${tipo}`;
+        this.agregarImagen(fakeUrl);
+        
+        this.mostrarNotificacion('success', 
+          'Imagen cargada', 
+          `Imagen ${tipo} cargada correctamente. (Simulación)`
+        );
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   ngOnInit(): void {
     this.cargarCiudades();
+    this.cargarCategorias();
     this.cargarHoteles();
+    this.cargarUsuarios();
   }
 
   ngAfterViewInit(): void {
@@ -129,7 +176,6 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
     this.destroyModales();
   }
 
-  // Inicializar modales de Bootstrap
   private initModales(): void {
     if (typeof window !== 'undefined' && (window as any).bootstrap) {
       if (this.detallesModalRef?.nativeElement) {
@@ -141,388 +187,305 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Destruir instancias de modales
   private destroyModales(): void {
     if (this.detallesModalInstance) {
       this.detallesModalInstance.dispose();
-      this.detallesModalInstance = null;
     }
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.dispose();
-      this.confirmarModalInstance = null;
     }
   }
 
-  // Cargar ciudades (simulación de servicio)
+  // Cargar ciudades
   cargarCiudades(): void {
-    // Datos de ejemplo para ciudades
-    this.ciudades = [
-      {
-        id: 1,
-        nombre: 'San Salvador de Jujuy',
-        provinciaId: 1,
-        descripcion: 'Capital de la provincia de Jujuy',
-        codigoPostal: '4600'
+    this.ciudadService.getCiudades().subscribe({
+      next: (ciudades: Ciudad[]) => {
+        this.ciudades = ciudades;
       },
-      {
-        id: 2,
-        nombre: 'Salta Capital',
-        provinciaId: 2,
-        descripcion: 'Ciudad ubicada en el Valle de Lerma',
-        codigoPostal: '4400'
-      },
-      {
-        id: 3,
-        nombre: 'Mendoza',
-        provinciaId: 3,
-        descripcion: 'Principal ciudad de la región de Cuyo',
-        codigoPostal: '5500'
-      },
-      {
-        id: 4,
-        nombre: 'Buenos Aires',
-        provinciaId: 4,
-        descripcion: 'Capital federal de Argentina',
-        codigoPostal: 'C1000'
-      },
-      {
-        id: 5,
-        nombre: 'Córdoba',
-        provinciaId: 5,
-        descripcion: 'Segunda ciudad más poblada de Argentina',
-        codigoPostal: '5000'
-      },
-      {
-        id: 6,
-        nombre: 'Rosario',
-        provinciaId: 6,
-        descripcion: 'Importante ciudad portuaria',
-        codigoPostal: '2000'
-      },
-      {
-        id: 7,
-        nombre: 'Bariloche',
-        provinciaId: 7,
-        descripcion: 'Ciudad turística en la Patagonia',
-        codigoPostal: '8400'
+      error: (error: any) => {
+        console.error('Error cargando ciudades:', error);
+        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las ciudades');
       }
+    });
+  }
+
+  // Cargar categorías desde la base de datos
+  cargarCategorias(): void {
+    this.categoriaService.getCategorias().subscribe({
+      next: (categorias: Categoria[]) => {
+        this.categorias = categorias;
+        console.log('Categorías cargadas:', categorias);
+      },
+      error: (error: any) => {
+        console.error('Error cargando categorías:', error);
+        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las categorías');
+        // Opcional: cargar categorías por defecto si falla
+        this.cargarCategoriasPorDefecto();
+      }
+    });
+  }
+
+  // Método opcional para cargar categorías por defecto si falla la conexión
+  cargarCategoriasPorDefecto(): void {
+    this.categorias = [
+      { id: 1, nombre: '⭐ 1 Estrella (Económico)' } as Categoria,
+      { id: 2, nombre: '⭐⭐ 2 Estrellas (Básico)' } as Categoria,
+      { id: 3, nombre: '⭐⭐⭐ 3 Estrellas (Confort)' } as Categoria,
+      { id: 4, nombre: '⭐⭐⭐⭐ 4 Estrellas (Superior)' } as Categoria,
+      { id: 5, nombre: '⭐⭐⭐⭐⭐ 5 Estrellas (Lujo)' } as Categoria,
+      { id: 6, nombre: '🏨 Boutique' } as Categoria,
+      { id: 7, nombre: '🏢 Apart Hotel' } as Categoria,
+      { id: 8, nombre: '🛏️ Hostel' } as Categoria
     ];
   }
 
-  // Cargar hoteles (simulación de API)
+  // Cargar hoteles
   cargarHoteles(): void {
     this.cargando = true;
-    
-    // Simulación de carga de datos
-    setTimeout(() => {
-      this.hoteles = [
-        {
-          id: 1,
-          nombre: 'Hotel de la Montaña',
-          descripcion: 'Hotel boutique con vista panorámica a la montaña, ubicado en el centro histórico. Ofrece spa, restaurante gourmet y habitaciones con jacuzzi.',
-          contactos: 'Tel: +54 388 123-4567\nEmail: info@hoteldelamontana.com\nDirección: Av. Belgrano 1234',
-          ciudadId: 1,
-          categoria: 'boutique',
-          habitaciones: 45,
-          precioPromedio: 180,
-          imagenPrincipal: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
-          imagenSecundaria: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800',
-          fechaCreacion: new Date('2024-01-15')
-        },
-        {
-          id: 2,
-          nombre: 'Gran Hotel Salta',
-          descripcion: 'Hotel 5 estrellas con piscina cubierta, centro de convenciones y 3 restaurantes. Ideal para negocios y turismo.',
-          contactos: 'Tel: +54 387 987-6543\nEmail: reservas@granhotelsalta.com\nDirección: Calle Alvarado 567',
-          ciudadId: 2,
-          categoria: '5',
-          habitaciones: 120,
-          precioPromedio: 220,
-          imagenPrincipal: 'https://images.unsplash.com/photo-1564501049418-3c27787d01e8?w=800',
-          fechaCreacion: new Date('2024-01-20')
-        },
-        {
-          id: 3,
-          nombre: 'Vineyard Resort',
-          descripcion: 'Resort en medio de viñedos con degustaciones de vino incluídas. Ofrece tours en bicicleta y masajes.',
-          contactos: 'Tel: +54 261 456-7890\nEmail: contacto@vineyardresort.com\nDirección: Ruta 40 km 123',
-          ciudadId: 3,
-          categoria: '4',
-          habitaciones: 80,
-          precioPromedio: 150,
-          imagenPrincipal: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800',
-          fechaCreacion: new Date('2024-01-25')
-        },
-        {
-          id: 4,
-          nombre: 'Urban Hostel Buenos Aires',
-          descripcion: 'Hostel moderno en Palermo con cocina compartida, sala de juegos y tours gratuitos por la ciudad.',
-          contactos: 'Tel: +54 11 8765-4321\nEmail: book@urbanhostel.com\nDirección: Thames 2345',
-          ciudadId: 4,
-          categoria: 'hostel',
-          habitaciones: 25,
-          precioPromedio: 35,
-          imagenPrincipal: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800',
-          fechaCreacion: new Date('2024-02-01')
-        },
-        {
-          id: 5,
-          nombre: 'Apart Hotel Córdoba Center',
-          descripcion: 'Apart hotel con cocina completa en cada unidad, lavandería y servicio de limpieza diario.',
-          contactos: 'Tel: +54 351 234-5678\nEmail: info@cordobacenter.com\nDirección: Av. Colón 789',
-          ciudadId: 5,
-          categoria: 'apart',
-          habitaciones: 60,
-          precioPromedio: 85,
-          fechaCreacion: new Date('2024-02-05')
-        },
-        {
-          id: 6,
-          nombre: 'Hotel Las Vegas Rosario',
-          descripcion: 'Hotel 3 estrellas con desayuno buffet incluido, ubicado frente al río Paraná.',
-          contactos: 'Tel: +54 341 345-6789\nEmail: reservas@hotellasvegas.com\nDirección: Blvd. Oroño 432',
-          ciudadId: 6,
-          categoria: '3',
-          habitaciones: 75,
-          precioPromedio: 95,
-          imagenPrincipal: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
-          fechaCreacion: new Date('2024-02-10')
-        },
-        {
-          id: 7,
-          nombre: 'Hotel Patagonia Lodge',
-          descripcion: 'Lodge de montaña con actividades al aire libre incluidas: trekking, cabalgatas y pesca.',
-          contactos: 'Tel: +54 294 123-4567\nEmail: adventure@patagonialodge.com\nDirección: Circuito Chico km 12',
-          ciudadId: 7,
-          categoria: '4',
-          habitaciones: 40,
-          precioPromedio: 200,
-          imagenPrincipal: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800',
-          fechaCreacion: new Date('2024-02-15')
-        }
-      ];
-      
-      this.hotelesFiltrados = [...this.hoteles];
-      this.totalHoteles = this.hoteles.length;
-      this.cargando = false;
-    }, 800);
+    this.hotelService.getHoteles().subscribe({
+      next: (hoteles: Hotel[]) => {
+        this.hoteles = hoteles;
+        this.hotelesFiltrados = [...this.hoteles];
+        this.totalHoteles = this.hoteles.length;
+        this.cargando = false;
+      },
+      error: (error: any) => {
+        console.error('Error cargando hoteles:', error);
+        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar los hoteles');
+        this.cargando = false;
+      }
+    });
   }
 
-  // Obtener nombre de ciudad por ID
+  // Cargar usuarios
+  cargarUsuarios(): void {
+    this.usuarioService.getUsuarios().subscribe({
+      next: (usuarios: Usuario[]) => {
+        this.usuarios = usuarios;
+      },
+      error: (error: any) => {
+        console.error('Error cargando usuarios:', error);
+      }
+    });
+  }
+
+  // Obtener nombre de ciudad
   obtenerNombreCiudad(ciudadId: number): string {
     const ciudad = this.ciudades.find(c => c.id === ciudadId);
     return ciudad ? ciudad.nombre : 'Ciudad desconocida';
   }
 
-  // Obtener label de categoría
-  getCategoriaLabel(categoria: string): string {
-    const cat = this.categorias.find(c => c.value === categoria);
-    return cat ? cat.label : 'Sin categoría';
+  // Obtener nombre de categoría desde BD
+  obtenerNombreCategoria(categoriaId: number): string {
+    const categoria = this.categorias.find(c => c.id === categoriaId);
+    return categoria ? categoria.nombre : 'Sin categoría';
   }
 
-  // Obtener clase para badge de categoría
-  getCategoriaBadgeClass(categoria: string): string {
-    const classes: {[key: string]: string} = {
-      '1': 'badge text-bg-secondary',
-      '2': 'badge text-bg-secondary',
-      '3': 'badge text-bg-primary',
-      '4': 'badge text-bg-info',
-      '5': 'badge text-bg-warning',
-      'boutique': 'badge text-bg-purple',
-      'apart': 'badge text-bg-success',
-      'hostel': 'badge text-bg-light text-dark'
-    };
-    return classes[categoria] || 'badge text-bg-secondary';
+  // Método para obtener el label de la categoría (usado en el template)
+  getCategoriaLabel(categoriaId: number): string {
+    return this.obtenerNombreCategoria(categoriaId);
   }
 
-  // Filtrar hoteles por texto
+  // Obtener clase para badge de categoría (ajusta según tus categorías en BD)
+  getCategoriaBadgeClass(categoriaId: number): string {
+    const categoria = this.categorias.find(c => c.id === categoriaId);
+    const nombreCategoria = categoria ? categoria.nombre.toLowerCase() : '';
+    
+    // Asigna clases basadas en el nombre o contenido de la categoría
+    if (nombreCategoria.includes('1 estrella') || nombreCategoria.includes('económico')) {
+      return 'badge text-bg-secondary';
+    } else if (nombreCategoria.includes('2 estrellas') || nombreCategoria.includes('básico')) {
+      return 'badge text-bg-secondary';
+    } else if (nombreCategoria.includes('3 estrellas') || nombreCategoria.includes('confort')) {
+      return 'badge text-bg-primary';
+    } else if (nombreCategoria.includes('4 estrellas') || nombreCategoria.includes('superior')) {
+      return 'badge text-bg-info';
+    } else if (nombreCategoria.includes('5 estrellas') || nombreCategoria.includes('lujo')) {
+      return 'badge text-bg-warning';
+    } else if (nombreCategoria.includes('boutique')) {
+      return 'badge text-bg-purple';
+    } else if (nombreCategoria.includes('apart') || nombreCategoria.includes('apart hotel')) {
+      return 'badge text-bg-success';
+    } else if (nombreCategoria.includes('hostel')) {
+      return 'badge text-bg-light text-dark';
+    } else {
+      return 'badge text-bg-secondary';
+    }
+  }
+
+  // Filtrar hoteles
   filtrarHoteles(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.filtroTexto = input.value.toLowerCase().trim();
     this.aplicarFiltros();
   }
 
-  // Filtrar por categoría
-  filtrarPorCategoria(categoria: string): void {
-    this.filtroCategoria = categoria;
+  filtrarPorCategoria(categoriaId: number): void {
+    this.filtroCategoria = categoriaId;
     this.aplicarFiltros();
   }
 
-  // Aplicar filtros combinados
   private aplicarFiltros(): void {
     let resultado = [...this.hoteles];
     
-    // Filtrar por categoría
     if (this.filtroCategoria) {
-      resultado = resultado.filter(h => h.categoria === this.filtroCategoria);
+      resultado = resultado.filter(h => h.categoriaId === this.filtroCategoria);
     }
     
-    // Filtrar por texto
     if (this.filtroTexto) {
       resultado = resultado.filter(hotel =>
         hotel.nombre.toLowerCase().includes(this.filtroTexto) ||
         hotel.descripcion.toLowerCase().includes(this.filtroTexto) ||
         hotel.contactos.toLowerCase().includes(this.filtroTexto) ||
-        this.obtenerNombreCiudad(hotel.ciudadId).toLowerCase().includes(this.filtroTexto)
+        this.obtenerNombreCiudad(hotel.ciudadId!).toLowerCase().includes(this.filtroTexto)
       );
     }
     
     this.hotelesFiltrados = resultado;
   }
 
-  // Iniciar nuevo registro
+  // Nuevo registro
   nuevoRegistro(): void {
     this.modoEdicion = false;
     this.hotelEditando = null;
+    this.imagenesHotel = [];
+    this.imagenesArray.clear();
+    
     this.hotelForm.reset({
       nombre: '',
       descripcion: '',
       contactos: '',
+      contrasena: 'hotel123',
       ciudadId: '',
-      categoria: '',
+      categoriaId: '',
       habitaciones: null,
-      precioPromedio: null,
-      imagenPrincipal: '',
-      imagenSecundaria: ''
+      precioPromedio: null
     });
+    
     this.hotelForm.markAsPristine();
     this.hotelForm.markAsUntouched();
-    
-    // Scroll suave al formulario
-    setTimeout(() => {
-      const formulario = document.querySelector('.col-lg-5');
-      if (formulario) {
-        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
   }
 
-  // Editar hotel existente
+  // Editar hotel
   editarHotel(hotel: Hotel): void {
     this.modoEdicion = true;
     this.hotelEditando = hotel;
+    this.imagenesHotel = hotel.imagenes || [];
+    
+    this.imagenesArray.clear();
+    this.imagenesHotel.forEach(imagen => {
+      this.imagenesArray.push(this.fb.control(imagen.url));
+    });
     
     this.hotelForm.patchValue({
       nombre: hotel.nombre,
       descripcion: hotel.descripcion,
       contactos: hotel.contactos,
-      ciudadId: hotel.ciudadId.toString(),
-      categoria: hotel.categoria,
+      contrasena: hotel.contrasena || 'hotel123',
+      ciudadId: hotel.ciudadId?.toString(),
+      categoriaId: hotel.categoriaId?.toString(),
       habitaciones: hotel.habitaciones || null,
-      precioPromedio: hotel.precioPromedio || null,
-      imagenPrincipal: hotel.imagenPrincipal || '',
-      imagenSecundaria: hotel.imagenSecundaria || ''
+      precioPromedio: hotel.precioPromedio || null
     });
-    
-    // Scroll suave al formulario
-    setTimeout(() => {
-      const formulario = document.querySelector('.col-lg-5');
-      if (formulario) {
-        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
   }
 
-  // Guardar hotel
+  // Guardar hotel con imágenes
   guardarHotel(): void {
-    // Marcar todos los controles como touched
     Object.keys(this.hotelForm.controls).forEach(key => {
       const control = this.hotelForm.get(key);
       control?.markAsTouched();
     });
 
     if (this.hotelForm.invalid) {
-      // Encontrar el primer campo inválido y enfocarlo
-      for (const key of Object.keys(this.hotelForm.controls)) {
-        const control = this.hotelForm.get(key);
-        if (control?.invalid) {
-          const element = document.getElementById(key);
-          if (element) {
-            element.focus();
-          }
-          break;
-        }
-      }
-      
-      // Mostrar alerta de error
       this.mostrarNotificacion('error', 
         'Formulario inválido', 
-        'Por favor, completa todos los campos requeridos correctamente.'
+        'Completa todos los campos requeridos correctamente.'
       );
       return;
     }
 
     this.guardando = true;
-    
     const hotelData = this.hotelForm.value;
-    hotelData.ciudadId = Number(hotelData.ciudadId);
     
-    // Simulación de guardado
-    setTimeout(() => {
-      if (this.modoEdicion && this.hotelEditando) {
-        // Actualizar hotel existente
-        const index = this.hoteles.findIndex(h => h.id === this.hotelEditando!.id);
-        if (index !== -1) {
-          this.hoteles[index] = {
-            ...this.hotelEditando,
-            nombre: hotelData.nombre,
-            descripcion: hotelData.descripcion,
-            contactos: hotelData.contactos,
-            ciudadId: hotelData.ciudadId,
-            categoria: hotelData.categoria,
-            habitaciones: hotelData.habitaciones || undefined,
-            precioPromedio: hotelData.precioPromedio || undefined,
-            imagenPrincipal: hotelData.imagenPrincipal || undefined,
-            imagenSecundaria: hotelData.imagenSecundaria || undefined
-          };
+    const guardarHotelObservable = this.modoEdicion && this.hotelEditando?.id
+      ? this.hotelService.updateHotel(this.hotelEditando.id, hotelData)
+      : this.hotelService.createHotel(hotelData);
+
+    guardarHotelObservable.subscribe({
+      next: (hotelGuardado: Hotel) => {
+        // Guardar imágenes si hay
+        const imagenesUrls = this.imagenesArray.value;
+        if (imagenesUrls.length > 0) {
+          imagenesUrls.forEach((url: string) => {
+            const imagen: Imagen = { url: url };
+            this.imagenService.createImagen(imagen).subscribe({
+              next: () => console.log('Imagen guardada'),
+              error: (error: any) => console.error('Error guardando imagen:', error)
+            });
+          });
         }
-      } else {
-        // Crear nuevo hotel
-        const nuevoHotel: Hotel = {
-          id: this.hoteles.length > 0 ? Math.max(...this.hoteles.map(h => h.id)) + 1 : 1,
-          nombre: hotelData.nombre,
-          descripcion: hotelData.descripcion,
-          contactos: hotelData.contactos,
-          ciudadId: hotelData.ciudadId,
-          categoria: hotelData.categoria,
-          habitaciones: hotelData.habitaciones || undefined,
-          precioPromedio: hotelData.precioPromedio || undefined,
-          imagenPrincipal: hotelData.imagenPrincipal || undefined,
-          imagenSecundaria: hotelData.imagenSecundaria || undefined,
-          fechaCreacion: new Date()
-        };
-        this.hoteles.unshift(nuevoHotel);
-        this.totalHoteles = this.hoteles.length;
-      }
-      
-      this.aplicarFiltros();
-      this.guardando = false;
-      this.nuevoRegistro();
-      
-      // Mostrar notificación de éxito
-      this.mostrarNotificacion('success', 
-        this.modoEdicion ? 'Hotel actualizado' : 'Hotel creado',
-        `El hotel "${hotelData.nombre}" se ha guardado correctamente.`
-      );
-    }, 1200);
-  }
-
-  // Cancelar edición
-  cancelarEdicion(): void {
-    if (this.hotelForm.dirty) {
-      if (confirm('¿Estás seguro? Los cambios no guardados se perderán.')) {
+        
+        this.cargarHoteles();
+        this.guardando = false;
         this.nuevoRegistro();
+        
+        this.mostrarNotificacion('success', 
+          this.modoEdicion ? 'Hotel actualizado' : 'Hotel creado',
+          `Hotel "${hotelData.nombre}" guardado correctamente.`
+        );
+      },
+      error: (error: any) => {
+        console.error('Error guardando hotel:', error);
+        this.guardando = false;
+        this.mostrarNotificacion('error', 
+          'Error', 
+          'No se pudo guardar el hotel. Intenta nuevamente.'
+        );
       }
-    } else {
-      this.nuevoRegistro();
-    }
+    });
   }
 
-  // Ver detalles de hotel
+  // Guardar usuario (parámetros de conexión)
+  guardarUsuario(): void {
+    if (this.usuarioForm.invalid) {
+      this.mostrarNotificacion('error', 'Formulario inválido', 'Completa todos los campos del usuario.');
+      return;
+    }
+
+    this.guardandoUsuario = true;
+    const usuarioData = this.usuarioForm.value;
+
+    this.usuarioService.createUsuario(usuarioData).subscribe({
+      next: (usuarioGuardado: Usuario) => {
+        this.guardandoUsuario = false;
+        this.usuarioForm.reset({
+          nombre: '',
+          apellidos: '',
+          telefono: '',
+          nacionalidad: '',
+          numPasaporte: '',
+          contrasena: '',
+          rol: 'usuario'
+        });
+        
+        this.mostrarNotificacion('success', 
+          'Usuario creado', 
+          'Parámetros de conexión guardados correctamente.'
+        );
+        
+        this.cargarUsuarios();
+      },
+      error: (error: any) => {
+        console.error('Error guardando usuario:', error);
+        this.guardandoUsuario = false;
+        this.mostrarNotificacion('error', 'Error', 'No se pudo guardar el usuario.');
+      }
+    });
+  }
+
+  // Ver detalles
   verDetalles(hotel: Hotel): void {
     this.hotelDetalles = hotel;
-    
-    // Mostrar modal de detalles
     if (this.detallesModalInstance) {
       this.detallesModalInstance.show();
     }
@@ -531,37 +494,34 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
   // Eliminar hotel
   eliminarHotel(hotel: Hotel): void {
     this.hotelAEliminar = hotel;
-    
-    // Mostrar modal de confirmación
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.show();
     }
   }
 
-  // Confirmar eliminación
   confirmarEliminar(): void {
-    if (!this.hotelAEliminar) return;
+    if (!this.hotelAEliminar?.id) return;
     
-    const index = this.hoteles.findIndex(h => h.id === this.hotelAEliminar!.id);
-    if (index !== -1) {
-      const nombreEliminado = this.hotelAEliminar.nombre;
-      this.hoteles.splice(index, 1);
-      this.totalHoteles = this.hoteles.length;
-      this.aplicarFiltros();
-      
-      // Cerrar modal
-      if (this.confirmarModalInstance) {
-        this.confirmarModalInstance.hide();
+    this.hotelService.deleteHotel(this.hotelAEliminar.id).subscribe({
+      next: () => {
+        this.cargarHoteles();
+        if (this.confirmarModalInstance) {
+          this.confirmarModalInstance.hide();
+        }
+        this.mostrarNotificacion('info', 
+          'Hotel eliminado',
+          `Hotel "${this.hotelAEliminar!.nombre}" eliminado correctamente.`
+        );
+        this.hotelAEliminar = null;
+      },
+      error: (error: any) => {
+        console.error('Error eliminando hotel:', error);
+        this.mostrarNotificacion('error', 'Error', 'No se pudo eliminar el hotel.');
+        if (this.confirmarModalInstance) {
+          this.confirmarModalInstance.hide();
+        }
       }
-      
-      // Mostrar notificación
-      this.mostrarNotificacion('info', 
-        'Hotel eliminado',
-        `El hotel "${nombreEliminado}" ha sido eliminado correctamente.`
-      );
-    }
-    
-    this.hotelAEliminar = null;
+    });
   }
 
   // Manejo de errores en imágenes
@@ -570,75 +530,9 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
     img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjhmOCIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBkeT0iLjNlbSI+SW1hZ2VuPC90ZXh0Pjwvc3ZnPg==';
   }
 
-  // Vista previa de imagen
-  previewImagen(tipo: 'principal' | 'secundaria'): void {
-    const url = tipo === 'principal' 
-      ? this.hotelForm.get('imagenPrincipal')?.value
-      : this.hotelForm.get('imagenSecundaria')?.value;
-    
-    if (url) {
-      window.open(url, '_blank');
-    } else {
-      this.mostrarNotificacion('warning', 
-        'Sin imagen', 
-        `No hay una URL de imagen ${tipo} para previsualizar.`
-      );
-    }
-  }
-
-  // Manejo de selección de archivos
-  onFileSelected(event: Event, tipo: 'principal' | 'secundaria'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      
-      // Validar tipo de archivo
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        this.mostrarNotificacion('error', 
-          'Tipo de archivo inválido', 
-          'Solo se permiten imágenes (JPEG, PNG, GIF, WebP).'
-        );
-        return;
-      }
-      
-      // Validar tamaño (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.mostrarNotificacion('error', 
-          'Archivo demasiado grande', 
-          'La imagen no debe superar los 5MB.'
-        );
-        return;
-      }
-      
-      // Simulación de subida de archivo
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        // En producción, aquí subirías la imagen al servidor
-        const fakeUrl = `https://fakeimg.pl/600x400/?text=Hotel+${tipo}+Image`;
-        
-        if (tipo === 'principal') {
-          this.hotelForm.patchValue({ imagenPrincipal: fakeUrl });
-        } else {
-          this.hotelForm.patchValue({ imagenSecundaria: fakeUrl });
-        }
-        
-        this.mostrarNotificacion('success', 
-          'Imagen cargada', 
-          `Imagen ${tipo} cargada correctamente. (Simulación)`
-        );
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
   // Mostrar notificación
   private mostrarNotificacion(tipo: 'success' | 'info' | 'warning' | 'error', titulo: string, mensaje: string): void {
-    // En producción, usarías un servicio de notificaciones como ngx-toastr
-    console.log(`[${tipo.toUpperCase()}] ${titulo}: ${mensaje}`);
-    
-    // Crear notificación visual simple
-    const toastId = 'hotel-notification-' + Date.now();
+    const toastId = 'notification-' + Date.now();
     const toast = document.createElement('div');
     toast.id = toastId;
     toast.className = `toast align-items-center text-bg-${tipo === 'error' ? 'danger' : tipo} border-0`;
@@ -660,66 +554,22 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
           <strong>${titulo}</strong><br>
           <small>${mensaje}</small>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     `;
     
-    const container = document.querySelector('.toast-container');
-    if (!container) {
+    const container = document.querySelector('.toast-container') || (() => {
       const newContainer = document.createElement('div');
       newContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
       newContainer.style.zIndex = '1055';
       document.body.appendChild(newContainer);
-      newContainer.appendChild(toast);
-    } else {
-      container.appendChild(toast);
-    }
+      return newContainer;
+    })();
     
-    // Inicializar y mostrar toast
+    container.appendChild(toast);
     const bsToast = new (window as any).bootstrap.Toast(toast);
     bsToast.show();
     
-    // Remover después de cerrar
-    toast.addEventListener('hidden.bs.toast', () => {
-      toast.remove();
-    });
-  }
-
-  // Obtener mensaje de error para un campo
-  getErrorMessage(fieldName: string): string {
-    const control = this.hotelForm.get(fieldName);
-    
-    if (!control || !control.errors || !control.touched) return '';
-    
-    const errors = control.errors;
-    
-    if (errors['required']) {
-      return 'Este campo es obligatorio';
-    }
-    
-    if (errors['minlength']) {
-      return `Mínimo ${errors['minlength'].requiredLength} caracteres`;
-    }
-    
-    if (errors['maxlength']) {
-      return `Máximo ${errors['maxlength'].requiredLength} caracteres`;
-    }
-    
-    if (errors['min']) {
-      return `El valor mínimo es ${errors['min'].min}`;
-    }
-    
-    if (errors['max']) {
-      return `El valor máximo es ${errors['max'].max}`;
-    }
-    
-    if (errors['pattern']) {
-      if (fieldName.includes('imagen')) {
-        return 'URL de imagen inválida (debe terminar en .png, .jpg, .jpeg, .gif, .webp o .svg)';
-      }
-      return 'Formato inválido';
-    }
-    
-    return 'Valor inválido';
+    toast.addEventListener('hidden.bs.toast', () => toast.remove());
   }
 }

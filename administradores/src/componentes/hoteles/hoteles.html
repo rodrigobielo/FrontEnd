@@ -237,19 +237,14 @@
                   <select 
                     class="form-select" 
                     id="categoria"
-                    formControlName="categoria"
-                    [class.is-valid]="hotelForm.get('categoria')?.valid && hotelForm.get('categoria')?.touched"
-                    [class.is-invalid]="hotelForm.get('categoria')?.invalid && hotelForm.get('categoria')?.touched"
+                    formControlName="categoriaId"
+                    [class.is-valid]="hotelForm.get('categoriaId')?.valid && hotelForm.get('categoriaId')?.touched"
+                    [class.is-invalid]="hotelForm.get('categoriaId')?.invalid && hotelForm.get('categoriaId')?.touched"
                   >
                     <option value="" disabled selected>Selecciona una categoría</option>
-                    <option value="1">⭐ 1 Estrella (Económico)</option>
-                    <option value="2">⭐⭐ 2 Estrellas (Básico)</option>
-                    <option value="3">⭐⭐⭐ 3 Estrellas (Confort)</option>
-                    <option value="4">⭐⭐⭐⭐ 4 Estrellas (Superior)</option>
-                    <option value="5">⭐⭐⭐⭐⭐ 5 Estrellas (Lujo)</option>
-                    <option value="boutique">🏨 Boutique</option>
-                    <option value="apart">🏢 Apart Hotel</option>
-                    <option value="hostel">🛏️ Hostel</option>
+                    @for (categoria of categorias; track categoria.id) {
+                      <option [value]="categoria.id">{{ categoria.nombre }}</option>
+                    }
                   </select>
                   <div class="valid-feedback">
                     <i class="bi bi-check-circle-fill me-1"></i> Categoría seleccionada
@@ -326,11 +321,11 @@
               </div>
               <div class="card-body">
                 <div class="row g-3">
-                  <!-- Campo: Imagen Principal -->
+                  <!-- Campo: URL de Imagen -->
                   <div class="col-12">
-                    <label for="imagenPrincipal" class="form-label fw-semibold">
-                      <i class="bi bi-camera-fill me-1 text-body-secondary"></i>
-                      Imagen Principal (URL)
+                    <label for="urlImagen" class="form-label fw-semibold">
+                      <i class="bi bi-link-45deg me-1 text-body-secondary"></i>
+                      URL de Imagen
                     </label>
                     <div class="input-group">
                       <span class="input-group-text">
@@ -339,106 +334,51 @@
                       <input 
                         type="url" 
                         class="form-control" 
-                        id="imagenPrincipal"
-                        formControlName="imagenPrincipal"
-                        placeholder="https://ejemplo.com/imagen-principal.jpg"
+                        id="urlImagen"
+                        placeholder="https://ejemplo.com/imagen.jpg"
+                        #urlInput
                       >
                       <button 
-                        class="btn btn-outline-secondary" 
+                        class="btn btn-outline-warning" 
                         type="button"
-                        (click)="previewImagen('principal')"
+                        (click)="agregarImagen(urlInput.value); urlInput.value=''"
                       >
-                        <i class="bi bi-eye"></i>
+                        <i class="bi bi-plus-circle me-1"></i> Agregar
                       </button>
                     </div>
-                    @if (hotelForm.get('imagenPrincipal')?.value) {
-                      <div class="mt-2">
-                        <small class="text-success">
-                          <i class="bi bi-check-circle-fill me-1"></i> URL de imagen válida
-                        </small>
-                      </div>
-                    }
                     <div class="form-text">
-                      <i class="bi bi-info-circle me-1"></i> URL de la imagen principal del hotel
+                      <i class="bi bi-info-circle me-1"></i> Ingresa la URL de una imagen y presiona Agregar
                     </div>
                   </div>
 
-                  <!-- Campo: Imagen Secundaria -->
-                  <div class="col-12">
-                    <label for="imagenSecundaria" class="form-label fw-semibold">
-                      <i class="bi bi-camera me-1 text-body-secondary"></i>
-                      Imagen Secundaria (URL)
-                    </label>
-                    <div class="input-group">
-                      <span class="input-group-text">
-                        <i class="bi bi-image-alt"></i>
-                      </span>
-                      <input 
-                        type="url" 
-                        class="form-control" 
-                        id="imagenSecundaria"
-                        formControlName="imagenSecundaria"
-                        placeholder="https://ejemplo.com/imagen-secundaria.jpg"
-                      >
-                      <button 
-                        class="btn btn-outline-secondary" 
-                        type="button"
-                        (click)="previewImagen('secundaria')"
-                      >
-                        <i class="bi bi-eye"></i>
-                      </button>
-                    </div>
-                    @if (hotelForm.get('imagenSecundaria')?.value) {
-                      <div class="mt-2">
-                        <small class="text-success">
-                          <i class="bi bi-check-circle-fill me-1"></i> URL de imagen válida
-                        </small>
+                  <!-- Lista de imágenes agregadas -->
+                  <div class="col-12" *ngIf="imagenesArray.length > 0">
+                    <h6 class="fw-semibold mb-2">
+                      <i class="bi bi-card-image me-1"></i>
+                      Imágenes agregadas
+                    </h6>
+                    <div class="list-group">
+                      <div class="list-group-item d-flex justify-content-between align-items-center" 
+                           *ngFor="let imagen of imagenesArray.controls; let i = index">
+                        <div class="d-flex align-items-center">
+                          <img [src]="imagen.value" 
+                               alt="Imagen {{i+1}}" 
+                               class="rounded me-3"
+                               style="width: 50px; height: 50px; object-fit: cover;"
+                               (error)="onImageError($event)">
+                          <div>
+                            <small class="d-block text-truncate" style="max-width: 200px;">{{ imagen.value }}</small>
+                            <button type="button" class="btn btn-sm btn-link p-0" (click)="previewImagen(imagen.value)">
+                              <small><i class="bi bi-eye me-1"></i>Vista previa</small>
+                            </button>
+                          </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" (click)="eliminarImagen(i)">
+                          <i class="bi bi-trash"></i>
+                        </button>
                       </div>
-                    }
-                    <div class="form-text">
-                      <i class="bi bi-info-circle me-1"></i> URL de una imagen adicional del hotel
                     </div>
                   </div>
-
-                  <!-- Vista previa de imágenes -->
-                  @if (hotelForm.get('imagenPrincipal')?.value || hotelForm.get('imagenSecundaria')?.value) {
-                    <div class="col-12 mt-3">
-                      <h6 class="fw-semibold mb-2">
-                        <i class="bi bi-card-image me-1"></i>
-                        Vista previa
-                      </h6>
-                      <div class="row g-2">
-                        @if (hotelForm.get('imagenPrincipal')?.value) {
-                          <div class="col-md-6">
-                            <div class="border rounded p-2">
-                              <small class="d-block mb-1 text-body-secondary">Principal</small>
-                              <img 
-                                [src]="hotelForm.get('imagenPrincipal')?.value" 
-                                alt="Imagen principal" 
-                                class="img-fluid rounded"
-                                (error)="onImageError($event)"
-                                style="max-height: 150px; object-fit: cover;"
-                              >
-                            </div>
-                          </div>
-                        }
-                        @if (hotelForm.get('imagenSecundaria')?.value) {
-                          <div class="col-md-6">
-                            <div class="border rounded p-2">
-                              <small class="d-block mb-1 text-body-secondary">Secundaria</small>
-                              <img 
-                                [src]="hotelForm.get('imagenSecundaria')?.value" 
-                                alt="Imagen secundaria" 
-                                class="img-fluid rounded"
-                                (error)="onImageError($event)"
-                                style="max-height: 150px; object-fit: cover;"
-                              >
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
 
                   <!-- Subida de archivos alternativa -->
                   <div class="col-12">
@@ -508,7 +448,7 @@
               <button 
                 type="button" 
                 class="btn btn-outline-secondary"
-                (click)="cancelarEdicion()"
+                (click)="nuevoRegistro()"
                 [disabled]="guardando"
               >
                 <i class="bi bi-x-circle me-1"></i>
@@ -522,6 +462,203 @@
                 <i class="bi bi-asterisk text-danger me-1"></i>
                 Campos marcados con asterisco (*) son obligatorios
               </small>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Formulario de Parámetros de Conexión (Usuario) -->
+      <div class="card border-success-subtle mt-4">
+        <div class="card-header bg-success-subtle border-0 py-3">
+          <h6 class="mb-0">
+            <i class="bi bi-person-badge-fill text-success me-2"></i>
+            Parámetros de Conexión
+          </h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()" novalidate>
+            <div class="row g-3">
+              <!-- Nombre y Apellidos -->
+              <div class="col-md-6">
+                <label for="nombreUsuario" class="form-label fw-semibold">
+                  <i class="bi bi-person-fill me-1 text-success"></i>
+                  Nombre <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nombreUsuario"
+                  formControlName="nombre"
+                  [class.is-invalid]="usuarioForm.get('nombre')?.invalid && usuarioForm.get('nombre')?.touched"
+                  placeholder="Ej: Juan"
+                >
+                @if (usuarioForm.get('nombre')?.invalid && usuarioForm.get('nombre')?.touched) {
+                  <div class="invalid-feedback">
+                    @if (usuarioForm.get('nombre')?.hasError('required')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> El nombre es obligatorio
+                    }
+                    @if (usuarioForm.get('nombre')?.hasError('minlength')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 2 caracteres
+                    }
+                  </div>
+                }
+              </div>
+              
+              <div class="col-md-6">
+                <label for="apellidos" class="form-label fw-semibold">
+                  <i class="bi bi-person-vcard-fill me-1 text-success"></i>
+                  Apellidos <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="apellidos"
+                  formControlName="apellidos"
+                  [class.is-invalid]="usuarioForm.get('apellidos')?.invalid && usuarioForm.get('apellidos')?.touched"
+                  placeholder="Ej: Pérez García"
+                >
+                @if (usuarioForm.get('apellidos')?.invalid && usuarioForm.get('apellidos')?.touched) {
+                  <div class="invalid-feedback">
+                    @if (usuarioForm.get('apellidos')?.hasError('required')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> Los apellidos son obligatorios
+                    }
+                    @if (usuarioForm.get('apellidos')?.hasError('minlength')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 2 caracteres
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Teléfono y Nacionalidad -->
+              <div class="col-md-6">
+                <label for="telefono" class="form-label fw-semibold">
+                  <i class="bi bi-telephone-fill me-1 text-success"></i>
+                  Teléfono <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  id="telefono"
+                  formControlName="telefono"
+                  [class.is-invalid]="usuarioForm.get('telefono')?.invalid && usuarioForm.get('telefono')?.touched"
+                  placeholder="Ej: +54 11 1234-5678"
+                >
+                @if (usuarioForm.get('telefono')?.invalid && usuarioForm.get('telefono')?.touched) {
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Teléfono inválido
+                  </div>
+                }
+              </div>
+              
+              <div class="col-md-6">
+                <label for="nacionalidad" class="form-label fw-semibold">
+                  <i class="bi bi-globe-americas me-1 text-success"></i>
+                  Nacionalidad <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nacionalidad"
+                  formControlName="nacionalidad"
+                  [class.is-invalid]="usuarioForm.get('nacionalidad')?.invalid && usuarioForm.get('nacionalidad')?.touched"
+                  placeholder="Ej: Argentina"
+                >
+                @if (usuarioForm.get('nacionalidad')?.invalid && usuarioForm.get('nacionalidad')?.touched) {
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> La nacionalidad es obligatoria
+                  </div>
+                }
+              </div>
+
+              <!-- Número de Pasaporte -->
+              <div class="col-12">
+                <label for="numPasaporte" class="form-label fw-semibold">
+                  <i class="bi bi-passport-fill me-1 text-success"></i>
+                  Número de Pasaporte <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="numPasaporte"
+                  formControlName="numPasaporte"
+                  [class.is-invalid]="usuarioForm.get('numPasaporte')?.invalid && usuarioForm.get('numPasaporte')?.touched"
+                  placeholder="Ej: AB1234567"
+                >
+                @if (usuarioForm.get('numPasaporte')?.invalid && usuarioForm.get('numPasaporte')?.touched) {
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El número de pasaporte es obligatorio
+                  </div>
+                }
+              </div>
+
+              <!-- Contraseña y Rol -->
+              <div class="col-md-6">
+                <label for="contrasenaUsuario" class="form-label fw-semibold">
+                  <i class="bi bi-key-fill me-1 text-success"></i>
+                  Contraseña <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  id="contrasenaUsuario"
+                  formControlName="contrasena"
+                  [class.is-invalid]="usuarioForm.get('contrasena')?.invalid && usuarioForm.get('contrasena')?.touched"
+                  placeholder="Mínimo 6 caracteres"
+                >
+                @if (usuarioForm.get('contrasena')?.invalid && usuarioForm.get('contrasena')?.touched) {
+                  <div class="invalid-feedback">
+                    @if (usuarioForm.get('contrasena')?.hasError('required')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> La contraseña es obligatoria
+                    }
+                    @if (usuarioForm.get('contrasena')?.hasError('minlength')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 6 caracteres
+                    }
+                  </div>
+                }
+              </div>
+              
+              <div class="col-md-6">
+                <label for="rol" class="form-label fw-semibold">
+                  <i class="bi bi-person-rolodex me-1 text-success"></i>
+                  Rol <span class="text-danger">*</span>
+                </label>
+                <select 
+                  class="form-select" 
+                  id="rol"
+                  formControlName="rol"
+                  [class.is-invalid]="usuarioForm.get('rol')?.invalid && usuarioForm.get('rol')?.touched"
+                >
+                  <option value="usuario">Usuario</option>
+                  <option value="admin">Administrador</option>
+                  <option value="empleado">Empleado</option>
+                </select>
+                @if (usuarioForm.get('rol')?.invalid && usuarioForm.get('rol')?.touched) {
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un rol
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Botón para guardar usuario -->
+            <div class="mt-4 pt-3 border-top">
+              <button 
+                type="submit" 
+                class="btn btn-success"
+                [disabled]="usuarioForm.invalid || guardandoUsuario"
+              >
+                @if (guardandoUsuario) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  Guardando...
+                } @else {
+                  <i class="bi bi-save me-1"></i>
+                  Guardar Parámetros de Conexión
+                }
+              </button>
+              <div class="form-text mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                Estos datos se guardarán en la tabla de Usuarios para acceso al sistema.
+              </div>
             </div>
           </form>
         </div>
@@ -555,12 +692,12 @@
                   <i class="bi bi-funnel-fill me-1"></i> Filtrar
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#" (click)="filtrarPorCategoria('')">Todas las categorías</a></li>
+                  <li><a class="dropdown-item" href="#" (click)="filtrarPorCategoria(0)">Todas las categorías</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  @for (categoria of categorias; track categoria.value) {
+                  @for (categoria of categorias; track categoria.id) {
                     <li>
-                      <a class="dropdown-item" href="#" (click)="filtrarPorCategoria(categoria.value)">
-                        <i class="bi bi-star-fill me-2"></i> {{ categoria.label }}
+                      <a class="dropdown-item" href="#" (click)="filtrarPorCategoria(categoria.id)">
+                        <i class="bi bi-star-fill me-2"></i> {{ categoria.nombre }}
                       </a>
                     </li>
                   }
@@ -622,10 +759,10 @@
                     <tr [class.table-warning-subtle]="hotel.id === hotelEditando?.id">
                       <td class="ps-3">
                         <div class="d-flex align-items-center">
-                          @if (hotel.imagenPrincipal) {
+                          @if (hotel.imagenes && hotel.imagenes.length > 0) {
                             <div class="flex-shrink-0 me-2">
                               <img 
-                                [src]="hotel.imagenPrincipal" 
+                                [src]="hotel.imagenes[0].url" 
                                 alt="{{ hotel.nombre }}"
                                 class="rounded"
                                 style="width: 50px; height: 50px; object-fit: cover;"
@@ -648,14 +785,14 @@
                           </div>
                           <div class="flex-grow-1 ms-2">
                             <span class="badge text-bg-info-subtle text-info-emphasis">
-                              {{ obtenerNombreCiudad(hotel.ciudadId) }}
+                              {{ obtenerNombreCiudad(hotel.ciudadId!) }}
                             </span>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span [class]="getCategoriaBadgeClass(hotel.categoria)">
-                          {{ getCategoriaLabel(hotel.categoria) }}
+                        <span [class]="getCategoriaBadgeClass(hotel.categoriaId!)">
+                          {{ getCategoriaLabel(hotel.categoriaId!) }}
                         </span>
                       </td>
                       <td class="text-end">
@@ -758,8 +895,8 @@
           @if (hotelDetalles) {
             <div class="row">
               <div class="col-md-4 text-center mb-3 mb-md-0">
-                @if (hotelDetalles.imagenPrincipal) {
-                  <img [src]="hotelDetalles.imagenPrincipal" 
+                @if (hotelDetalles.imagenes && hotelDetalles.imagenes.length > 0) {
+                  <img [src]="hotelDetalles.imagenes[0].url" 
                        alt="{{ hotelDetalles.nombre }}" 
                        class="img-fluid rounded-3 shadow"
                        (error)="onImageError($event)"
@@ -773,8 +910,8 @@
               <div class="col-md-8">
                 <h3 class="text-warning-emphasis mb-2">{{ hotelDetalles.nombre }}</h3>
                 <div class="mb-3">
-                  <span [class]="getCategoriaBadgeClass(hotelDetalles.categoria) + ' fs-6'">
-                    {{ getCategoriaLabel(hotelDetalles.categoria) }}
+                  <span [class]="getCategoriaBadgeClass(hotelDetalles.categoriaId!) + ' fs-6'">
+                    {{ getCategoriaLabel(hotelDetalles.categoriaId!) }}
                   </span>
                 </div>
                 <div class="row g-3">
@@ -782,7 +919,7 @@
                     <strong class="text-body-emphasis">Ciudad:</strong>
                     <span class="ms-2">
                       <span class="badge text-bg-info-subtle text-info-emphasis">
-                        {{ obtenerNombreCiudad(hotelDetalles.ciudadId) }}
+                        {{ obtenerNombreCiudad(hotelDetalles.ciudadId!) }}
                       </span>
                     </span>
                   </div>
@@ -857,11 +994,11 @@
                   </div>
                   <div class="col-12">
                     <strong class="text-body-emphasis">Ciudad:</strong>
-                    <span class="ms-2">{{ obtenerNombreCiudad(hotelAEliminar.ciudadId) }}</span>
+                    <span class="ms-2">{{ obtenerNombreCiudad(hotelAEliminar.ciudadId!) }}</span>
                   </div>
                   <div class="col-12">
                     <strong class="text-body-emphasis">Categoría:</strong>
-                    <span class="ms-2">{{ getCategoriaLabel(hotelAEliminar.categoria) }}</span>
+                    <span class="ms-2">{{ getCategoriaLabel(hotelAEliminar.categoriaId!) }}</span>
                   </div>
                 </div>
               </div>

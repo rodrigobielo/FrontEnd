@@ -1,8 +1,7 @@
-// src/app/componentes/categorias/categorias.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { CategoriaService } from '../../servicios/categoria.service';
 import { Categoria, CategoriaDTO } from '../../modelos/categoria.model';
@@ -14,91 +13,59 @@ import { Categoria, CategoriaDTO } from '../../modelos/categoria.model';
   templateUrl: './categorias.html',
   styleUrls: ['./categorias.css']
 })
-export class Categorias implements OnInit, OnDestroy {
-  categoriaForm: FormGroup;
-  modoEdicion: boolean = false;
-  guardando: boolean = false;
-  cargando: boolean = false;
-  
+export class Categorias implements OnInit, AfterViewInit {
+  // Datos
   categorias: Categoria[] = [];
   categoriasFiltradas: Categoria[] = [];
   categoriaEditando: Categoria | null = null;
   categoriaDetalles: Categoria | null = null;
   categoriaAEliminar: Categoria | null = null;
   
+  // Formulario
+  categoriaForm: FormGroup;
+  
+  // Variables de estado
+  modoEdicion: boolean = false;
+  guardando: boolean = false;
+  cargando: boolean = false;
+  filtroTexto: string = '';
+  
+  // Estadísticas
   totalCategorias: number = 0;
-  opcionesEstrellas = [1, 2, 3, 4, 5];
 
+  // Variables para modales
   private detallesModalInstance: any;
   private confirmarModalInstance: any;
 
+  @ViewChild('detallesModal') detallesModalRef!: ElementRef;
+  @ViewChild('confirmarEliminarModal') confirmarModalRef!: ElementRef;
+
   constructor(
     private fb: FormBuilder,
-    private categoriaService: CategoriaService,
-    private router: Router // Inyectar Router para redirecciones
+    private categoriaService: CategoriaService
   ) {
     this.categoriaForm = this.fb.group({
-      nombre: ['', [
-        Validators.required, 
-        Validators.minLength(3), 
-        Validators.maxLength(100),
-        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-\.]+$/)
-      ]],
-      numeroEstrellas: ['', [
-        Validators.required,
-        Validators.min(1),
-        Validators.max(5)
-      ]],
-      descripcion: ['', [
-        Validators.required, 
-        Validators.minLength(10),
-        Validators.maxLength(500)
-      ]]
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      descripcion: ['', [Validators.maxLength(500)]],
+      numeroEstrellas: [0, [Validators.min(0), Validators.max(5)]]
     });
   }
 
   ngOnInit(): void {
-    // Verificar autenticación
-    this.verificarAutenticacion();
-    
-    // Cargar datos
     this.cargarCategorias();
+  }
+
+  ngAfterViewInit(): void {
     this.initModales();
-  }
-
-  ngOnDestroy(): void {
-    this.destroyModales();
-  }
-
-  private verificarAutenticacion(): void {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    const currentUser = localStorage.getItem('currentUser');
-    
-    if (isLoggedIn !== 'true' || !currentUser) {
-      console.warn('Usuario no autenticado. Redirigiendo al dashboard...');
-      this.router.navigate(['/dashboard']);
-      return;
-    }
-    
-    // Opcional: Puedes parsear y usar la información del usuario
-    try {
-      const user = JSON.parse(currentUser);
-      console.log('Usuario autenticado:', user.name);
-    } catch (error) {
-      console.error('Error al parsear datos del usuario:', error);
-    }
   }
 
   private initModales(): void {
     if (typeof window !== 'undefined' && (window as any).bootstrap) {
-      const detallesElement = document.getElementById('detallesModal');
-      const confirmarElement = document.getElementById('confirmarEliminarModal');
-      
-      if (detallesElement) {
-        this.detallesModalInstance = new (window as any).bootstrap.Modal(detallesElement);
+      if (this.detallesModalRef?.nativeElement) {
+        this.detallesModalInstance = new (window as any).bootstrap.Modal(this.detallesModalRef.nativeElement);
       }
-      if (confirmarElement) {
-        this.confirmarModalInstance = new (window as any).bootstrap.Modal(confirmarElement);
+      if (this.confirmarModalRef?.nativeElement) {
+        this.confirmarModalInstance = new (window as any).bootstrap.Modal(this.confirmarModalRef.nativeElement);
       }
     }
   }
@@ -106,101 +73,43 @@ export class Categorias implements OnInit, OnDestroy {
   private destroyModales(): void {
     if (this.detallesModalInstance) {
       this.detallesModalInstance.dispose();
-      this.detallesModalInstance = null;
     }
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.dispose();
-      this.confirmarModalInstance = null;
     }
   }
 
+  // Cargar categorías
   cargarCategorias(): void {
     this.cargando = true;
-    
     this.categoriaService.getAll().subscribe({
-      next: (data: Categoria[]) => {
-        this.categorias = data;
-        this.categoriasFiltradas = [...this.categorias];
-        this.totalCategorias = this.categorias.length;
+      next: (categorias: Categoria[]) => {
+        this.categorias = categorias;
+        this.categoriasFiltradas = [...categorias];
+        this.totalCategorias = categorias.length;
         this.cargando = false;
-        console.log('Categorías cargadas:', this.categorias);
       },
-      error: (error: Error) => {
-        console.error('Error al cargar categorías:', error);
+      error: (error: any) => {
+        console.error('Error cargando categorías:', error);
         this.cargando = false;
-        this.mostrarNotificacion('error', 'Error', error.message || 'No se pudieron cargar las categorías');
-        this.categorias = [];
-        this.categoriasFiltradas = [];
-        this.totalCategorias = 0;
       }
     });
   }
 
-  filtrarCategorias(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const filtro = input.value.toLowerCase().trim();
-    
-    this.aplicarFiltros(filtro);
-  }
-
-  filtrarPorEstrellas(numeroEstrellas: number): void {
-    this.aplicarFiltrosPorEstrellas(numeroEstrellas);
-  }
-
-  // Métodos públicos para usar en la plantilla
-  aplicarFiltros(filtroTexto: string): void {
-    let resultado = [...this.categorias];
-    
-    if (filtroTexto) {
-      resultado = resultado.filter(categoria =>
-        categoria.nombre.toLowerCase().includes(filtroTexto) ||
-        categoria.descripcion.toLowerCase().includes(filtroTexto) ||
-        categoria.numeroEstrellas.toString().includes(filtroTexto)
-      );
-    }
-    
-    this.categoriasFiltradas = resultado;
-  }
-
-  aplicarFiltrosPorEstrellas(numeroEstrellas: number): void {
-    let resultado = [...this.categorias];
-    
-    if (numeroEstrellas > 0) {
-      resultado = resultado.filter(c => c.numeroEstrellas === numeroEstrellas);
-    }
-    
-    this.categoriasFiltradas = resultado;
-  }
-
+  // Nuevo registro
   nuevoRegistro(): void {
     this.modoEdicion = false;
     this.categoriaEditando = null;
-    
     this.categoriaForm.reset({
       nombre: '',
-      numeroEstrellas: 1,
-      descripcion: ''
+      descripcion: '',
+      numeroEstrellas: 0
     });
     this.categoriaForm.markAsPristine();
     this.categoriaForm.markAsUntouched();
   }
 
-  editarCategoria(categoria: Categoria): void {
-    this.modoEdicion = true;
-    this.categoriaEditando = categoria;
-    
-    this.categoriaForm.patchValue({
-      nombre: categoria.nombre,
-      numeroEstrellas: categoria.numeroEstrellas,
-      descripcion: categoria.descripcion
-    });
-    
-    const formulario = document.querySelector('.col-lg-5');
-    if (formulario) {
-      formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
-
+  // Guardar categoría
   guardarCategoria(): void {
     Object.keys(this.categoriaForm.controls).forEach(key => {
       const control = this.categoriaForm.get(key);
@@ -208,192 +117,157 @@ export class Categorias implements OnInit, OnDestroy {
     });
 
     if (this.categoriaForm.invalid) {
-      for (const key of Object.keys(this.categoriaForm.controls)) {
-        const control = this.categoriaForm.get(key);
-        if (control?.invalid) {
-          const element = document.getElementById(key);
-          if (element) {
-            element.focus();
-          }
-          break;
-        }
-      }
       return;
     }
 
     this.guardando = true;
-    
-    const categoriaData: CategoriaDTO = this.categoriaForm.value;
-    
-    if (this.modoEdicion && this.categoriaEditando) {
-      this.categoriaService.update(this.categoriaEditando.id, categoriaData).subscribe({
-        next: (categoriaActualizada: Categoria) => {
-          const index = this.categorias.findIndex(c => c.id === categoriaActualizada.id);
-          if (index !== -1) {
-            this.categorias[index] = categoriaActualizada;
-          }
-          this.aplicarFiltros('');
-          this.guardando = false;
-          this.nuevoRegistro();
-          
-          this.mostrarNotificacion('success', 
-            'Categoría actualizada',
-            `La categoría "${categoriaData.nombre}" se ha actualizado correctamente.`
-          );
-        },
-        error: (error: Error) => {
-          console.error('Error al actualizar categoría:', error);
-          this.guardando = false;
-          this.mostrarNotificacion('error', 
-            'Error',
-            error.message || 'No se pudo actualizar la categoría. Por favor, intente nuevamente.'
-          );
-        }
-      });
-    } else {
-      this.categoriaService.create(categoriaData).subscribe({
-        next: (nuevaCategoria: Categoria) => {
-          this.categorias.unshift(nuevaCategoria);
-          this.totalCategorias = this.categorias.length;
-          this.aplicarFiltros('');
-          this.guardando = false;
-          this.nuevoRegistro();
-          
-          this.mostrarNotificacion('success', 
-            'Categoría creada',
-            `La categoría "${categoriaData.nombre}" se ha creado correctamente.`
-          );
-        },
-        error: (error: Error) => {
-          console.error('Error al crear categoría:', error);
-          this.guardando = false;
-          this.mostrarNotificacion('error', 
-            'Error',
-            error.message || 'No se pudo crear la categoría. Por favor, intente nuevamente.'
-          );
-        }
-      });
-    }
-  }
+    const categoriaData: CategoriaDTO = {
+      nombre: this.categoriaForm.get('nombre')?.value,
+      descripcion: this.categoriaForm.get('descripcion')?.value || '',
+      numeroEstrellas: this.categoriaForm.get('numeroEstrellas')?.value || 0
+    };
 
-  cancelarEdicion(): void {
-    if (this.categoriaForm.dirty) {
-      if (confirm('¿Estás seguro? Los cambios no guardados se perderán.')) {
+    const guardarObservable = this.modoEdicion && this.categoriaEditando?.id
+      ? this.categoriaService.update(this.categoriaEditando.id, categoriaData)
+      : this.categoriaService.create(categoriaData);
+
+    guardarObservable.subscribe({
+      next: () => {
+        this.cargarCategorias();
+        this.guardando = false;
         this.nuevoRegistro();
+      },
+      error: (error: any) => {
+        console.error('Error guardando categoría:', error);
+        this.guardando = false;
       }
-    } else {
-      this.nuevoRegistro();
-    }
+    });
   }
 
+  // Editar categoría
+  editarCategoria(categoria: Categoria): void {
+    this.modoEdicion = true;
+    this.categoriaEditando = categoria;
+    this.categoriaForm.patchValue({
+      nombre: categoria.nombre,
+      descripcion: categoria.descripcion || '',
+      numeroEstrellas: categoria.numeroEstrellas || 0
+    });
+  }
+
+  // Cancelar edición
+  cancelarEdicion(): void {
+    this.nuevoRegistro();
+  }
+
+  // Ver detalles
   verDetalles(categoria: Categoria): void {
     this.categoriaDetalles = categoria;
-    
     if (this.detallesModalInstance) {
       this.detallesModalInstance.show();
     }
   }
 
+  // Eliminar categoría
   eliminarCategoria(categoria: Categoria): void {
     this.categoriaAEliminar = categoria;
-    
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.show();
     }
   }
 
+  // Confirmar eliminación
   confirmarEliminar(): void {
-    if (!this.categoriaAEliminar) return;
+    if (!this.categoriaAEliminar?.id) return;
     
-    const categoriaAEliminar = this.categoriaAEliminar;
-    this.categoriaService.delete(categoriaAEliminar.id).subscribe({
+    this.categoriaService.delete(this.categoriaAEliminar.id).subscribe({
       next: () => {
-        const index = this.categorias.findIndex(c => c.id === categoriaAEliminar.id);
-        if (index !== -1) {
-          const nombreEliminado = categoriaAEliminar.nombre;
-          this.categorias.splice(index, 1);
-          this.totalCategorias = this.categorias.length;
-          this.aplicarFiltros('');
-          
-          if (this.confirmarModalInstance) {
-            this.confirmarModalInstance.hide();
-          }
-          
-          this.mostrarNotificacion('info', 
-            'Categoría eliminada',
-            `La categoría "${nombreEliminado}" ha sido eliminada correctamente.`
-          );
+        this.cargarCategorias();
+        if (this.confirmarModalInstance) {
+          this.confirmarModalInstance.hide();
         }
         this.categoriaAEliminar = null;
       },
-      error: (error: Error) => {
-        console.error('Error al eliminar categoría:', error);
-        this.mostrarNotificacion('error', 
-          'Error',
-          error.message || 'No se pudo eliminar la categoría. Por favor, intente nuevamente.'
-        );
+      error: (error: any) => {
+        console.error('Error eliminando categoría:', error);
+        if (this.confirmarModalInstance) {
+          this.confirmarModalInstance.hide();
+        }
       }
     });
   }
 
+  // Filtrar categorías
+  filtrarCategorias(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.filtroTexto = input.value.toLowerCase().trim();
+    this.aplicarFiltros();
+  }
+
+  // Aplicar filtros
+  private aplicarFiltros(): void {
+    let resultado = [...this.categorias];
+    
+    if (this.filtroTexto) {
+      resultado = resultado.filter(categoria =>
+        categoria.nombre.toLowerCase().includes(this.filtroTexto) ||
+        (categoria.descripcion || '').toLowerCase().includes(this.filtroTexto) ||
+        ((categoria.numeroEstrellas || 0).toString()).includes(this.filtroTexto)
+      );
+    }
+    
+    this.categoriasFiltradas = resultado;
+  }
+
+  // Obtener clase para estrellas
+  getEstrellasClass(numeroEstrellas: number): string {
+    if (numeroEstrellas >= 4) return 'badge text-bg-success';
+    if (numeroEstrellas >= 3) return 'badge text-bg-primary';
+    if (numeroEstrellas >= 2) return 'badge text-bg-warning';
+    if (numeroEstrellas >= 1) return 'badge text-bg-secondary';
+    return 'badge text-bg-light text-dark';
+  }
+
+  // Mostrar notificación
   private mostrarNotificacion(tipo: 'success' | 'info' | 'warning' | 'error', titulo: string, mensaje: string): void {
-    console.log(`[${tipo.toUpperCase()}] ${titulo}: ${mensaje}`);
+    const toastId = 'notification-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast align-items-center text-bg-${tipo === 'error' ? 'danger' : tipo} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
     
     const iconos = {
-      success: '✅',
-      info: 'ℹ️',
-      warning: '⚠️',
-      error: '❌'
+      success: 'bi-check-circle-fill',
+      info: 'bi-info-circle-fill',
+      warning: 'bi-exclamation-triangle-fill',
+      error: 'bi-x-circle-fill'
     };
     
-    alert(`${iconos[tipo]} ${titulo}\n\n${mensaje}`);
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const control = this.categoriaForm.get(fieldName);
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="bi ${iconos[tipo]} me-2"></i>
+          <strong>${titulo}</strong><br>
+          <small>${mensaje}</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
     
-    if (!control || !control.errors || !control.touched) return '';
+    const container = document.querySelector('.toast-container') || (() => {
+      const newContainer = document.createElement('div');
+      newContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+      newContainer.style.zIndex = '1055';
+      document.body.appendChild(newContainer);
+      return newContainer;
+    })();
     
-    const errors = control.errors;
+    container.appendChild(toast);
+    const bsToast = new (window as any).bootstrap.Toast(toast);
+    bsToast.show();
     
-    if (errors['required']) {
-      return 'Este campo es obligatorio';
-    }
-    
-    if (errors['minlength']) {
-      return `Mínimo ${errors['minlength'].requiredLength} caracteres`;
-    }
-    
-    if (errors['maxlength']) {
-      return `Máximo ${errors['maxlength'].requiredLength} caracteres`;
-    }
-    
-    if (errors['min']) {
-      return `El valor mínimo es ${errors['min'].min}`;
-    }
-    
-    if (errors['max']) {
-      return `El valor máximo es ${errors['max'].max}`;
-    }
-    
-    if (errors['pattern']) {
-      if (fieldName === 'nombre') {
-        return 'Solo letras, espacios, puntos y guiones';
-      }
-      return 'Formato inválido';
-    }
-    
-    return 'Valor inválido';
-  }
-
-  getEstrellasTexto(numeroEstrellas: number): string {
-    switch(numeroEstrellas) {
-      case 1: return '★ (Económica)';
-      case 2: return '★★ (Básica)';
-      case 3: return '★★★ (Estándar)';
-      case 4: return '★★★★ (Superior)';
-      case 5: return '★★★★★ (Lujo)';
-      default: return `${numeroEstrellas} estrellas`;
-    }
+    toast.addEventListener('hidden.bs.toast', () => toast.remove());
   }
 }

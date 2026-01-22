@@ -1,13 +1,12 @@
-// Para completar el componente, necesitarás crear este modelo
 export interface Categoria {
   id: number;
   nombre: string;
-  numeroEstrellas: number;
-  descripcion: string;
+  descripcion?: string;
+  numeroEstrellas?: number; // Propiedad opcional
 }
 
 export interface CategoriaDTO {
   nombre: string;
-  numeroEstrellas: number;
-  descripcion: string;
+  descripcion?: string;
+  numeroEstrellas?: number;
 }

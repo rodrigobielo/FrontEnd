@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators'; // ¡map está importado aquí!
 import { Categoria, CategoriaDTO } from '../modelos/categoria.model';
 
 @Injectable({
@@ -26,6 +26,15 @@ export class CategoriaService {
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  getCategorias(): Observable<Categoria[]> {
+    return this.getAll().pipe(
+      catchError((error: any) => {
+        console.error('Error obteniendo categorías:', error);
+        return of([]);
+      })
+    );
   }
 
   /**
@@ -68,7 +77,7 @@ export class CategoriaService {
   delete(id: number): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/${id}`, this.httpOptions)
       .pipe(
-        map(() => true), // Si la operación es exitosa, retornamos true
+        map(() => true), // ¡map está disponible aquí!
         catchError(this.handleError)
       );
   }
