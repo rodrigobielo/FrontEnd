@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, map } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Provincia, ProvinciaBackend } from '../modelos/provincia.model';
+import { Provincia, ProvinciaBackend, ProvinciaSimple } from '../modelos/provincia.model';
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +17,27 @@ export class ProvinciaService {
   };
 
   constructor(private http: HttpClient) {}
+
+  // Método getAll que funciona con la estructura del backend
+  getAll(): Observable<ProvinciaSimple[]> {
+    return this.http.get<Provincia[]>(`${this.apiUrl}/Listar`)
+      .pipe(
+        map(provincias => this.transformarProvincias(provincias)),
+        catchError(this.manejarError)
+      );
+  }
+
+  // Transformar la respuesta del backend a ProvinciaSimple[]
+  private transformarProvincias(provincias: Provincia[]): ProvinciaSimple[] {
+    if (!provincias || !Array.isArray(provincias)) {
+      return [];
+    }
+    
+    return provincias.map(provincia => ({
+      id: provincia.id || 0,
+      nombre: provincia.nombre || 'Sin nombre'
+    }));
+  }
 
   obtenerProvincias(): Observable<Provincia[]> {
     return this.http.get<Provincia[]>(`${this.apiUrl}/Listar`)

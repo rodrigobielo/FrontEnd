@@ -1,4 +1,4 @@
-<!-- ciudades.html - Componente de gestión de ciudades -->
+<!-- CIUDADES.HTML COMPLETO -->
 <div class="container-fluid py-4">
   <!-- Encabezado de la página -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -158,135 +158,50 @@
               </div>
             </div>
 
-            <!-- Campo: Provincia (select) -->
+            <!-- Campo: Provincia (select) - VERSIÓN MEJORADA -->
             <div class="mb-4">
               <label for="provincia" class="form-label fw-semibold">
                 <i class="bi bi-map-fill me-1 text-info-emphasis"></i>
                 Provincia <span class="text-danger">*</span>
               </label>
-              <div class="input-group has-validation">
-                <span class="input-group-text">
-                  <i class="bi bi-geo-alt-fill"></i>
-                </span>
-                <select 
-                  class="form-select" 
-                  id="provincia"
-                  formControlName="provinciaId"
-                  [class.is-valid]="ciudadForm.get('provinciaId')?.valid && ciudadForm.get('provinciaId')?.touched"
-                  [class.is-invalid]="ciudadForm.get('provinciaId')?.invalid && ciudadForm.get('provinciaId')?.touched"
-                >
-                  <option value="" disabled selected>Selecciona una provincia</option>
-                  @for (provincia of provincias; track provincia.id) {
-                    <option [value]="provincia.id">{{ provincia.nombre }}</option>
-                  }
-                </select>
-                <div class="valid-feedback">
-                  <i class="bi bi-check-circle-fill me-1"></i> Provincia seleccionada
+              
+              @if (cargandoProvincias) {
+                <div class="alert alert-info">
+                  <i class="bi bi-hourglass-split me-2"></i>
+                  Cargando provincias...
                 </div>
-                <div class="invalid-feedback">
-                  <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar una provincia
+              } @else if (provincias.length === 0) {
+                <div class="alert alert-warning">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  No hay provincias disponibles. Debes crear provincias primero.
                 </div>
-              </div>
+              } @else {
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-geo-alt-fill"></i>
+                  </span>
+                  <select 
+                    class="form-select" 
+                    id="provincia"
+                    formControlName="provinciaId"
+                    [class.is-valid]="ciudadForm.get('provinciaId')?.valid && ciudadForm.get('provinciaId')?.touched"
+                    [class.is-invalid]="ciudadForm.get('provinciaId')?.invalid && ciudadForm.get('provinciaId')?.touched"
+                  >
+                    <option value="" disabled selected>Selecciona una provincia</option>
+                    @for (provincia of provincias; track provincia.id) {
+                      <option [value]="provincia.id">{{ provincia.nombre }}</option>
+                    }
+                  </select>
+                  <div class="valid-feedback">
+                    <i class="bi bi-check-circle-fill me-1"></i> Provincia seleccionada
+                  </div>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar una provincia
+                  </div>
+                </div>
+              }
               <div class="form-text">
                 <i class="bi bi-info-circle me-1"></i> Selecciona la provincia a la que pertenece
-              </div>
-            </div>
-
-            <!-- Campos en fila: Código postal y Población -->
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <label for="codigoPostal" class="form-label fw-semibold">
-                  <i class="bi bi-envelope-fill me-1 text-body-secondary"></i>
-                  Código Postal (opcional)
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-postcard-fill"></i>
-                  </span>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="codigoPostal"
-                    formControlName="codigoPostal"
-                    placeholder="Ej: 4600, 4400"
-                    maxlength="10"
-                  >
-                </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Código postal principal
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label for="poblacion" class="form-label fw-semibold">
-                  <i class="bi bi-people-fill me-1 text-body-secondary"></i>
-                  Población (opcional)
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-person-badge-fill"></i>
-                  </span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="poblacion"
-                    formControlName="poblacion"
-                    placeholder="Ej: 300000"
-                    min="0"
-                    step="1000"
-                  >
-                  <span class="input-group-text">hab.</span>
-                </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Población aproximada
-                </div>
-              </div>
-            </div>
-
-            <!-- Campos en fila: Altitud y Fundación -->
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <label for="altitud" class="form-label fw-semibold">
-                  <i class="bi bi-mountain-fill me-1 text-body-secondary"></i>
-                  Altitud (opcional)
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-arrow-up"></i>
-                  </span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="altitud"
-                    formControlName="altitud"
-                    placeholder="Ej: 1259"
-                    min="0"
-                    step="1"
-                  >
-                  <span class="input-group-text">m.s.n.m</span>
-                </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Altitud sobre el nivel del mar
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label for="fundacion" class="form-label fw-semibold">
-                  <i class="bi bi-calendar-fill me-1 text-body-secondary"></i>
-                  Fundación (opcional)
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-calendar-date-fill"></i>
-                  </span>
-                  <input 
-                    type="date" 
-                    class="form-control" 
-                    id="fundacion"
-                    formControlName="fundacion"
-                  >
-                </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Fecha de fundación
-                </div>
               </div>
             </div>
 
@@ -404,14 +319,6 @@
                       <i class="bi bi-map-fill text-info-emphasis me-1"></i>
                       Provincia
                     </th>
-                    <th scope="col" class="text-end">
-                      <i class="bi bi-people-fill text-info-emphasis me-1"></i>
-                      Población
-                    </th>
-                    <th scope="col" class="text-end">
-                      <i class="bi bi-mountain-fill text-info-emphasis me-1"></i>
-                      Altitud
-                    </th>
                     <th scope="col" class="text-center pe-3">
                       <i class="bi bi-gear-fill text-info-emphasis me-1"></i>
                       Acciones
@@ -428,9 +335,7 @@
                           </div>
                           <div class="flex-grow-1 ms-2">
                             <strong class="d-block">{{ ciudad.nombre }}</strong>
-                            @if (ciudad.codigoPostal) {
-                              <small class="text-body-tertiary">CP: {{ ciudad.codigoPostal }}</small>
-                            }
+                            <small class="text-body-tertiary">{{ ciudad.descripcion | slice:0:50 }}{{ ciudad.descripcion.length > 50 ? '...' : '' }}</small>
                           </div>
                         </div>
                       </td>
@@ -445,22 +350,6 @@
                             </span>
                           </div>
                         </div>
-                      </td>
-                      <td class="text-end">
-                        @if (ciudad.poblacion) {
-                          <span class="fw-semibold">{{ ciudad.poblacion | number }}</span>
-                          <small class="text-body-tertiary d-block">hab.</small>
-                        } @else {
-                          <span class="text-body-tertiary fst-italic">-</span>
-                        }
-                      </td>
-                      <td class="text-end">
-                        @if (ciudad.altitud) {
-                          <span class="fw-semibold">{{ ciudad.altitud | number }}</span>
-                          <small class="text-body-tertiary d-block">m</small>
-                        } @else {
-                          <span class="text-body-tertiary fst-italic">-</span>
-                        }
                       </td>
                       <td class="text-center pe-3">
                         <div class="btn-group btn-group-sm" role="group">
@@ -511,25 +400,6 @@
                   </span>
                 }
               </small>
-              <nav aria-label="Navegación de ciudades">
-                <ul class="pagination pagination-sm mb-0">
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                      <i class="bi bi-chevron-left"></i>
-                    </a>
-                  </li>
-                  <li class="page-item active" aria-current="page">
-                    <span class="page-link">1</span>
-                  </li>
-                  <li class="page-item"><a class="page-link" href="#">2</a></li>
-                  <li class="page-item"><a class="page-link" href="#">3</a></li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">
-                      <i class="bi bi-chevron-right"></i>
-                    </a>
-                  </li>
-                </ul>
-              </nav>
             </div>
           </div>
         }
@@ -573,26 +443,6 @@
                     <strong class="text-body-emphasis">Descripción:</strong>
                     <p class="mt-1">{{ ciudadDetalles.descripcion }}</p>
                   </div>
-                  <div class="col-md-6">
-                    <strong class="text-body-emphasis">Código Postal:</strong>
-                    <p class="mb-0">{{ ciudadDetalles.codigoPostal || 'No especificado' }}</p>
-                  </div>
-                  <div class="col-md-6">
-                    <strong class="text-body-emphasis">Población:</strong>
-                    <p class="mb-0">{{ ciudadDetalles.poblacion ? (ciudadDetalles.poblacion | number) + ' hab.' : 'No especificada' }}</p>
-                  </div>
-                  <div class="col-md-6">
-                    <strong class="text-body-emphasis">Altitud:</strong>
-                    <p class="mb-0">{{ ciudadDetalles.altitud ? (ciudadDetalles.altitud | number) + ' m.s.n.m' : 'No especificada' }}</p>
-                  </div>
-                  <div class="col-md-6">
-                    <strong class="text-body-emphasis">Fundación:</strong>
-                    <p class="mb-0">{{ ciudadDetalles.fundacion ? (ciudadDetalles.fundacion | date:'longDate') : 'No especificada' }}</p>
-                  </div>
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Fecha de Registro:</strong>
-                    <p class="mb-0">{{ ciudadDetalles.fechaCreacion | date:'longDate' }}</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -627,8 +477,7 @@
           <h5 class="text-center mb-3">¿Estás seguro de eliminar esta ciudad?</h5>
           <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
             <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
-            <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
-            Si la ciudad tiene barrios o localidades asociadas, también se eliminarán.
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer.
           </div>
           @if (ciudadAEliminar) {
             <div class="card border-danger-subtle">
@@ -646,12 +495,6 @@
                     <strong class="text-body-emphasis">Provincia:</strong>
                     <span class="ms-2">{{ obtenerNombreProvincia(ciudadAEliminar.provinciaId) }}</span>
                   </div>
-                  @if (ciudadAEliminar.codigoPostal) {
-                    <div class="col-12">
-                      <strong class="text-body-emphasis">Código Postal:</strong>
-                      <span class="ms-2">{{ ciudadAEliminar.codigoPostal }}</span>
-                    </div>
-                  }
                 </div>
               </div>
             </div>
