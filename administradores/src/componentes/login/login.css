@@ -1,58 +1,72 @@
 /* login.css */
-.login-container {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
 .login-card {
-  width: 100%;
   max-width: 450px;
-  transition: transform 0.3s ease;
-}
-
-.login-card:hover {
-  transform: translateY(-5px);
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .login-icon-container {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 80px;
   height: 80px;
-  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  backdrop-filter: blur(5px);
 }
 
-.input-group-text {
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-  border-color: #86b7fe;
+.input-group-lg .form-control,
+.input-group-lg .input-group-text {
+  height: 55px;
+  font-size: 1rem;
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, #0d6efd 0%, #0b5ed7 100%);
-  border: none;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
   transition: all 0.3s ease;
 }
 
-.btn-primary:hover {
-  background: linear-gradient(90deg, #0b5ed7 0%, #0a58ca 100%);
+.btn-primary:hover:not(:disabled) {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
 }
 
-.btn-outline-secondary:hover {
-  background-color: #f8f9fa;
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
-/* Responsividad adicional */
+.btn-link {
+  text-decoration: none;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.invalid-feedback {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.alert {
+  border-radius: 8px;
+  border: none;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Responsive */
 @media (max-width: 576px) {
   .login-card {
-    border-radius: 0.5rem !important;
+    border: none;
+    box-shadow: none !important;
   }
   
   .card-body {

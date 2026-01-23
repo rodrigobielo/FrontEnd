@@ -1,21 +1,18 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 // Servicios
 import { HotelService } from '../../servicios/hotel.service';
 import { CiudadService } from '../../servicios/ciudades.service';
 import { CategoriaService } from '../../servicios/categoria.service';
-import { ImagenService } from '../../servicios/imagen.service';
 import { UsuarioService } from '../../servicios/usuario.service';
 
 // Modelos
 import { Ciudad } from '../../modelos/ciudad.model';
 import { Categoria } from '../../modelos/categoria.model';
-import { Imagen } from '../../modelos/imagen.model';
 import { Usuario } from '../../modelos/usuario.model';
 import { Hotel } from '../../modelos/hotel.model';
 
@@ -31,7 +28,6 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
   private hotelService = inject(HotelService);
   private ciudadService = inject(CiudadService);
   private categoriaService = inject(CategoriaService);
-  private imagenService = inject(ImagenService);
   private usuarioService = inject(UsuarioService);
   private fb = inject(FormBuilder);
   
@@ -43,21 +39,20 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
   modoEdicion: boolean = false;
   guardando: boolean = false;
   cargando: boolean = false;
+  cargandoCiudades: boolean = false;
+  cargandoCategorias: boolean = false;
   guardandoUsuario: boolean = false;
   filtroCategoria: number | null = null;
   filtroTexto: string = '';
   
   // Datos
   ciudades: Ciudad[] = [];
-  categorias: Categoria[] = []; // Categorías reales desde BD
+  categorias: Categoria[] = [];
   hoteles: Hotel[] = [];
   hotelesFiltrados: Hotel[] = [];
   hotelEditando: Hotel | null = null;
   hotelDetalles: Hotel | null = null;
   hotelAEliminar: Hotel | null = null;
-  
-  // Imágenes del hotel actual
-  imagenesHotel: Imagen[] = [];
   
   // Usuarios
   usuarios: Usuario[] = [];
@@ -90,8 +85,8 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
         Validators.minLength(10)
       ]],
       contrasena: ['hotel123', [Validators.required]],
-      ciudadId: ['', [Validators.required]],
-      categoriaId: ['', [Validators.required]],
+      ciudadId: [{value: '', disabled: false}, [Validators.required]],
+      categoriaId: [{value: '', disabled: false}, [Validators.required]],
       habitaciones: [null, [
         Validators.min(0),
         Validators.max(10000)
@@ -99,8 +94,7 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
       precioPromedio: [null, [
         Validators.min(0),
         Validators.max(10000)
-      ]],
-      imagenes: this.fb.array([])
+      ]]
     });
 
     // Formulario de usuario
@@ -113,52 +107,6 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
       contrasena: ['', [Validators.required, Validators.minLength(6)]],
       rol: ['usuario', [Validators.required]]
     });
-  }
-
-  // Getter para el FormArray de imágenes
-  get imagenesArray(): FormArray {
-    return this.hotelForm.get('imagenes') as FormArray;
-  }
-
-  // Método para agregar imagen
-  agregarImagen(url: string): void {
-    if (url && url.trim() !== '') {
-      this.imagenesArray.push(this.fb.control(url.trim()));
-    }
-  }
-
-  // Método para eliminar imagen
-  eliminarImagen(index: number): void {
-    this.imagenesArray.removeAt(index);
-  }
-
-  // Método para vista previa de imagen
-  previewImagen(url: string): void {
-    if (url) {
-      window.open(url, '_blank');
-    }
-  }
-
-  // Método para manejar la selección de archivos
-  onFileSelected(event: Event, tipo: 'principal' | 'secundaria'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      
-      reader.onload = (e: any) => {
-        // En producción, aquí subirías la imagen al servidor
-        // Por ahora, simulamos una URL
-        const fakeUrl = `https://fakeimg.pl/600x400/?text=Imagen+${tipo}`;
-        this.agregarImagen(fakeUrl);
-        
-        this.mostrarNotificacion('success', 
-          'Imagen cargada', 
-          `Imagen ${tipo} cargada correctamente. (Simulación)`
-        );
-      };
-      reader.readAsDataURL(file);
-    }
   }
 
   ngOnInit(): void {
@@ -196,47 +144,68 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Cargar ciudades
+  // Cargar ciudades dinámicamente desde la base de datos
   cargarCiudades(): void {
+    this.cargandoCiudades = true;
+    // Deshabilitar el control mientras se cargan los datos
+    this.hotelForm.get('ciudadId')?.disable();
+    
     this.ciudadService.getCiudades().subscribe({
       next: (ciudades: Ciudad[]) => {
         this.ciudades = ciudades;
+        this.cargandoCiudades = false;
+        
+        // Habilitar el control si hay datos
+        if (ciudades.length > 0) {
+          this.hotelForm.get('ciudadId')?.enable();
+        } else {
+          // Mantener deshabilitado si no hay datos
+          this.hotelForm.get('ciudadId')?.disable();
+        }
+        
+        console.log('Ciudades cargadas desde BD:', ciudades);
       },
       error: (error: any) => {
         console.error('Error cargando ciudades:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las ciudades');
+        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las ciudades desde la base de datos');
+        this.cargandoCiudades = false;
+        this.ciudades = [];
+        // Habilitar el control pero mostrar mensaje de error
+        this.hotelForm.get('ciudadId')?.enable();
       }
     });
   }
 
-  // Cargar categorías desde la base de datos
+  // Cargar categorías dinámicamente desde la base de datos
   cargarCategorias(): void {
+    this.cargandoCategorias = true;
+    // Deshabilitar el control mientras se cargan los datos
+    this.hotelForm.get('categoriaId')?.disable();
+    
     this.categoriaService.getCategorias().subscribe({
       next: (categorias: Categoria[]) => {
         this.categorias = categorias;
-        console.log('Categorías cargadas:', categorias);
+        this.cargandoCategorias = false;
+        
+        // Habilitar el control si hay datos
+        if (categorias.length > 0) {
+          this.hotelForm.get('categoriaId')?.enable();
+        } else {
+          // Mantener deshabilitado si no hay datos
+          this.hotelForm.get('categoriaId')?.disable();
+        }
+        
+        console.log('Categorías cargadas desde BD:', categorias);
       },
       error: (error: any) => {
         console.error('Error cargando categorías:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las categorías');
-        // Opcional: cargar categorías por defecto si falla
-        this.cargarCategoriasPorDefecto();
+        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las categorías desde la base de datos');
+        this.cargandoCategorias = false;
+        this.categorias = [];
+        // Habilitar el control pero mostrar mensaje de error
+        this.hotelForm.get('categoriaId')?.enable();
       }
     });
-  }
-
-  // Método opcional para cargar categorías por defecto si falla la conexión
-  cargarCategoriasPorDefecto(): void {
-    this.categorias = [
-      { id: 1, nombre: '⭐ 1 Estrella (Económico)' } as Categoria,
-      { id: 2, nombre: '⭐⭐ 2 Estrellas (Básico)' } as Categoria,
-      { id: 3, nombre: '⭐⭐⭐ 3 Estrellas (Confort)' } as Categoria,
-      { id: 4, nombre: '⭐⭐⭐⭐ 4 Estrellas (Superior)' } as Categoria,
-      { id: 5, nombre: '⭐⭐⭐⭐⭐ 5 Estrellas (Lujo)' } as Categoria,
-      { id: 6, nombre: '🏨 Boutique' } as Categoria,
-      { id: 7, nombre: '🏢 Apart Hotel' } as Categoria,
-      { id: 8, nombre: '🛏️ Hostel' } as Categoria
-    ];
   }
 
   // Cargar hoteles
@@ -286,28 +255,36 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
     return this.obtenerNombreCategoria(categoriaId);
   }
 
-  // Obtener clase para badge de categoría (ajusta según tus categorías en BD)
+  // Obtener clase para badge de categoría basado en numeroEstrellas o nombre
   getCategoriaBadgeClass(categoriaId: number): string {
     const categoria = this.categorias.find(c => c.id === categoriaId);
-    const nombreCategoria = categoria ? categoria.nombre.toLowerCase() : '';
+    if (!categoria) return 'badge text-bg-secondary';
+
+    // Si tiene numeroEstrellas, usamos ese para asignar clase
+    if (categoria.numeroEstrellas !== undefined && categoria.numeroEstrellas !== null) {
+      switch (categoria.numeroEstrellas) {
+        case 1: return 'badge text-bg-secondary';
+        case 2: return 'badge text-bg-primary';
+        case 3: return 'badge text-bg-info';
+        case 4: return 'badge text-bg-success';
+        case 5: return 'badge text-bg-warning';
+        default: return 'badge text-bg-secondary';
+      }
+    }
+
+    // Si no tiene numeroEstrellas, usamos el nombre para inferir
+    const nombreCategoria = categoria.nombre.toLowerCase();
     
-    // Asigna clases basadas en el nombre o contenido de la categoría
-    if (nombreCategoria.includes('1 estrella') || nombreCategoria.includes('económico')) {
-      return 'badge text-bg-secondary';
-    } else if (nombreCategoria.includes('2 estrellas') || nombreCategoria.includes('básico')) {
-      return 'badge text-bg-secondary';
-    } else if (nombreCategoria.includes('3 estrellas') || nombreCategoria.includes('confort')) {
-      return 'badge text-bg-primary';
-    } else if (nombreCategoria.includes('4 estrellas') || nombreCategoria.includes('superior')) {
-      return 'badge text-bg-info';
-    } else if (nombreCategoria.includes('5 estrellas') || nombreCategoria.includes('lujo')) {
-      return 'badge text-bg-warning';
-    } else if (nombreCategoria.includes('boutique')) {
+    if (nombreCategoria.includes('boutique')) {
       return 'badge text-bg-purple';
     } else if (nombreCategoria.includes('apart') || nombreCategoria.includes('apart hotel')) {
-      return 'badge text-bg-success';
+      return 'badge text-bg-info';
     } else if (nombreCategoria.includes('hostel')) {
       return 'badge text-bg-light text-dark';
+    } else if (nombreCategoria.includes('económico') || nombreCategoria.includes('economico')) {
+      return 'badge text-bg-secondary';
+    } else if (nombreCategoria.includes('lujo')) {
+      return 'badge text-bg-warning';
     } else {
       return 'badge text-bg-secondary';
     }
@@ -348,8 +325,10 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
   nuevoRegistro(): void {
     this.modoEdicion = false;
     this.hotelEditando = null;
-    this.imagenesHotel = [];
-    this.imagenesArray.clear();
+    
+    // Asegurarse de que los controles estén habilitados antes de resetear
+    this.hotelForm.get('ciudadId')?.enable();
+    this.hotelForm.get('categoriaId')?.enable();
     
     this.hotelForm.reset({
       nombre: '',
@@ -362,6 +341,14 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
       precioPromedio: null
     });
     
+    // Si no hay datos, deshabilitar los controles
+    if (this.ciudades.length === 0) {
+      this.hotelForm.get('ciudadId')?.disable();
+    }
+    if (this.categorias.length === 0) {
+      this.hotelForm.get('categoriaId')?.disable();
+    }
+    
     this.hotelForm.markAsPristine();
     this.hotelForm.markAsUntouched();
   }
@@ -370,12 +357,10 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
   editarHotel(hotel: Hotel): void {
     this.modoEdicion = true;
     this.hotelEditando = hotel;
-    this.imagenesHotel = hotel.imagenes || [];
     
-    this.imagenesArray.clear();
-    this.imagenesHotel.forEach(imagen => {
-      this.imagenesArray.push(this.fb.control(imagen.url));
-    });
+    // Habilitar controles antes de editar
+    this.hotelForm.get('ciudadId')?.enable();
+    this.hotelForm.get('categoriaId')?.enable();
     
     this.hotelForm.patchValue({
       nombre: hotel.nombre,
@@ -389,7 +374,7 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // Guardar hotel con imágenes
+  // Guardar hotel
   guardarHotel(): void {
     Object.keys(this.hotelForm.controls).forEach(key => {
       const control = this.hotelForm.get(key);
@@ -404,27 +389,36 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    // Verificar que haya categorías disponibles
+    if (this.categorias.length === 0) {
+      this.mostrarNotificacion('error', 
+        'Error', 
+        'No hay categorías disponibles en la base de datos.'
+      );
+      return;
+    }
+
+    // Verificar que haya ciudades disponibles
+    if (this.ciudades.length === 0) {
+      this.mostrarNotificacion('error', 
+        'Error', 
+        'No hay ciudades disponibles en la base de datos.'
+      );
+      return;
+    }
+
     this.guardando = true;
-    const hotelData = this.hotelForm.value;
+    const hotelData = this.hotelForm.getRawValue(); // Usar getRawValue() para obtener valores de controles disabled
     
-    const guardarHotelObservable = this.modoEdicion && this.hotelEditando?.id
-      ? this.hotelService.updateHotel(this.hotelEditando.id, hotelData)
-      : this.hotelService.createHotel(hotelData);
+    let guardarHotelObservable;
+    if (this.modoEdicion && this.hotelEditando && this.hotelEditando.id) {
+      guardarHotelObservable = this.hotelService.updateHotel(this.hotelEditando.id, hotelData);
+    } else {
+      guardarHotelObservable = this.hotelService.createHotel(hotelData);
+    }
 
     guardarHotelObservable.subscribe({
       next: (hotelGuardado: Hotel) => {
-        // Guardar imágenes si hay
-        const imagenesUrls = this.imagenesArray.value;
-        if (imagenesUrls.length > 0) {
-          imagenesUrls.forEach((url: string) => {
-            const imagen: Imagen = { url: url };
-            this.imagenService.createImagen(imagen).subscribe({
-              next: () => console.log('Imagen guardada'),
-              error: (error: any) => console.error('Error guardando imagen:', error)
-            });
-          });
-        }
-        
         this.cargarHoteles();
         this.guardando = false;
         this.nuevoRegistro();
@@ -445,10 +439,18 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // Guardar usuario (parámetros de conexión)
+  // Método para guardar usuario
   guardarUsuario(): void {
+    Object.keys(this.usuarioForm.controls).forEach(key => {
+      const control = this.usuarioForm.get(key);
+      control?.markAsTouched();
+    });
+
     if (this.usuarioForm.invalid) {
-      this.mostrarNotificacion('error', 'Formulario inválido', 'Completa todos los campos del usuario.');
+      this.mostrarNotificacion('error', 
+        'Formulario inválido', 
+        'Completa todos los campos requeridos correctamente.'
+      );
       return;
     }
 
@@ -467,67 +469,83 @@ export class Hoteles implements OnInit, OnDestroy, AfterViewInit {
           contrasena: '',
           rol: 'usuario'
         });
-        
         this.mostrarNotificacion('success', 
-          'Usuario creado', 
-          'Parámetros de conexión guardados correctamente.'
+          'Usuario creado',
+          `Usuario "${usuarioData.nombre} ${usuarioData.apellidos}" guardado correctamente.`
         );
-        
-        this.cargarUsuarios();
+        this.cargarUsuarios(); // Recargar la lista de usuarios
       },
       error: (error: any) => {
         console.error('Error guardando usuario:', error);
         this.guardandoUsuario = false;
-        this.mostrarNotificacion('error', 'Error', 'No se pudo guardar el usuario.');
+        this.mostrarNotificacion('error', 
+          'Error', 
+          'No se pudo guardar el usuario. Intenta nuevamente.'
+        );
       }
     });
   }
 
-  // Ver detalles
+  // Método para ver detalles de un hotel
   verDetalles(hotel: Hotel): void {
     this.hotelDetalles = hotel;
     if (this.detallesModalInstance) {
       this.detallesModalInstance.show();
+    } else {
+      // Fallback si no se inicializó el modal
+      const modalElement = document.getElementById('detallesModal');
+      if (modalElement) {
+        const modal = new (window as any).bootstrap.Modal(modalElement);
+        modal.show();
+      }
     }
   }
 
-  // Eliminar hotel
+  // Método para preparar la eliminación de un hotel
   eliminarHotel(hotel: Hotel): void {
     this.hotelAEliminar = hotel;
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.show();
+    } else {
+      // Fallback si no se inicializó el modal
+      const modalElement = document.getElementById('confirmarEliminarModal');
+      if (modalElement) {
+        const modal = new (window as any).bootstrap.Modal(modalElement);
+        modal.show();
+      }
     }
   }
 
+  // Método para confirmar la eliminación
   confirmarEliminar(): void {
-    if (!this.hotelAEliminar?.id) return;
-    
+    if (!this.hotelAEliminar || this.hotelAEliminar.id === undefined) {
+      this.mostrarNotificacion('error', 'Error', 'No se puede eliminar el hotel porque no tiene un ID válido.');
+      return;
+    }
+
+    this.guardando = true;
     this.hotelService.deleteHotel(this.hotelAEliminar.id).subscribe({
       next: () => {
-        this.cargarHoteles();
+        this.guardando = false;
+        this.mostrarNotificacion('success', 
+          'Hotel eliminado', 
+          `El hotel "${this.hotelAEliminar!.nombre}" ha sido eliminado correctamente.`
+        );
+        this.cargarHoteles(); // Recargar la lista
         if (this.confirmarModalInstance) {
           this.confirmarModalInstance.hide();
         }
-        this.mostrarNotificacion('info', 
-          'Hotel eliminado',
-          `Hotel "${this.hotelAEliminar!.nombre}" eliminado correctamente.`
-        );
         this.hotelAEliminar = null;
       },
       error: (error: any) => {
         console.error('Error eliminando hotel:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudo eliminar el hotel.');
-        if (this.confirmarModalInstance) {
-          this.confirmarModalInstance.hide();
-        }
+        this.guardando = false;
+        this.mostrarNotificacion('error', 
+          'Error', 
+          'No se pudo eliminar el hotel. Intenta nuevamente.'
+        );
       }
     });
-  }
-
-  // Manejo de errores en imágenes
-  onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjhmOCIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBkeT0iLjNlbSI+SW1hZ2VuPC90ZXh0Pjwvc3ZnPg==';
   }
 
   // Mostrar notificación
