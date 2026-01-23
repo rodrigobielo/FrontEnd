@@ -1,1 +1,454 @@
-<p>dashboard-hotel works!</p>
+<div class="dashboard-container">
+  <!-- Barra de navegación superior -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
+    <div class="container-fluid">
+      <!-- Logo y nombre de la aplicación -->
+      <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/dashboard-hotel">
+        <i class="bi bi-house-door-fill me-2"></i>
+        <span>Hotel Management</span>
+      </a>
+      
+      <!-- Botón para colapsar sidebar en móviles -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <!-- Menú de usuario -->
+      <div class="navbar-nav ms-auto align-items-center">
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+            <div class="me-2 d-none d-md-block">
+              <span class="small text-white-50 d-block">Bienvenido,</span>
+              <strong class="text-white">{{currentUser?.name || 'Administrador'}}</strong>
+            </div>
+            <i class="bi bi-person-circle fs-4"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Mi perfil</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <!-- Botón de cerrar sesión -->
+            <li>
+              <a class="dropdown-item text-danger" href="#" (click)="cerrarSesion($event)">
+                <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenedor principal -->
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+        <div class="position-sticky pt-3">
+          <!-- Perfil en sidebar -->
+          <div class="text-center mb-4 p-3 bg-light rounded-3 d-none d-md-block">
+            <div class="mb-3">
+              <i class="bi bi-person-circle display-6 text-primary"></i>
+            </div>
+            <h6 class="mb-1 fw-bold">{{currentUser?.name || 'Administrador'}}</h6>
+            <small class="text-muted">Gestión Hotelera</small>
+          </div>
+          
+          <!-- Menú principal -->
+          <h6 class="sidebar-heading px-3 mt-4 mb-2 text-muted text-uppercase small fw-bold">
+            <i class="bi bi-menu-button-wide me-2"></i> Menú Principal
+          </h6>
+          <ul class="nav flex-column mb-4">
+            <li class="nav-item">
+              <a class="nav-link active" routerLink="/dashboard-hotel" routerLinkActive="active">
+                <i class="bi bi-speedometer2 me-2"></i>
+                Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/habitaciones" routerLinkActive="active">
+                <i class="bi bi-door-closed me-2"></i>
+                Habitaciones
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/tipos-habitaciones" routerLinkActive="active">
+                <i class="bi bi-grid-3x3-gap me-2"></i>
+                Tipos de Habitaciones
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/reservas" routerLinkActive="active">
+                <i class="bi bi-calendar-check me-2"></i>
+                Reservas
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/clientes" routerLinkActive="active">
+                <i class="bi bi-people me-2"></i>
+                Clientes
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/pagos" routerLinkActive="active">
+                <i class="bi bi-credit-card me-2"></i>
+                Pagos
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/fotos" routerLinkActive="active">
+                <i class="bi bi-images me-2"></i>
+                Fotos del Hotel
+              </a>
+            </li>
+          </ul>
+          
+          <!-- Reportes -->
+          <h6 class="sidebar-heading px-3 mt-4 mb-2 text-muted text-uppercase small fw-bold">
+            <i class="bi bi-bar-chart me-2"></i> Reportes
+          </h6>
+          <ul class="nav flex-column mb-4">
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                <i class="bi bi-graph-up me-2"></i>
+                Ocupación
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                <i class="bi bi-cash-coin me-2"></i>
+                Finanzas
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                <i class="bi bi-star me-2"></i>
+                Satisfacción
+              </a>
+            </li>
+          </ul>
+          
+          <!-- Botón de cerrar sesión en sidebar -->
+          <div class="sidebar-footer p-3 mt-3 bg-light rounded-3 d-none d-md-block">
+            <button class="btn btn-outline-danger w-100" (click)="cerrarSesion()">
+              <i class="bi bi-box-arrow-right me-2"></i>
+              Cerrar sesión
+            </button>
+          </div>
+          
+          <!-- Información del sistema -->
+          <div class="sidebar-footer p-3 mt-3 bg-light rounded-3 d-none d-md-block">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-info-circle text-primary me-2"></i>
+              <div>
+                <small class="text-muted d-block">Hotel Management</small>
+                <small class="text-muted">Versión 2.1.0</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+        <!-- Header del contenido -->
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+          <h1 class="h2 fw-bold">
+            <i class="bi bi-house-door me-2 text-primary"></i>
+            Dashboard Hotel
+          </h1>
+          <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-calendar me-1"></i> Hoy: {{currentDate | date:'dd/MM/yyyy'}}
+              </button>
+            </div>
+            <button type="button" class="btn btn-sm btn-primary" (click)="generarReporteDiario()">
+              <i class="bi bi-file-earmark-text me-1"></i> Reporte Diario
+            </button>
+          </div>
+        </div>
+
+        <!-- Tarjetas de resumen -->
+        <div class="row mb-4">
+          <ng-container *ngFor="let card of summaryCards; let i = index">
+            <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+              <div class="card border-3 border-start border-0 shadow-sm h-100 py-2" 
+                   [class.border-left-primary]="i === 0"
+                   [class.border-left-success]="i === 1"
+                   [class.border-left-info]="i === 2"
+                   [class.border-left-warning]="i === 3"
+                   [class.border-left-danger]="i === 4"
+                   [class.border-left-purple]="i === 5">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                      <div class="text-xs fw-bold text-uppercase mb-1"
+                           [class.text-primary]="i === 0"
+                           [class.text-success]="i === 1"
+                           [class.text-info]="i === 2"
+                           [class.text-warning]="i === 3"
+                           [class.text-danger]="i === 4"
+                           [class.text-purple]="i === 5">
+                        {{card.title}}
+                      </div>
+                      <div class="h5 mb-0 fw-bold text-gray-800">
+                        <ng-container *ngIf="card.count !== undefined">
+                          {{card.count}}
+                        </ng-container>
+                        <ng-container *ngIf="card.total !== undefined">
+                          {{card.total | currency}}
+                        </ng-container>
+                      </div>
+                      <div class="mt-2">
+                        <span *ngIf="card.disponibles !== undefined" class="badge" 
+                              [ngClass]="{'bg-primary': i === 0}">
+                          {{card.disponibles}} disponibles
+                        </span>
+                        <span *ngIf="card.precioMin !== undefined" class="badge bg-success">
+                          Desde {{card.precioMin | currency}}
+                        </span>
+                        <span *ngIf="card.change !== undefined" class="badge" 
+                              [ngClass]="getChangeBadgeClass(card.change)">
+                          <i class="bi" [class]="'bi-' + getChangeIcon(card.change) + ' me-1'"></i> 
+                          {{card.change}}%
+                        </span>
+                        <span *ngIf="card.nuevosHoy !== undefined" class="badge bg-warning text-dark">
+                          {{card.nuevosHoy}} nuevos hoy
+                        </span>
+                        <span *ngIf="card.galerias !== undefined" class="badge bg-purple">
+                          {{card.galerias}} galerías
+                        </span>
+                      </div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="bi fs-1 opacity-75"
+                         [class]="'bi-' + card.icon + ' text-' + card.color"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
+                  <button class="btn btn-sm" 
+                          [class]="'btn-' + card.color"
+                          (click)="onAddClick(card.title)">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    <ng-container *ngIf="card.title === 'Pagos' || card.title === 'Clientes'">
+                      Registrar
+                    </ng-container>
+                    <ng-container *ngIf="card.title === 'Fotos'">
+                      Subir
+                    </ng-container>
+                    <ng-container *ngIf="card.title === 'Reservas'">
+                      Nueva
+                    </ng-container>
+                    <ng-container *ngIf="!(card.title === 'Pagos' || card.title === 'Clientes' || card.title === 'Fotos' || card.title === 'Reservas')">
+                      Añadir
+                    </ng-container>
+                  </button>
+                  <button class="btn btn-sm" 
+                          [class]="'btn-outline-' + card.color"
+                          (click)="onListClick(card.title)">
+                    <i class="bi bi-list me-1"></i>
+                    <ng-container *ngIf="card.title === 'Fotos'">
+                      Galerías
+                    </ng-container>
+                    <ng-container *ngIf="card.title !== 'Fotos'">
+                      Ver {{card.title === 'Tipos de Habitaciones' ? 'Todos' : 'Todas'}}
+                    </ng-container>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+          <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                  <i class="bi bi-calendar-event me-2 text-primary"></i>
+                  Reservas Recientes
+                </h6>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th>Habitación</th>
+                        <th>Cliente</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let reserva of reservasRecientes">
+                        <td>{{reserva.habitacion}}</td>
+                        <td>{{reserva.cliente}}</td>
+                        <td>{{reserva.checkIn | date:'dd/MM'}}</td>
+                        <td>{{reserva.checkOut | date:'dd/MM'}}</td>
+                        <td>
+                          <span class="badge" [ngClass]="getEstadoBadgeClass(reserva.estado)">
+                            {{reserva.estado}}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="card-footer bg-white">
+                <button class="btn btn-sm btn-outline-primary" (click)="verTodasReservas()">
+                  Ver todas las reservas
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estadísticas rápidas -->
+          <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                  <i class="bi bi-speedometer me-2 text-primary"></i>
+                  Estadísticas Rápidas
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-6 text-center mb-3">
+                    <div class="p-3 bg-light rounded-3">
+                      <div class="h4 fw-bold text-primary">{{estadisticas.ocupacion}}%</div>
+                      <small class="text-muted">Ocupación Actual</small>
+                    </div>
+                  </div>
+                  <div class="col-6 text-center mb-3">
+                    <div class="p-3 bg-light rounded-3">
+                      <div class="h4 fw-bold text-success">{{estadisticas.ingresosHoy | currency}}</div>
+                      <small class="text-muted">Ingresos Hoy</small>
+                    </div>
+                  </div>
+                  <div class="col-6 text-center mb-3">
+                    <div class="p-3 bg-light rounded-3">
+                      <div class="h4 fw-bold text-info">{{estadisticas.reservasPendientes}}</div>
+                      <small class="text-muted">Reservas Pendientes</small>
+                    </div>
+                  </div>
+                  <div class="col-6 text-center mb-3">
+                    <div class="p-3 bg-light rounded-3">
+                      <div class="h4 fw-bold text-warning">{{estadisticas.clientesNuevos}}</div>
+                      <small class="text-muted">Clientes Nuevos (Mes)</small>
+                    </div>
+                  </div>
+                  <div class="col-6 text-center mb-3">
+                    <div class="p-3 bg-light rounded-3">
+                      <div class="h4 fw-bold text-danger">{{estadisticas.pagosPendientes}}</div>
+                      <small class="text-muted">Pagos Pendientes</small>
+                    </div>
+                  </div>
+                  <div class="col-6 text-center mb-3">
+                    <div class="p-3 bg-light rounded-3">
+                      <div class="h4 fw-bold text-purple">{{estadisticas.fotosSubidas}}</div>
+                      <small class="text-muted">Fotos Subidas (Mes)</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                  <i class="bi bi-lightning me-2 text-primary"></i>
+                  Acciones Rápidas
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4 col-sm-6 mb-2">
+                    <button class="btn btn-outline-primary w-100 text-start" (click)="crearReservaRapida()">
+                      <i class="bi bi-plus-circle me-2"></i>
+                      Nueva Reserva
+                    </button>
+                  </div>
+                  <div class="col-md-4 col-sm-6 mb-2">
+                    <button class="btn btn-outline-success w-100 text-start" (click)="registrarPago()">
+                      <i class="bi bi-cash-coin me-2"></i>
+                      Registrar Pago
+                    </button>
+                  </div>
+                  <div class="col-md-4 col-sm-6 mb-2">
+                    <button class="btn btn-outline-info w-100 text-start" (click)="checkInRapido()">
+                      <i class="bi bi-box-arrow-in-right me-2"></i>
+                      Check-in
+                    </button>
+                  </div>
+                  <div class="col-md-4 col-sm-6 mb-2">
+                    <button class="btn btn-outline-warning w-100 text-start" (click)="checkOutRapido()">
+                      <i class="bi bi-box-arrow-right me-2"></i>
+                      Check-out
+                    </button>
+                  </div>
+                  <div class="col-md-4 col-sm-6 mb-2">
+                    <button class="btn btn-outline-purple w-100 text-start" (click)="subirFoto()">
+                      <i class="bi bi-camera me-2"></i>
+                      Subir Foto
+                    </button>
+                  </div>
+                  <div class="col-md-4 col-sm-6 mb-2">
+                    <button class="btn btn-outline-secondary w-100 text-start" (click)="generarReporte()">
+                      <i class="bi bi-printer me-2"></i>
+                      Generar Reporte
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de bienvenida -->
+<div class="modal fade" id="welcomeModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-house-door-fill me-2"></i>
+          ¡Bienvenido al Hotel Management!
+        </h5>
+      </div>
+      <div class="modal-body text-center p-5">
+        <div class="mb-4">
+          <i class="bi bi-check-circle-fill display-1 text-success"></i>
+        </div>
+        <h4 class="mb-3">Panel de Gestión Hotelera</h4>
+        <p class="text-muted">
+          Has accedido al panel de administración del hotel como <strong>{{currentUser?.name || 'Administrador'}}</strong>.
+          Desde aquí puedes gestionar habitaciones, reservas, clientes y más.
+        </p>
+        <div class="alert alert-info mt-3">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>Ocupación actual:</strong> {{estadisticas.ocupacion}}% | 
+          <strong>Reservas hoy:</strong> {{summaryCards[2].count}}
+        </div>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+          <i class="bi bi-arrow-right me-1"></i> Comenzar a trabajar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
