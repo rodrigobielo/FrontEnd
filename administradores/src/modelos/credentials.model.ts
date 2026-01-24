@@ -1,5 +1,5 @@
 export interface Credentials {
-  nombre: string;       // CAMBIADO: de 'usuario' a 'nombre'
-  contrasena: string;   // CAMBIADO: de 'password' a 'contrasena'
+  email: string;          // Cambiado de 'nombre' a 'email'
+  contrasena: string;
   rememberMe?: boolean;
 }

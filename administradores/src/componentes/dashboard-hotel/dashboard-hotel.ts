@@ -1,7 +1,8 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule, DatePipe, CurrencyPipe, NgFor, NgClass } from '@angular/common';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../servicios/auth.service';
 
 @Component({
   selector: 'app-dashboard-hotel',
@@ -11,153 +12,88 @@ import { FormsModule } from '@angular/forms';
     RouterModule, 
     FormsModule,
     DatePipe,
-    CurrencyPipe,
-    NgFor,
-    NgClass
+    CurrencyPipe
   ],
   templateUrl: './dashboard-hotel.html',
   styleUrls: ['./dashboard-hotel.css']
 })
-export class DashboardHotelComponent implements OnInit, AfterViewInit {
-  @ViewChild('ocupacionCanvas') ocupacionCanvas!: ElementRef;
-  
-  summaryCards = [
-    { 
-      title: 'Habitaciones', 
-      count: 48, 
-      disponibles: 12,
-      icon: 'door-closed', 
-      color: 'primary' 
-    },
-    { 
-      title: 'Tipos de Habitaciones', 
-      count: 6, 
-      precioMin: 120,
-      icon: 'grid-3x3-gap', 
-      color: 'success' 
-    },
-    { 
-      title: 'Reservas', 
-      count: 8, 
-      change: 14, 
-      icon: 'calendar-check', 
-      color: 'info' 
-    },
-    { 
-      title: 'Clientes', 
-      count: 245, 
-      nuevosHoy: 3,
-      icon: 'people', 
-      color: 'warning' 
-    },
-    { 
-      title: 'Pagos', 
-      total: 4560, 
-      change: 8, 
-      icon: 'credit-card', 
-      color: 'danger' 
-    },
-    { 
-      title: 'Fotos del Hotel', 
-      count: 156, 
-      galerias: 8,
-      icon: 'images', 
-      color: 'purple' 
-    }
-  ];
-
-  reservasRecientes = [
-    { habitacion: '101 - Suite', cliente: 'Juan Pérez', checkIn: new Date(), checkOut: new Date(Date.now() + 86400000*2), estado: 'Confirmada' },
-    { habitacion: '205 - Doble', cliente: 'María García', checkIn: new Date(), checkOut: new Date(Date.now() + 86400000*3), estado: 'En curso' },
-    { habitacion: '312 - Individual', cliente: 'Carlos López', checkIn: new Date(Date.now() - 86400000), checkOut: new Date(Date.now() + 86400000), estado: 'En curso' },
-    { habitacion: '108 - Suite', cliente: 'Ana Martínez', checkIn: new Date(Date.now() + 86400000*2), checkOut: new Date(Date.now() + 86400000*5), estado: 'Pendiente' },
-    { habitacion: '404 - Familiar', cliente: 'Pedro Sánchez', checkIn: new Date(), checkOut: new Date(Date.now() + 86400000*4), estado: 'Confirmada' }
-  ];
-
-  estadisticas = {
-    ocupacion: 75,
-    ingresosHoy: 4560,
-    reservasPendientes: 5,
-    clientesNuevos: 15,
-    pagosPendientes: 3,
-    fotosSubidas: 12
-  };
-
-  currentUser: any = { name: 'Admin Hotel' };
+export class DashboardHotel implements OnInit, AfterViewInit {
+  // Propiedades necesarias para la plantilla
+  currentUser: any = null;
+  currentHotel: any = null;
   currentDate: Date = new Date();
-  periodoGrafico: string = 'hoy';
-  loading: boolean = false;
+  summaryCards: any[] = [];
+  reservasRecientes: any[] = [];
+  estadisticas: any = {};
 
-  constructor(private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.cargarDatosDashboard();
-  }
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
 
-  private cargarDatosDashboard(): void {
-    this.loading = true;
-    // Simular carga de datos
-    setTimeout(() => {
-      this.loading = false;
-    }, 1000);
+    this.currentUser = this.authService.getCurrentUser();
+    
+    if (!this.authService.isAdminHotel()) {
+      if (this.authService.isSuperAdmin()) {
+        this.router.navigate(['/dashboard']);
+      } else {
+        this.router.navigate(['/perfil']);
+      }
+      return;
+    }
+
+    // Inicializar datos de ejemplo para el dashboard del hotel
+    this.summaryCards = [
+      { title: 'Mis Habitaciones', count: 0, disponibles: 0, icon: 'door-closed', color: 'primary' },
+      { title: 'Tipos de Habitaciones', count: 0, precioMin: 0, icon: 'grid-3x3-gap', color: 'success' },
+      { title: 'Mis Reservas', count: 0, change: 0, icon: 'calendar-check', color: 'info' },
+      { title: 'Mis Clientes', count: 0, nuevosHoy: 0, icon: 'people', color: 'warning' },
+      { title: 'Mis Pagos', total: 0, change: 0, icon: 'credit-card', color: 'danger' },
+      { title: 'Fotos Mi Hotel', count: 0, galerias: 0, icon: 'images', color: 'purple' }
+    ];
+
+    this.reservasRecientes = [];
+    this.estadisticas = {
+      ocupacion: 0,
+      ingresosHoy: 0,
+      reservasPendientes: 0,
+      clientesNuevos: 0,
+      pagosPendientes: 0,
+      fotosSubidas: 0
+    };
+
+    // Obtener el hotel asignado
+    const hotelId = this.authService.getCurrentHotelId();
+    if (hotelId) {
+      // Aquí iría la llamada para obtener los datos del hotel, pero por ahora usamos un objeto vacío
+      this.currentHotel = { id: hotelId, nombre: 'Mi Hotel' };
+    } else {
+      this.currentHotel = { id: 1, nombre: 'Mi Hotel' };
+    }
   }
 
   ngAfterViewInit(): void {
+    // Mostrar modal de bienvenida si es necesario
     setTimeout(() => {
-      this.showWelcomeModal();
+      const modalElement = document.getElementById('welcomeModal');
+      if (modalElement) {
+        const modal = new (window as any).bootstrap.Modal(modalElement);
+        const modalAlreadyShown = sessionStorage.getItem('welcomeModalHotelShown');
+        if (!modalAlreadyShown) {
+          modal.show();
+          sessionStorage.setItem('welcomeModalHotelShown', 'true');
+        }
+      }
     }, 500);
   }
 
-  private showWelcomeModal(): void {
-    const modalAlreadyShown = sessionStorage.getItem('welcomeModalHotelShown');
-    
-    if (modalAlreadyShown === 'true') {
-      return;
-    }
-    
-    const modalElement = document.getElementById('welcomeModal');
-    if (modalElement) {
-      const modal = new (window as any).bootstrap.Modal(modalElement);
-      
-      sessionStorage.setItem('welcomeModalHotelShown', 'true');
-      modal.show();
-    }
-  }
-
-  onAddClick(cardType: string): void {
-    console.log(`Añadir nuevo ${cardType}`);
-    
-    const rutas: {[key: string]: string} = {
-      'Habitaciones': '/habitaciones/nueva',
-      'Tipos de Habitaciones': '/tipos-habitaciones/nuevo',
-      'Reservas': '/reservas/nueva',
-      'Clientes': '/clientes/nuevo',
-      'Pagos': '/pagos/nuevo',
-      'Fotos': '/fotos/subir'
-    };
-    
-    if (rutas[cardType]) {
-      this.router.navigate([rutas[cardType]]);
-    }
-  }
-
-  onListClick(cardType: string): void {
-    console.log(`Ver lista de ${cardType}`);
-    
-    const rutas: {[key: string]: string} = {
-      'Habitaciones': '/habitaciones',
-      'Tipos de Habitaciones': '/tipos-habitaciones',
-      'Reservas': '/reservas',
-      'Clientes': '/clientes',
-      'Pagos': '/pagos',
-      'Fotos': '/fotos'
-    };
-    
-    if (rutas[cardType]) {
-      this.router.navigate([rutas[cardType]]);
-    }
-  }
-
+  // Métodos necesarios para la plantilla
   getChangeBadgeClass(change: number): string {
     return change >= 0 ? 'bg-success' : 'bg-danger';
   }
@@ -177,6 +113,14 @@ export class DashboardHotelComponent implements OnInit, AfterViewInit {
     return clases[estado] || 'bg-secondary';
   }
 
+  onAddClick(cardType: string): void {
+    console.log(`Añadir nuevo ${cardType} para el hotel ${this.currentHotel?.nombre}`);
+  }
+
+  onListClick(cardType: string): void {
+    console.log(`Ver lista de ${cardType} para el hotel ${this.currentHotel?.nombre}`);
+  }
+
   cerrarSesion(event?: Event): void {
     if (event) {
       event.preventDefault();
@@ -184,46 +128,48 @@ export class DashboardHotelComponent implements OnInit, AfterViewInit {
     }
     
     if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-      console.log('Sesión cerrada');
-      sessionStorage.removeItem('welcomeModalHotelShown');
-      this.router.navigate(['/login']);
+      this.authService.logout();
     }
   }
 
   verTodasReservas(): void {
-    this.router.navigate(['/reservas']);
+    console.log('Ver todas las reservas del hotel');
   }
 
   generarReporteDiario(): void {
-    console.log('Generando reporte diario...');
-    alert('Reporte diario generado correctamente');
+    console.log('Generando reporte diario para el hotel');
   }
 
   crearReservaRapida(): void {
-    this.router.navigate(['/reservas/nueva']);
+    console.log('Crear reserva rápida para el hotel');
   }
 
   registrarPago(): void {
-    this.router.navigate(['/pagos/nuevo']);
+    console.log('Registrar pago para el hotel');
   }
 
   checkInRapido(): void {
-    console.log('Check-in rápido');
+    console.log('Check-in rápido para el hotel');
   }
 
   checkOutRapido(): void {
-    console.log('Check-out rápido');
+    console.log('Check-out rápido para el hotel');
   }
 
   subirFoto(): void {
-    this.router.navigate(['/fotos/subir']);
+    console.log('Subir foto para el hotel');
   }
 
   generarReporte(): void {
-    console.log('Generando reporte...');
+    console.log('Generar reporte para el hotel');
   }
 
-  actualizarGrafico(): void {
-    console.log('Actualizando gráfico para periodo:', this.periodoGrafico);
+  // Getters para la plantilla
+  get nombreUsuario(): string {
+    return this.currentUser?.nombre || 'Administrador';
+  }
+
+  get nombreHotel(): string {
+    return this.currentHotel?.nombre || 'Mi Hotel';
   }
 }

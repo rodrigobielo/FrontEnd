@@ -1,12 +1,10 @@
 export interface User {
-  id?: number;
+  id: number;
   nombre: string;
-  apellidos?: string;
-  telefono?: string;
-  nacionalidad?: string;
-  numPasaporte?: string;
+  apellidos: string;
+  telefono: string;
+  email: string;
   rol: string;
-  // Campos opcionales para compatibilidad
-  username?: string;
-  email?: string;
+  username: string;
+  hotelId?: number; // Para adminHotel, almacenar ID del hotel
 }

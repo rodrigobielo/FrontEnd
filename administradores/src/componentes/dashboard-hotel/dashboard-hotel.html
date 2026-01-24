@@ -5,7 +5,7 @@
       <!-- Logo y nombre de la aplicación -->
       <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/dashboard-hotel">
         <i class="bi bi-house-door-fill me-2"></i>
-        <span>Hotel Management</span>
+        <span>{{nombreHotel}} - Panel</span>
       </a>
       
       <!-- Botón para colapsar sidebar en móviles -->
@@ -19,7 +19,7 @@
           <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
             <div class="me-2 d-none d-md-block">
               <span class="small text-white-50 d-block">Bienvenido,</span>
-              <strong class="text-white">{{currentUser?.name || 'Administrador'}}</strong>
+              <strong class="text-white">{{nombreUsuario}}</strong>
             </div>
             <i class="bi bi-person-circle fs-4"></i>
           </a>
@@ -50,8 +50,9 @@
             <div class="mb-3">
               <i class="bi bi-person-circle display-6 text-primary"></i>
             </div>
-            <h6 class="mb-1 fw-bold">{{currentUser?.name || 'Administrador'}}</h6>
-            <small class="text-muted">Gestión Hotelera</small>
+            <h6 class="mb-1 fw-bold">{{nombreUsuario}}</h6>
+            <small class="text-muted">{{nombreHotel}}</small>
+            <small class="text-muted d-block">Administrador de Hotel</small>
           </div>
           
           <!-- Menú principal -->
@@ -66,39 +67,39 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/habitaciones" routerLinkActive="active">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'habitaciones']" routerLinkActive="active">
                 <i class="bi bi-door-closed me-2"></i>
-                Habitaciones
+                Mis Habitaciones
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/tipos-habitaciones" routerLinkActive="active">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'tipos-habitaciones']" routerLinkActive="active">
                 <i class="bi bi-grid-3x3-gap me-2"></i>
                 Tipos de Habitaciones
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/reservas" routerLinkActive="active">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'reservas']" routerLinkActive="active">
                 <i class="bi bi-calendar-check me-2"></i>
-                Reservas
+                Mis Reservas
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/clientes" routerLinkActive="active">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'clientes']" routerLinkActive="active">
                 <i class="bi bi-people me-2"></i>
-                Clientes
+                Mis Clientes
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/pagos" routerLinkActive="active">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'pagos']" routerLinkActive="active">
                 <i class="bi bi-credit-card me-2"></i>
-                Pagos
+                Mis Pagos
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/fotos" routerLinkActive="active">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'fotos']" routerLinkActive="active">
                 <i class="bi bi-images me-2"></i>
-                Fotos del Hotel
+                Fotos Mi Hotel
               </a>
             </li>
           </ul>
@@ -109,13 +110,13 @@
           </h6>
           <ul class="nav flex-column mb-4">
             <li class="nav-item">
-              <a class="nav-link" href="#">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'reportes', 'ocupacion']">
                 <i class="bi bi-graph-up me-2"></i>
                 Ocupación
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">
+              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'reportes', 'finanzas']">
                 <i class="bi bi-cash-coin me-2"></i>
                 Finanzas
               </a>
@@ -141,7 +142,7 @@
             <div class="d-flex align-items-center">
               <i class="bi bi-info-circle text-primary me-2"></i>
               <div>
-                <small class="text-muted d-block">Hotel Management</small>
+                <small class="text-muted d-block">{{nombreHotel}}</small>
                 <small class="text-muted">Versión 2.1.0</small>
               </div>
             </div>
@@ -155,7 +156,7 @@
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
           <h1 class="h2 fw-bold">
             <i class="bi bi-house-door me-2 text-primary"></i>
-            Dashboard Hotel
+            {{nombreHotel}} - Dashboard
           </h1>
           <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group me-2">
@@ -232,16 +233,16 @@
                           [class]="'btn-' + card.color"
                           (click)="onAddClick(card.title)">
                     <i class="bi bi-plus-circle me-1"></i>
-                    <ng-container *ngIf="card.title === 'Pagos' || card.title === 'Clientes'">
+                    <ng-container *ngIf="card.title === 'Mis Pagos' || card.title === 'Mis Clientes'">
                       Registrar
                     </ng-container>
-                    <ng-container *ngIf="card.title === 'Fotos'">
+                    <ng-container *ngIf="card.title === 'Fotos Mi Hotel'">
                       Subir
                     </ng-container>
-                    <ng-container *ngIf="card.title === 'Reservas'">
+                    <ng-container *ngIf="card.title === 'Mis Reservas'">
                       Nueva
                     </ng-container>
-                    <ng-container *ngIf="!(card.title === 'Pagos' || card.title === 'Clientes' || card.title === 'Fotos' || card.title === 'Reservas')">
+                    <ng-container *ngIf="!(card.title === 'Mis Pagos' || card.title === 'Mis Clientes' || card.title === 'Fotos Mi Hotel' || card.title === 'Mis Reservas')">
                       Añadir
                     </ng-container>
                   </button>
@@ -249,10 +250,10 @@
                           [class]="'btn-outline-' + card.color"
                           (click)="onListClick(card.title)">
                     <i class="bi bi-list me-1"></i>
-                    <ng-container *ngIf="card.title === 'Fotos'">
+                    <ng-container *ngIf="card.title === 'Fotos Mi Hotel'">
                       Galerías
                     </ng-container>
-                    <ng-container *ngIf="card.title !== 'Fotos'">
+                    <ng-container *ngIf="card.title !== 'Fotos Mi Hotel'">
                       Ver {{card.title === 'Tipos de Habitaciones' ? 'Todos' : 'Todas'}}
                     </ng-container>
                   </button>
@@ -426,7 +427,7 @@
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">
           <i class="bi bi-house-door-fill me-2"></i>
-          ¡Bienvenido al Hotel Management!
+          ¡Bienvenido a {{nombreHotel}}!
         </h5>
       </div>
       <div class="modal-body text-center p-5">
@@ -435,7 +436,7 @@
         </div>
         <h4 class="mb-3">Panel de Gestión Hotelera</h4>
         <p class="text-muted">
-          Has accedido al panel de administración del hotel como <strong>{{currentUser?.name || 'Administrador'}}</strong>.
+          Has accedido al panel de administración de <strong>{{nombreHotel}}</strong> como <strong>{{nombreUsuario}}</strong>.
           Desde aquí puedes gestionar habitaciones, reservas, clientes y más.
         </p>
         <div class="alert alert-info mt-3">

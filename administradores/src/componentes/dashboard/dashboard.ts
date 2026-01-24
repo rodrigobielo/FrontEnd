@@ -1,12 +1,18 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../servicios/auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    FormsModule,
+    DatePipe
+  ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -20,12 +26,13 @@ export class Dashboard implements OnInit, AfterViewInit {
   ];
 
   currentUser: any = null;
+  currentDate: Date = new Date();
   loading: boolean = true;
   errorMessage: string = '';
 
   constructor(
-    private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) { 
     console.log('DashboardComponent inicializado');
   }
@@ -38,9 +45,6 @@ export class Dashboard implements OnInit, AfterViewInit {
   private verifyAccess(): void {
     console.log('Verificando acceso al dashboard...');
     this.loading = true;
-    
-    // Mostrar estado actual
-    this.authService.debugEstado();
     
     // Verificar autenticación
     if (!this.authService.isAuthenticated()) {
@@ -125,12 +129,50 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   onAddClick(cardType: string): void {
     console.log(`Añadir nuevo ${cardType}`);
-    // Aquí va la lógica para añadir...
+    // Redirigir según el tipo
+    switch(cardType) {
+      case 'Regiones':
+        this.router.navigate(['/regiones/nueva']);
+        break;
+      case 'Provincias':
+        this.router.navigate(['/provincias/nueva']);
+        break;
+      case 'Ciudades':
+        this.router.navigate(['/ciudades/nueva']);
+        break;
+      case 'Hoteles':
+        this.router.navigate(['/hoteles/nuevo']);
+        break;
+      case 'Categorías':
+        this.router.navigate(['/categorias/nueva']);
+        break;
+      default:
+        console.log(`Tipo no reconocido: ${cardType}`);
+    }
   }
 
   onListClick(cardType: string): void {
     console.log(`Ver lista de ${cardType}`);
-    // Aquí va la lógica para listar...
+    // Redirigir según el tipo
+    switch(cardType) {
+      case 'Regiones':
+        this.router.navigate(['/regiones']);
+        break;
+      case 'Provincias':
+        this.router.navigate(['/provincias']);
+        break;
+      case 'Ciudades':
+        this.router.navigate(['/ciudades']);
+        break;
+      case 'Hoteles':
+        this.router.navigate(['/hoteles']);
+        break;
+      case 'Categorías':
+        this.router.navigate(['/categorias']);
+        break;
+      default:
+        console.log(`Tipo no reconocido: ${cardType}`);
+    }
   }
 
   getChangeBadgeClass(change: number): string {

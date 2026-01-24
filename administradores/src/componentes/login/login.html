@@ -12,28 +12,30 @@
       <!-- Formulario de login -->
       <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)" novalidate>
         
-        <!-- Campo de nombre de usuario -->
+        <!-- Campo de email -->
         <div class="mb-4">
-          <label for="nombre" class="form-label fw-medium">Nombre de Usuario</label>
+          <label for="email" class="form-label fw-medium">Email</label>
           <div class="input-group input-group-lg">
             <span class="input-group-text bg-light border-end-0">
-              <i class="bi bi-person-fill text-primary"></i>
+              <i class="bi bi-envelope-fill text-primary"></i>
             </span>
             <input 
-              type="text" 
+              type="email" 
               class="form-control border-start-0" 
-              id="nombre" 
-              name="nombre"
-              placeholder="Ingrese su nombre de usuario"
-              [(ngModel)]="credentials.nombre"
-              #nombre="ngModel"
+              id="email" 
+              name="email"
+              placeholder="Ingrese su email"
+              [(ngModel)]="credentials.email"
+              #email="ngModel"
               required
-              [class.is-invalid]="nombre.invalid && (nombre.dirty || nombre.touched || loginForm.submitted)"
+              email
+              [class.is-invalid]="email.invalid && (email.dirty || email.touched || loginForm.submitted)"
             >
           </div>
-          <!-- Mensaje de error para el campo nombre -->
-          <div class="invalid-feedback d-block" *ngIf="nombre.invalid && (nombre.dirty || nombre.touched || loginForm.submitted)">
-            <span *ngIf="nombre.errors?.['required']">El nombre de usuario es requerido</span>
+          <!-- Mensajes de error para email -->
+          <div class="invalid-feedback d-block" *ngIf="email.invalid && (email.dirty || email.touched || loginForm.submitted)">
+            <span *ngIf="email.errors?.['required']">El email es requerido</span>
+            <span *ngIf="email.errors?.['email']">Formato de email inválido</span>
           </div>
         </div>
         
@@ -50,7 +52,7 @@
               <i class="bi bi-lock-fill text-primary"></i>
             </span>
             <input 
-              type="password" 
+              [type]="showPassword ? 'text' : 'password'" 
               class="form-control border-start-0" 
               id="contrasena" 
               name="contrasena"
@@ -65,7 +67,7 @@
               <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
             </button>
           </div>
-          <!-- Mensaje de error para el campo contraseña -->
+          <!-- Mensajes de error para contraseña -->
           <div class="invalid-feedback d-block" *ngIf="contrasena.invalid && (contrasena.dirty || contrasena.touched || loginForm.submitted)">
             <div *ngIf="contrasena.errors?.['required']">La contraseña es requerida</div>
             <div *ngIf="contrasena.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</div>
@@ -87,7 +89,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" (click)="clearError()"></button>
         </div>
         
-        <!-- Botón de inicio de sesión -->
+        <!-- BOTÓN DE INICIAR SESIÓN (ESTÁ PRESENTE) -->
         <div class="d-grid mb-4">
           <button 
             type="submit" 
@@ -111,7 +113,7 @@
             Acceso restringido a usuarios autorizados
           </p>
           <p class="small text-muted mb-0">
-            Sistema Turístico v2.1.0
+            Sistema Hotelero v2.1.0
           </p>
         </div>
       </form>

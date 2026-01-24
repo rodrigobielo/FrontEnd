@@ -12,7 +12,11 @@ export const routes: Routes = [
   },
   { 
     path: 'dashboard', 
-    loadComponent: () => import('../componentes/dashboard/dashboard').then(m => m.Dashboard)
+    loadComponent: () => import('../componentes/dashboard/dashboard').then(m => m.Dashboard)  // Cambiado a .Dashboard
+  },
+  { 
+    path: 'dashboard-hotel', 
+    loadComponent: () => import('../componentes/dashboard-hotel/dashboard-hotel').then(m => m.DashboardHotel)  // Cambiado a .DashboardHotel
   },
   { 
     path: 'regiones', 
@@ -34,7 +38,7 @@ export const routes: Routes = [
     path: 'categorias', 
     loadComponent: () => import('../componentes/categorias/categorias').then(m => m.Categorias)
   },
- /* { 
+  /* { 
     path: 'perfil', 
     loadComponent: () => import('../componentes/perfil/perfil.component')
       .then(m => m.PerfilComponent)
