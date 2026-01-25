@@ -1,0 +1,614 @@
+<div class="container-fluid py-4">
+  <!-- Encabezado de la página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 fw-bold mb-0">
+        <i class="bi bi-people-fill text-info me-2"></i>
+        Gestión de Usuarios
+      </h1>
+      <p class="text-body-secondary mb-0">Administra los usuarios del sistema hotelero</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+        <i class="bi bi-arrow-left me-1"></i> Volver
+      </button>
+      <button class="btn btn-info" (click)="nuevoRegistro()">
+        <i class="bi bi-plus-circle me-1"></i> Nuevo Usuario
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de información -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card border-info-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-person-badge-fill text-info-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Total de Usuarios</h5>
+              <p class="card-text display-6 fw-bold text-info">{{ totalUsuarios }}</p>
+              <small class="text-body-tertiary">Registrados en el sistema</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-8">
+      <div class="card border-light-subtle shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-lightbulb-fill text-warning-emphasis me-2"></i>
+            Información importante
+          </h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
+              Los usuarios pueden ser Administradores, Usuarios regulares o Administradores de Hotel.
+            </li>
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
+              Cada usuario debe tener un nombre de usuario único y una contraseña segura.
+            </li>
+            <li>
+              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
+              Los datos personales como pasaporte y nacionalidad son obligatorios para reservas.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Formulario de usuarios -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square text-info me-2"></i>
+            {{ modoEdicion ? 'Editar Usuario' : 'Nuevo Usuario' }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()" novalidate>
+            <!-- Nombre -->
+            <div class="mb-3">
+              <label for="nombre" class="form-label fw-semibold">
+                <i class="bi bi-person-fill me-1 text-info-emphasis"></i>
+                Nombre <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-person"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nombre"
+                  formControlName="nombre"
+                  [class.is-valid]="usuarioForm.get('nombre')?.valid && usuarioForm.get('nombre')?.touched"
+                  [class.is-invalid]="usuarioForm.get('nombre')?.invalid && usuarioForm.get('nombre')?.touched"
+                  placeholder="Ej: Juan"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('nombre') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Apellidos -->
+            <div class="mb-3">
+              <label for="apellidos" class="form-label fw-semibold">
+                <i class="bi bi-person-badge-fill me-1 text-info-emphasis"></i>
+                Apellidos <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-person-badge"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="apellidos"
+                  formControlName="apellidos"
+                  [class.is-valid]="usuarioForm.get('apellidos')?.valid && usuarioForm.get('apellidos')?.touched"
+                  [class.is-invalid]="usuarioForm.get('apellidos')?.invalid && usuarioForm.get('apellidos')?.touched"
+                  placeholder="Ej: Pérez García"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('apellidos') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Teléfono -->
+            <div class="mb-3">
+              <label for="telefono" class="form-label fw-semibold">
+                <i class="bi bi-telephone-fill me-1 text-info-emphasis"></i>
+                Teléfono <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-telephone"></i>
+                </span>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  id="telefono"
+                  formControlName="telefono"
+                  [class.is-valid]="usuarioForm.get('telefono')?.valid && usuarioForm.get('telefono')?.touched"
+                  [class.is-invalid]="usuarioForm.get('telefono')?.invalid && usuarioForm.get('telefono')?.touched"
+                  placeholder="Ej: +34 600 123 456"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('telefono') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Nacionalidad -->
+            <div class="mb-3">
+              <label for="nacionalidad" class="form-label fw-semibold">
+                <i class="bi bi-globe-americas me-1 text-info-emphasis"></i>
+                Nacionalidad <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-flag-fill"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nacionalidad"
+                  formControlName="nacionalidad"
+                  [class.is-valid]="usuarioForm.get('nacionalidad')?.valid && usuarioForm.get('nacionalidad')?.touched"
+                  [class.is-invalid]="usuarioForm.get('nacionalidad')?.invalid && usuarioForm.get('nacionalidad')?.touched"
+                  placeholder="Ej: Española"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('nacionalidad') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Número de Pasaporte -->
+            <div class="mb-3">
+              <label for="numPasaporte" class="form-label fw-semibold">
+                <i class="bi bi-passport-fill me-1 text-info-emphasis"></i>
+                Número de Pasaporte <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-passport"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="numPasaporte"
+                  formControlName="numPasaporte"
+                  [class.is-valid]="usuarioForm.get('numPasaporte')?.valid && usuarioForm.get('numPasaporte')?.touched"
+                  [class.is-invalid]="usuarioForm.get('numPasaporte')?.invalid && usuarioForm.get('numPasaporte')?.touched"
+                  placeholder="Ej: AB1234567"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('numPasaporte') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Nombre de Usuario -->
+            <div class="mb-3">
+              <label for="usuario" class="form-label fw-semibold">
+                <i class="bi bi-person-circle me-1 text-info-emphasis"></i>
+                Nombre de Usuario <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-at"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="usuario"
+                  formControlName="usuario"
+                  [class.is-valid]="usuarioForm.get('usuario')?.valid && usuarioForm.get('usuario')?.touched"
+                  [class.is-invalid]="usuarioForm.get('usuario')?.invalid && usuarioForm.get('usuario')?.touched"
+                  placeholder="Ej: juan.perez"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('usuario') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label fw-semibold">
+                <i class="bi bi-envelope-fill me-1 text-info-emphasis"></i>
+                Email <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-envelope"></i>
+                </span>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="email"
+                  formControlName="email"
+                  [class.is-valid]="usuarioForm.get('email')?.valid && usuarioForm.get('email')?.touched"
+                  [class.is-invalid]="usuarioForm.get('email')?.invalid && usuarioForm.get('email')?.touched"
+                  placeholder="Ej: juan.perez@example.com"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('email') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="mb-3">
+              <label for="contrasena" class="form-label fw-semibold">
+                <i class="bi bi-lock-fill me-1 text-info-emphasis"></i>
+                Contraseña <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-key"></i>
+                </span>
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  id="contrasena"
+                  formControlName="contrasena"
+                  [class.is-valid]="usuarioForm.get('contrasena')?.valid && usuarioForm.get('contrasena')?.touched"
+                  [class.is-invalid]="usuarioForm.get('contrasena')?.invalid && usuarioForm.get('contrasena')?.touched"
+                  placeholder="Mínimo 6 caracteres"
+                >
+                <div class="invalid-feedback">
+                  {{ getErrorMessage('contrasena') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Rol -->
+            <div class="mb-4">
+              <label for="rolId" class="form-label fw-semibold">
+                <i class="bi bi-person-rolodex me-1 text-info-emphasis"></i>
+                Rol <span class="text-danger">*</span>
+              </label>
+              
+              @if (cargandoRoles) {
+                <div class="alert alert-info">
+                  <i class="bi bi-hourglass-split me-2"></i>
+                  Cargando roles...
+                </div>
+              } @else if (roles.length === 0) {
+                <div class="alert alert-warning">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  No hay roles disponibles. Debes crear roles primero.
+                </div>
+              } @else {
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-person-badge"></i>
+                  </span>
+                  <select 
+                    class="form-select" 
+                    id="rolId"
+                    formControlName="rolId"
+                    [class.is-valid]="usuarioForm.get('rolId')?.valid && usuarioForm.get('rolId')?.touched"
+                    [class.is-invalid]="usuarioForm.get('rolId')?.invalid && usuarioForm.get('rolId')?.touched"
+                  >
+                    <option value="" disabled selected>Selecciona un rol</option>
+                    @for (rol of roles; track rol.id) {
+                      <option [value]="rol.id">{{ rol.nombre }}</option>
+                    }
+                  </select>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un rol
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Botones del formulario -->
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+              <button 
+                type="submit" 
+                class="btn btn-info flex-fill"
+                [disabled]="usuarioForm.invalid || guardando"
+              >
+                @if (guardando) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Guardando...
+                } @else {
+                  <i class="bi bi-save me-1"></i>
+                  {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                }
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="cancelarEdicion()"
+                [disabled]="guardando"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de usuarios -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul text-info me-2"></i>
+              Usuarios Registrados
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="min-width: 200px;">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Buscar usuario..."
+                  (input)="filtrarUsuarios($event)"
+                >
+              </div>
+              <button class="btn btn-sm btn-outline-info" (click)="cargarUsuarios()" title="Recargar">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          @if (cargando) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-info mb-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-body-secondary">Cargando usuarios...</p>
+            </div>
+          } @else if (usuariosFiltrados.length === 0) {
+            <div class="text-center py-5">
+              <i class="bi bi-people display-1 text-body-tertiary mb-3"></i>
+              <h5 class="text-body-secondary mb-2">No hay usuarios registrados</h5>
+              <p class="text-body-tertiary mb-0">Comienza agregando un nuevo usuario</p>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-3">
+                      <i class="bi bi-person-fill text-info-emphasis me-1"></i>
+                      Usuario
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-envelope-fill text-info-emphasis me-1"></i>
+                      Email
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-person-rolodex text-info-emphasis me-1"></i>
+                      Rol
+                    </th>
+                    <th scope="col" class="text-center pe-3">
+                      <i class="bi bi-gear-fill text-info-emphasis me-1"></i>
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (usuario of usuariosFiltrados; track usuario.id) {
+                    <tr [class.table-info-subtle]="usuario.id === usuarioEditando?.id">
+                      <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-person-circle text-info fs-5"></i>
+                          </div>
+                          <div class="flex-grow-1 ms-2">
+                            <strong class="d-block">{{ usuario.nombre }} {{ usuario.apellidos }}</strong>
+                            <small class="text-body-tertiary">@{{ usuario.usuario }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {{ usuario.email }}
+                      </td>
+                      <td>
+                        <span class="badge text-bg-success-subtle text-success-emphasis">
+                          {{ obtenerNombreRol(usuario.rolId) }}
+                        </span>
+                      </td>
+                      <td class="text-center pe-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-info"
+                            (click)="editarUsuario(usuario)"
+                            title="Editar usuario"
+                          >
+                            <i class="bi bi-pencil-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-primary"
+                            (click)="verDetalles(usuario)"
+                            title="Ver detalles"
+                          >
+                            <i class="bi bi-eye-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarUsuario(usuario)"
+                            title="Eliminar usuario"
+                          >
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        
+        @if (usuariosFiltrados.length > 0 && !cargando) {
+          <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+              <small class="text-body-secondary">
+                Mostrando {{ usuariosFiltrados.length }} de {{ totalUsuarios }} usuarios
+              </small>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-info text-white">
+          <h1 class="modal-title fs-5" id="detallesModalLabel">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Detalles del Usuario
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          @if (usuarioDetalles) {
+            <div class="row">
+              <div class="col-md-4 text-center mb-3 mb-md-0">
+                <div class="bg-info-subtle p-4 rounded-3">
+                  <i class="bi bi-person-circle display-1 text-info"></i>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <h3 class="text-info-emphasis mb-3">{{ usuarioDetalles.nombre }} {{ usuarioDetalles.apellidos }}</h3>
+                <div class="row g-3">
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Usuario:</strong>
+                    <p>@{{ usuarioDetalles.usuario }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Email:</strong>
+                    <p>{{ usuarioDetalles.email }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Teléfono:</strong>
+                    <p>{{ usuarioDetalles.telefono }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Nacionalidad:</strong>
+                    <p>{{ usuarioDetalles.nacionalidad }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Pasaporte:</strong>
+                    <p>{{ usuarioDetalles.numPasaporte }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Rol:</strong>
+                    <p>
+                      <span class="badge text-bg-success-subtle text-success-emphasis">
+                        {{ obtenerNombreRol(usuarioDetalles.rolId) }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-danger text-white">
+          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <i class="bi bi-trash-fill text-danger display-4"></i>
+          </div>
+          <h5 class="text-center mb-3">¿Estás seguro de eliminar este usuario?</h5>
+          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+          </div>
+          @if (usuarioAEliminar) {
+            <div class="card border-danger-subtle">
+              <div class="card-body">
+                <h6 class="card-title text-danger-emphasis mb-3">
+                  <i class="bi bi-person-fill me-2"></i>
+                  Usuario a eliminar
+                </h6>
+                <div class="row g-2">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Nombre:</strong>
+                    <span class="ms-2">{{ usuarioAEliminar.nombre }} {{ usuarioAEliminar.apellidos }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Usuario:</strong>
+                    <span class="ms-2">@{{ usuarioAEliminar.usuario }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Email:</strong>
+                    <span class="ms-2">{{ usuarioAEliminar.email }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Rol:</strong>
+                    <span class="ms-2">{{ obtenerNombreRol(usuarioAEliminar.rolId) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash-fill me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

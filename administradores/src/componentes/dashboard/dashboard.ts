@@ -22,7 +22,8 @@ export class Dashboard implements OnInit, AfterViewInit {
     { title: 'Provincias', count: 196, change: 8, icon: 'map', color: 'success' },
     { title: 'Ciudades', count: 842, change: 5, icon: 'building', color: 'info' },
     { title: 'Hoteles', count: 1254, change: -3, icon: 'house-door', color: 'warning' },
-    { title: 'Categorías', count: 8, change: 15, icon: 'tags', color: 'danger' }
+    { title: 'Categorías', count: 8, change: 15, icon: 'tags', color: 'danger' },
+    { title: 'Usuarios', count: 42, change: 10, icon: 'people', color: 'secondary' }
   ];
 
   currentUser: any = null;
@@ -146,6 +147,9 @@ export class Dashboard implements OnInit, AfterViewInit {
       case 'Categorías':
         this.router.navigate(['/categorias/nueva']);
         break;
+      case 'Usuarios':
+        this.router.navigate(['/usuarios/nuevo']);
+        break;
       default:
         console.log(`Tipo no reconocido: ${cardType}`);
     }
@@ -169,6 +173,9 @@ export class Dashboard implements OnInit, AfterViewInit {
         break;
       case 'Categorías':
         this.router.navigate(['/categorias']);
+        break;
+      case 'Usuarios':
+        this.router.navigate(['/usuarios']);
         break;
       default:
         console.log(`Tipo no reconocido: ${cardType}`);

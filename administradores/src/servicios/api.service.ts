@@ -7,7 +7,7 @@ import { catchError, map, tap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://localhost:8765';
+  private apiUrl = 'http://localhost:8765/';
 
   constructor(private http: HttpClient) { }
 
@@ -18,7 +18,7 @@ export class ApiService {
       contrasena: credentials.contrasena
     };
     
-    return this.http.post<any>(`${this.apiUrl}/auth/login`, loginData)
+    return this.http.post<any>(`${this.apiUrl}auth/login`, loginData)
       .pipe(
         map(response => {
           if (response.success) {
