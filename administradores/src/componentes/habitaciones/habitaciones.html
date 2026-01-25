@@ -1,0 +1,607 @@
+<div class="container-fluid py-4">
+  <!-- Encabezado de la página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 fw-bold mb-0">
+        <i class="bi bi-door-closed-fill text-info me-2"></i>
+        Gestión de Habitaciones
+      </h1>
+      <p class="text-body-secondary mb-0">Administra las habitaciones de los hoteles</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+        <i class="bi bi-arrow-left me-1"></i> Volver
+      </button>
+      <button class="btn btn-info" (click)="nuevoRegistro()">
+        <i class="bi bi-plus-circle me-1"></i> Nueva Habitación
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de información -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card border-info-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-info-circle-fill text-info-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Total de Habitaciones</h5>
+              <p class="card-text display-6 fw-bold text-info">{{ totalHabitaciones }}</p>
+              <small class="text-body-tertiary">Registradas en el sistema</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-8">
+      <div class="card border-light-subtle shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-lightbulb-fill text-info-emphasis me-2"></i>
+            Información importante
+          </h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
+              Cada habitación debe estar asociada a un hotel específico.
+            </li>
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
+              Selecciona el tipo de habitación adecuado (Individual, Doble, Suite, etc.)
+            </li>
+            <li>
+              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
+              Actualiza la disponibilidad según el estado actual de la habitación.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Formulario principal de habitaciones -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square text-info me-2"></i>
+            {{ modoEdicion ? 'Editar Habitación' : 'Nueva Habitación' }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="habitacionForm" (ngSubmit)="guardarHabitacion()" novalidate>
+            <!-- Campos en fila: Hotel y Tipo de Habitación -->
+            <div class="row g-3 mb-4">
+              <!-- Dropdown de Hoteles -->
+              <div class="col-md-6">
+                <label for="hotel" class="form-label fw-semibold">
+                  <i class="bi bi-building-fill me-1 text-info-emphasis"></i>
+                  Hotel <span class="text-danger">*</span>
+                </label>
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-house-fill"></i>
+                  </span>
+                  <select 
+                    class="form-select" 
+                    id="hotel"
+                    formControlName="hotelId"
+                    [class.is-valid]="habitacionForm.get('hotelId')?.valid && habitacionForm.get('hotelId')?.touched"
+                    [class.is-invalid]="habitacionForm.get('hotelId')?.invalid && habitacionForm.get('hotelId')?.touched"
+                  >
+                    <option value="" disabled selected>
+                      @if (cargandoHoteles) {
+                        <span class="text-muted">Cargando hoteles...</span>
+                      } @else if (hoteles.length === 0) {
+                        <span class="text-danger">No hay hoteles disponibles</span>
+                      } @else {
+                        Selecciona un hotel
+                      }
+                    </option>
+                    @for (hotel of hoteles; track hotel.id) {
+                      <option [value]="hotel.id">{{ hotel.nombre }}</option>
+                    }
+                  </select>
+                  <div class="valid-feedback">
+                    <i class="bi bi-check-circle-fill me-1"></i> Hotel seleccionado
+                  </div>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un hotel
+                  </div>
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Hotel al que pertenece la habitación
+                </div>
+              </div>
+              
+              <!-- Dropdown de Tipos de Habitación -->
+              <div class="col-md-6">
+                <label for="tipoHabitacion" class="form-label fw-semibold">
+                  <i class="bi bi-door-open-fill me-1 text-info-emphasis"></i>
+                  Tipo de Habitación <span class="text-danger">*</span>
+                </label>
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-tag-fill"></i>
+                  </span>
+                  <select 
+                    class="form-select" 
+                    id="tipoHabitacion"
+                    formControlName="tipoHabitacionId"
+                    [class.is-valid]="habitacionForm.get('tipoHabitacionId')?.valid && habitacionForm.get('tipoHabitacionId')?.touched"
+                    [class.is-invalid]="habitacionForm.get('tipoHabitacionId')?.invalid && habitacionForm.get('tipoHabitacionId')?.touched"
+                  >
+                    <option value="" disabled selected>
+                      @if (cargandoTiposHabitacion) {
+                        <span class="text-muted">Cargando tipos...</span>
+                      } @else if (tiposHabitacion.length === 0) {
+                        <span class="text-danger">No hay tipos disponibles</span>
+                      } @else {
+                        Selecciona un tipo
+                      }
+                    </option>
+                    @for (tipo of tiposHabitacion; track tipo.id) {
+                      <option [value]="tipo.id">{{ tipo.nombre }}</option>
+                    }
+                  </select>
+                  <div class="valid-feedback">
+                    <i class="bi bi-check-circle-fill me-1"></i> Tipo seleccionado
+                  </div>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un tipo
+                  </div>
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Clasificación de la habitación
+                </div>
+              </div>
+            </div>
+
+            <!-- Campo: Precio por noche -->
+            <div class="mb-4">
+              <label for="precioNoche" class="form-label fw-semibold">
+                <i class="bi bi-cash-coin me-1 text-info-emphasis"></i>
+                Precio por noche <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-currency-dollar"></i>
+                </span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="precioNoche"
+                  formControlName="precioNoche"
+                  [class.is-valid]="habitacionForm.get('precioNoche')?.valid && habitacionForm.get('precioNoche')?.touched"
+                  [class.is-invalid]="habitacionForm.get('precioNoche')?.invalid && habitacionForm.get('precioNoche')?.touched"
+                  placeholder="Ej: 100"
+                  min="0"
+                  step="1"
+                >
+                <span class="input-group-text">USD</span>
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Precio válido
+                </div>
+                <div class="invalid-feedback">
+                  @if (habitacionForm.get('precioNoche')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El precio por noche es obligatorio
+                  }
+                  @if (habitacionForm.get('precioNoche')?.hasError('min')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El precio debe ser mayor a 0
+                  }
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Precio por noche en dólares
+              </div>
+            </div>
+
+            <!-- Campo: Disponibilidad -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-toggle-on me-1 text-info-emphasis"></i>
+                Disponibilidad <span class="text-danger">*</span>
+              </label>
+              <div class="form-check form-switch">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  role="switch" 
+                  id="disponibilidad"
+                  formControlName="disponibilidad"
+                  [class.is-valid]="habitacionForm.get('disponibilidad')?.valid && habitacionForm.get('disponibilidad')?.touched"
+                  [class.is-invalid]="habitacionForm.get('disponibilidad')?.invalid && habitacionForm.get('disponibilidad')?.touched"
+                >
+                <label class="form-check-label" for="disponibilidad">
+                  @if (habitacionForm.get('disponibilidad')?.value) {
+                    <span class="text-success fw-semibold">Disponible</span>
+                  } @else {
+                    <span class="text-danger fw-semibold">No disponible</span>
+                  }
+                </label>
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Disponibilidad definida
+                </div>
+                <div class="invalid-feedback">
+                  <i class="bi bi-exclamation-circle-fill me-1"></i> Debes definir la disponibilidad
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Activa si la habitación está disponible para reservas
+              </div>
+            </div>
+
+            <!-- Campo: Características -->
+            <div class="mb-4">
+              <label for="caracteristicas" class="form-label fw-semibold">
+                <i class="bi bi-card-text me-1 text-info-emphasis"></i>
+                Características
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text align-items-start pt-2">
+                  <i class="bi bi-text-paragraph"></i>
+                </span>
+                <textarea 
+                  class="form-control" 
+                  id="caracteristicas"
+                  formControlName="caracteristicas"
+                  [class.is-valid]="habitacionForm.get('caracteristicas')?.valid && habitacionForm.get('caracteristicas')?.touched"
+                  [class.is-invalid]="habitacionForm.get('caracteristicas')?.invalid && habitacionForm.get('caracteristicas')?.touched"
+                  rows="3"
+                  placeholder="Describe las características de la habitación: tamaño, vista, comodidades, etc."
+                  maxlength="500"
+                ></textarea>
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Características válidas
+                </div>
+                <div class="invalid-feedback">
+                  @if (habitacionForm.get('caracteristicas')?.hasError('maxlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Máximo 500 caracteres
+                  }
+                </div>
+              </div>
+              <div class="d-flex justify-content-between mt-1">
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Información adicional para los huéspedes
+                </div>
+                <small class="text-body-tertiary">
+                  {{ habitacionForm.get('caracteristicas')?.value?.length || 0 }}/500
+                </small>
+              </div>
+            </div>
+
+            <!-- Botones del formulario -->
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+              <button 
+                type="submit" 
+                class="btn btn-info flex-fill"
+                [disabled]="habitacionForm.invalid || guardando"
+                [title]="habitacionForm.invalid ? 'Completa todos los campos requeridos' : ''"
+              >
+                @if (guardando) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Guardando...
+                } @else {
+                  <i class="bi bi-save me-1"></i>
+                  {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                }
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="nuevoRegistro()"
+                [disabled]="guardando"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancelar
+              </button>
+            </div>
+            
+            <!-- Información de campos requeridos -->
+            <div class="mt-3 pt-2">
+              <small class="text-body-tertiary">
+                <i class="bi bi-asterisk text-danger me-1"></i>
+                Campos marcados con asterisco (*) son obligatorios
+              </small>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de habitaciones -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul text-info me-2"></i>
+              Habitaciones Registradas
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="min-width: 200px;">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Buscar habitación..."
+                  (input)="filtrarHabitaciones($event)"
+                >
+              </div>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-funnel-fill me-1"></i> Filtrar por hotel
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="#" (click)="filtrarPorHotel(0)">
+                      <i class="bi bi-list-check me-2"></i> Todos los hoteles
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  
+                  <!-- Hoteles dinámicos desde BD -->
+                  @for (hotel of hoteles; track hotel.id) {
+                    <li>
+                      <a class="dropdown-item" href="#" (click)="filtrarPorHotel(hotel.id)">
+                        <i class="bi bi-building-fill me-2 text-info"></i> 
+                        {{ hotel.nombre }}
+                      </a>
+                    </li>
+                  }
+                  
+                  <!-- Mensaje si no hay hoteles -->
+                  @if (hoteles.length === 0 && !cargandoHoteles) {
+                    <li>
+                      <a class="dropdown-item disabled" href="#">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        No hay hoteles
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+              <button class="btn btn-sm btn-outline-info" (click)="cargarHabitaciones()" title="Recargar">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          @if (cargando) {
+            <!-- Estado de carga -->
+            <div class="text-center py-5">
+              <div class="spinner-border text-info mb-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-body-secondary">Cargando habitaciones...</p>
+            </div>
+          } @else if (habitacionesFiltradas.length === 0) {
+            <!-- Estado sin datos -->
+            <div class="text-center py-5">
+              <i class="bi bi-door-closed display-1 text-body-tertiary mb-3"></i>
+              <h5 class="text-body-secondary mb-2">No hay habitaciones registradas</h5>
+              <p class="text-body-tertiary mb-0">Comienza agregando una nueva habitación</p>
+            </div>
+          } @else {
+            <!-- Tabla de habitaciones -->
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-3" style="width: 25%;">
+                      <i class="bi bi-hash text-info-emphasis me-1"></i>
+                      ID / Características
+                    </th>
+                    <th scope="col" style="width: 20%;">
+                      <i class="bi bi-building-fill text-info-emphasis me-1"></i>
+                      Hotel
+                    </th>
+                    <th scope="col" style="width: 15%;">
+                      <i class="bi bi-tag-fill text-info-emphasis me-1"></i>
+                      Tipo
+                    </th>
+                    <th scope="col" class="text-end" style="width: 15%;">
+                      <i class="bi bi-cash text-info-emphasis me-1"></i>
+                      Precio
+                    </th>
+                    <th scope="col" class="text-center" style="width: 15%;">
+                      <i class="bi bi-toggle-on text-info-emphasis me-1"></i>
+                      Disponibilidad
+                    </th>
+                    <th scope="col" class="text-center pe-3" style="width: 10%;">
+                      <i class="bi bi-gear-fill text-info-emphasis me-1"></i>
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (habitacion of habitacionesFiltradas; track habitacion.id) {
+                    <tr [class.table-info-subtle]="habitacion.id === habitacionEditando?.id">
+                      <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-grow-1">
+                            <strong class="d-block">Habitación #{{ habitacion.id }}</strong>
+                            <small class="text-body-tertiary text-truncate d-block" style="max-width: 200px;">
+                              {{ habitacion.caracteristicas | slice:0:50 }}
+                              @if (habitacion.caracteristicas.length > 50) {
+                                ...
+                              }
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge text-bg-info-subtle text-info-emphasis">
+                          {{ habitacion.hoteles?.nombre || 'Sin hotel' }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge text-bg-secondary-subtle text-secondary-emphasis">
+                          {{ habitacion.tiposHabitaciones?.nombre || 'Sin tipo' }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        <span class="fw-semibold">${{ habitacion.precioNoche | number }}</span>
+                        <small class="text-body-tertiary d-block">USD/noche</small>
+                      </td>
+                      <td class="text-center">
+                        @if (habitacion.disponibilidad) {
+                          <span class="badge text-bg-success-subtle text-success-emphasis">
+                            <i class="bi bi-check-circle-fill me-1"></i> Disponible
+                          </span>
+                        } @else {
+                          <span class="badge text-bg-danger-subtle text-danger-emphasis">
+                            <i class="bi bi-x-circle-fill me-1"></i> Ocupada
+                          </span>
+                        }
+                      </td>
+                      <td class="text-center pe-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-info"
+                            (click)="editarHabitacion(habitacion)"
+                            title="Editar habitación"
+                          >
+                            <i class="bi bi-pencil-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-warning"
+                            (click)="toggleDisponibilidad(habitacion)"
+                            title="Cambiar disponibilidad"
+                          >
+                            @if (habitacion.disponibilidad) {
+                              <i class="bi bi-toggle-off"></i>
+                            } @else {
+                              <i class="bi bi-toggle-on"></i>
+                            }
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarHabitacion(habitacion)"
+                            title="Eliminar habitación"
+                          >
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        
+        <!-- Paginación -->
+        @if (habitacionesFiltradas.length > 0 && !cargando) {
+          <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+              <small class="text-body-secondary">
+                Mostrando {{ habitacionesFiltradas.length }} de {{ totalHabitaciones }} habitaciones
+                @if (filtroHotel) {
+                  <span class="badge text-bg-info-subtle text-info-emphasis ms-2">
+                    <i class="bi bi-funnel-fill me-1"></i>
+                    Filtrado por hotel
+                  </span>
+                }
+              </small>
+              <nav aria-label="Navegación de habitaciones">
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <i class="bi bi-chevron-left"></i>
+                    </a>
+                  </li>
+                  <li class="page-item active" aria-current="page">
+                    <span class="page-link">1</span>
+                  </li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      <i class="bi bi-chevron-right"></i>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-danger text-white">
+          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <i class="bi bi-trash-fill text-danger display-4"></i>
+          </div>
+          <h5 class="text-center mb-3">¿Estás seguro de eliminar esta habitación?</h5>
+          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
+            Se eliminarán todos los datos relacionados con esta habitación.
+          </div>
+          @if (habitacionAEliminar) {
+            <div class="card border-danger-subtle">
+              <div class="card-body">
+                <h6 class="card-title text-danger-emphasis mb-3">
+                  <i class="bi bi-trash-fill me-2"></i>
+                  Habitación a eliminar
+                </h6>
+                <div class="row g-2">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">ID:</strong>
+                    <span class="ms-2">{{ habitacionAEliminar.id }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Hotel:</strong>
+                    <span class="ms-2">{{ habitacionAEliminar.hoteles?.nombre || 'Sin hotel' }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Precio por noche:</strong>
+                    <span class="ms-2">${{ habitacionAEliminar.precioNoche }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash-fill me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

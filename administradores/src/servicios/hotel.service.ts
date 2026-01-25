@@ -21,12 +21,15 @@ export class HotelService {
   getHoteles(): Observable<Hotel[]> {
     return this.http.get<Hotel[]>(`${this.baseUrl}/Listar`).pipe(
       map(hoteles => {
-        // Si la respuesta es null, asigna un array vacío
+        // Asegurar que siempre retornamos un array
         const hotelesArray = hoteles || [];
         return hotelesArray.map(hotel => ({
           ...hotel,
-          ciudadId: hotel.ciudades?.id,
-          categoriaId: hotel.categorias?.id
+          // Asegurar que las propiedades anidadas existan
+          ciudades: hotel.ciudades || null,
+          categorias: hotel.categorias || null,
+          usuarios: hotel.usuarios || null,
+          habitaciones: hotel.habitaciones || []
         }));
       }),
       catchError(this.handleError)
@@ -35,34 +38,51 @@ export class HotelService {
 
   getHotelById(id: number): Observable<Hotel> {
     return this.http.get<Hotel>(`${this.baseUrl}/${id}`).pipe(
+      map(hotel => ({
+        ...hotel,
+        ciudades: hotel.ciudades || null,
+        categorias: hotel.categorias || null,
+        usuarios: hotel.usuarios || null,
+        habitaciones: hotel.habitaciones || []
+      })),
       catchError(this.handleError)
     );
   }
 
-  createHotel(hotel: Hotel): Observable<Hotel> {
+  createHotel(hotel: any): Observable<Hotel> {
+    // Asegurar que el objeto tenga la estructura correcta
     const hotelData = {
       nombre: hotel.nombre,
       descripcion: hotel.descripcion,
       contactos: hotel.contactos,
-      contrasena: hotel.contrasena,
-      ciudades: { id: hotel.ciudadId },
-      categorias: { id: hotel.categoriaId }
+      precio: hotel.precio,
+      ciudades: { id: hotel.ciudades?.id || hotel.ciudadId },
+      categorias: { id: hotel.categorias?.id || hotel.categoriaId },
+      usuarios: { id: hotel.usuarios?.id || hotel.administradorId },
+      habitaciones: hotel.habitaciones || []
     };
+    
+    console.log('Enviando hotel al backend:', hotelData);
     
     return this.http.post<Hotel>(`${this.baseUrl}/Crear`, hotelData, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateHotel(id: number, hotel: Hotel): Observable<Hotel> {
+  updateHotel(id: number, hotel: any): Observable<Hotel> {
+    // Asegurar que el objeto tenga la estructura correcta
     const hotelData = {
       nombre: hotel.nombre,
       descripcion: hotel.descripcion,
       contactos: hotel.contactos,
-      contrasena: hotel.contrasena,
-      ciudades: { id: hotel.ciudadId },
-      categorias: { id: hotel.categoriaId }
+      precio: hotel.precio,
+      ciudades: { id: hotel.ciudades?.id || hotel.ciudadId },
+      categorias: { id: hotel.categorias?.id || hotel.categoriaId },
+      usuarios: { id: hotel.usuarios?.id || hotel.administradorId },
+      habitaciones: hotel.habitaciones || []
     };
+    
+    console.log('Actualizando hotel en backend:', hotelData);
     
     return this.http.put<Hotel>(`${this.baseUrl}/${id}`, hotelData, this.httpOptions).pipe(
       catchError(this.handleError)
@@ -77,6 +97,16 @@ export class HotelService {
 
   private handleError(error: any) {
     console.error('Error en servicio Hotel:', error);
-    return throwError(() => new Error('Error en el servicio de hoteles'));
+    
+    let errorMessage = 'Error en el servicio de hoteles';
+    if (error.error instanceof ErrorEvent) {
+      // Error del lado del cliente
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Error del lado del servidor
+      errorMessage = `Código: ${error.status}\nMensaje: ${error.message}`;
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
 }

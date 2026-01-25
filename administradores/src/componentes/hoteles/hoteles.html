@@ -1,4 +1,3 @@
-<!-- hoteles.html - Componente de gestión de hoteles -->
 <div class="container-fluid py-4">
   <!-- Encabezado de la página -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -191,10 +190,49 @@
               </div>
             </div>
 
-            <!-- Campos en fila: Ciudad y Categoría (DINÁMICOS DESDE BD) -->
+            <!-- Campo: Precio (obligatorio según entidad) -->
+            <div class="mb-4">
+              <label for="precio" class="form-label fw-semibold">
+                <i class="bi bi-currency-dollar me-1 text-warning-emphasis"></i>
+                Precio <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-cash-stack"></i>
+                </span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="precio"
+                  formControlName="precio"
+                  [class.is-valid]="hotelForm.get('precio')?.valid && hotelForm.get('precio')?.touched"
+                  [class.is-invalid]="hotelForm.get('precio')?.invalid && hotelForm.get('precio')?.touched"
+                  placeholder="Ej: 150.00"
+                  min="0"
+                  step="0.01"
+                >
+                <span class="input-group-text">USD</span>
+                <div class="valid-feedback">
+                  <i class="bi bi-check-circle-fill me-1"></i> Precio válido
+                </div>
+                <div class="invalid-feedback">
+                  @if (hotelForm.get('precio')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El precio es obligatorio
+                  }
+                  @if (hotelForm.get('precio')?.hasError('min')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El precio debe ser mayor a 0
+                  }
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Precio base por noche
+              </div>
+            </div>
+
+            <!-- Campos en fila: Ciudad, Categoría y Administrador -->
             <div class="row g-3 mb-4">
-              <!-- Dropdown de Ciudades (dinámico desde BD) -->
-              <div class="col-md-6">
+              <!-- Dropdown de Ciudades -->
+              <div class="col-md-4">
                 <label for="ciudad" class="form-label fw-semibold">
                   <i class="bi bi-building-fill me-1 text-warning-emphasis"></i>
                   Ciudad <span class="text-danger">*</span>
@@ -219,35 +257,10 @@
                         Selecciona una ciudad
                       }
                     </option>
-                    
-                    <!-- Mostrar ciudades desde la base de datos -->
                     @for (ciudad of ciudades; track ciudad.id) {
-                      <option [value]="ciudad.id">
-                        {{ ciudad.nombre }}
-                        @if (ciudad.descripcion) {
-                          <span class="text-muted"> - {{ ciudad.descripcion | slice:0:30 }}...</span>
-                        }
-                      </option>
-                    }
-                    
-                    <!-- Mensaje si no hay ciudades -->
-                    @if (ciudades.length === 0 && !cargandoCiudades) {
-                      <option disabled class="text-danger">
-                        No hay ciudades registradas en la base de datos
-                      </option>
+                      <option [value]="ciudad.id">{{ ciudad.nombre }}</option>
                     }
                   </select>
-                  
-                  <!-- Spinner de carga -->
-                  @if (cargandoCiudades) {
-                    <span class="input-group-text">
-                      <span class="spinner-border spinner-border-sm text-warning" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                      </span>
-                    </span>
-                  }
-                  
-                  <!-- Feedback de validación -->
                   <div class="valid-feedback">
                     <i class="bi bi-check-circle-fill me-1"></i> Ciudad seleccionada
                   </div>
@@ -256,19 +269,12 @@
                   </div>
                 </div>
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> 
-                  @if (cargandoCiudades) {
-                    <span class="text-warning">Cargando ciudades desde la base de datos...</span>
-                  } @else if (ciudades.length === 0) {
-                    <span class="text-danger">Debes crear ciudades primero en el módulo de Ciudades</span>
-                  } @else {
-                    Ciudad donde se ubica el hotel ({{ ciudades.length }} disponibles)
-                  }
+                  <i class="bi bi-info-circle me-1"></i> Ciudad donde se ubica el hotel
                 </div>
               </div>
               
-              <!-- Dropdown de Categorías (dinámico desde BD) -->
-              <div class="col-md-6">
+              <!-- Dropdown de Categorías -->
+              <div class="col-md-4">
                 <label for="categoria" class="form-label fw-semibold">
                   <i class="bi bi-star-fill me-1 text-warning-emphasis"></i>
                   Categoría <span class="text-danger">*</span>
@@ -293,38 +299,10 @@
                         Selecciona una categoría
                       }
                     </option>
-                    
-                    <!-- Mostrar categorías desde la base de datos -->
                     @for (categoria of categorias; track categoria.id) {
-                      <option [value]="categoria.id">
-                        {{ categoria.nombre }}
-                        @if (categoria.numeroEstrellas) {
-                          <span class="text-warning"> ({{ categoria.numeroEstrellas }} ⭐)</span>
-                        }
-                        @if (categoria.descripcion) {
-                          <span class="text-muted"> - {{ categoria.descripcion | slice:0:25 }}...</span>
-                        }
-                      </option>
-                    }
-                    
-                    <!-- Mensaje si no hay categorías -->
-                    @if (categorias.length === 0 && !cargandoCategorias) {
-                      <option disabled class="text-danger">
-                        No hay categorías registradas en la base de datos
-                      </option>
+                      <option [value]="categoria.id">{{ categoria.nombre }}</option>
                     }
                   </select>
-                  
-                  <!-- Spinner de carga -->
-                  @if (cargandoCategorias) {
-                    <span class="input-group-text">
-                      <span class="spinner-border spinner-border-sm text-warning" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                      </span>
-                    </span>
-                  }
-                  
-                  <!-- Feedback de validación -->
                   <div class="valid-feedback">
                     <i class="bi bi-check-circle-fill me-1"></i> Categoría seleccionada
                   </div>
@@ -333,66 +311,49 @@
                   </div>
                 </div>
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> 
-                  @if (cargandoCategorias) {
-                    <span class="text-warning">Cargando categorías desde la base de datos...</span>
-                  } @else if (categorias.length === 0) {
-                    <span class="text-danger">Debes crear categorías primero en el módulo de Categorías</span>
-                  } @else {
-                    Clasificación del hotel ({{ categorias.length }} disponibles)
-                  }
+                  <i class="bi bi-info-circle me-1"></i> Clasificación del hotel
                 </div>
               </div>
-            </div>
 
-            <!-- Campos en fila: Habitaciones y Precio -->
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <label for="habitaciones" class="form-label fw-semibold">
-                  <i class="bi bi-door-closed-fill me-1 text-body-secondary"></i>
-                  Habitaciones (opcional)
+              <!-- Dropdown de Administrador (Usuario) -->
+              <div class="col-md-4">
+                <label for="administrador" class="form-label fw-semibold">
+                  <i class="bi bi-person-badge-fill me-1 text-warning-emphasis"></i>
+                  Administrador <span class="text-danger">*</span>
                 </label>
-                <div class="input-group">
+                <div class="input-group has-validation">
                   <span class="input-group-text">
-                    <i class="bi bi-house-door-fill"></i>
+                    <i class="bi bi-person-fill"></i>
                   </span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="habitaciones"
-                    formControlName="habitaciones"
-                    placeholder="Ej: 50"
-                    min="0"
-                    step="1"
+                  <select 
+                    class="form-select" 
+                    id="administrador"
+                    formControlName="administradorId"
+                    [class.is-valid]="hotelForm.get('administradorId')?.valid && hotelForm.get('administradorId')?.touched"
+                    [class.is-invalid]="hotelForm.get('administradorId')?.invalid && hotelForm.get('administradorId')?.touched"
                   >
-                  <span class="input-group-text">unidades</span>
+                    <option value="" disabled selected>
+                      @if (cargandoAdministradores) {
+                        <span class="text-muted">Cargando administradores...</span>
+                      } @else if (administradores.length === 0) {
+                        <span class="text-danger">No hay administradores disponibles</span>
+                      } @else {
+                        Selecciona un administrador
+                      }
+                    </option>
+                    @for (admin of administradores; track admin.id) {
+                      <option [value]="admin.id">{{ admin.nombre }} {{ admin.apellidos }}</option>
+                    }
+                  </select>
+                  <div class="valid-feedback">
+                    <i class="bi bi-check-circle-fill me-1"></i> Administrador seleccionado
+                  </div>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un administrador
+                  </div>
                 </div>
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Número total de habitaciones
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label for="precioPromedio" class="form-label fw-semibold">
-                  <i class="bi bi-currency-dollar me-1 text-body-secondary"></i>
-                  Precio promedio (opcional)
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-cash-stack"></i>
-                  </span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="precioPromedio"
-                    formControlName="precioPromedio"
-                    placeholder="Ej: 150"
-                    min="0"
-                    step="0.01"
-                  >
-                  <span class="input-group-text">USD/noche</span>
-                </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Precio por noche en dólares
+                  <i class="bi bi-info-circle me-1"></i> Usuario administrador del hotel
                 </div>
               </div>
             </div>
@@ -431,203 +392,6 @@
                 <i class="bi bi-asterisk text-danger me-1"></i>
                 Campos marcados con asterisco (*) son obligatorios
               </small>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Formulario de Parámetros de Conexión (Usuario) -->
-      <div class="card border-success-subtle mt-4">
-        <div class="card-header bg-success-subtle border-0 py-3">
-          <h6 class="mb-0">
-            <i class="bi bi-person-badge-fill text-success me-2"></i>
-            Parámetros de Conexión
-          </h6>
-        </div>
-        <div class="card-body">
-          <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()" novalidate>
-            <div class="row g-3">
-              <!-- Nombre y Apellidos -->
-              <div class="col-md-6">
-                <label for="nombreUsuario" class="form-label fw-semibold">
-                  <i class="bi bi-person-fill me-1 text-success"></i>
-                  Nombre <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="nombreUsuario"
-                  formControlName="nombre"
-                  [class.is-invalid]="usuarioForm.get('nombre')?.invalid && usuarioForm.get('nombre')?.touched"
-                  placeholder="Ej: Juan"
-                >
-                @if (usuarioForm.get('nombre')?.invalid && usuarioForm.get('nombre')?.touched) {
-                  <div class="invalid-feedback">
-                    @if (usuarioForm.get('nombre')?.hasError('required')) {
-                      <i class="bi bi-exclamation-circle-fill me-1"></i> El nombre es obligatorio
-                    }
-                    @if (usuarioForm.get('nombre')?.hasError('minlength')) {
-                      <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 2 caracteres
-                    }
-                  </div>
-                }
-              </div>
-              
-              <div class="col-md-6">
-                <label for="apellidos" class="form-label fw-semibold">
-                  <i class="bi bi-person-vcard-fill me-1 text-success"></i>
-                  Apellidos <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="apellidos"
-                  formControlName="apellidos"
-                  [class.is-invalid]="usuarioForm.get('apellidos')?.invalid && usuarioForm.get('apellidos')?.touched"
-                  placeholder="Ej: Pérez García"
-                >
-                @if (usuarioForm.get('apellidos')?.invalid && usuarioForm.get('apellidos')?.touched) {
-                  <div class="invalid-feedback">
-                    @if (usuarioForm.get('apellidos')?.hasError('required')) {
-                      <i class="bi bi-exclamation-circle-fill me-1"></i> Los apellidos son obligatorios
-                    }
-                    @if (usuarioForm.get('apellidos')?.hasError('minlength')) {
-                      <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 2 caracteres
-                    }
-                  </div>
-                }
-              </div>
-
-              <!-- Teléfono y Nacionalidad -->
-              <div class="col-md-6">
-                <label for="telefono" class="form-label fw-semibold">
-                  <i class="bi bi-telephone-fill me-1 text-success"></i>
-                  Teléfono <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="tel" 
-                  class="form-control" 
-                  id="telefono"
-                  formControlName="telefono"
-                  [class.is-invalid]="usuarioForm.get('telefono')?.invalid && usuarioForm.get('telefono')?.touched"
-                  placeholder="Ej: +54 11 1234-5678"
-                >
-                @if (usuarioForm.get('telefono')?.invalid && usuarioForm.get('telefono')?.touched) {
-                  <div class="invalid-feedback">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Teléfono inválido
-                  </div>
-                }
-              </div>
-              
-              <div class="col-md-6">
-                <label for="nacionalidad" class="form-label fw-semibold">
-                  <i class="bi bi-globe-americas me-1 text-success"></i>
-                  Nacionalidad <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="nacionalidad"
-                  formControlName="nacionalidad"
-                  [class.is-invalid]="usuarioForm.get('nacionalidad')?.invalid && usuarioForm.get('nacionalidad')?.touched"
-                  placeholder="Ej: Argentina"
-                >
-                @if (usuarioForm.get('nacionalidad')?.invalid && usuarioForm.get('nacionalidad')?.touched) {
-                  <div class="invalid-feedback">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> La nacionalidad es obligatoria
-                  </div>
-                }
-              </div>
-
-              <!-- Número de Pasaporte -->
-              <div class="col-12">
-                <label for="numPasaporte" class="form-label fw-semibold">
-                  <i class="bi bi-passport-fill me-1 text-success"></i>
-                  Número de Pasaporte <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="numPasaporte"
-                  formControlName="numPasaporte"
-                  [class.is-invalid]="usuarioForm.get('numPasaporte')?.invalid && usuarioForm.get('numPasaporte')?.touched"
-                  placeholder="Ej: AB1234567"
-                >
-                @if (usuarioForm.get('numPasaporte')?.invalid && usuarioForm.get('numPasaporte')?.touched) {
-                  <div class="invalid-feedback">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> El número de pasaporte es obligatorio
-                  </div>
-                }
-              </div>
-
-              <!-- Contraseña y Rol -->
-              <div class="col-md-6">
-                <label for="contrasenaUsuario" class="form-label fw-semibold">
-                  <i class="bi bi-key-fill me-1 text-success"></i>
-                  Contraseña <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="password" 
-                  class="form-control" 
-                  id="contrasenaUsuario"
-                  formControlName="contrasena"
-                  [class.is-invalid]="usuarioForm.get('contrasena')?.invalid && usuarioForm.get('contrasena')?.touched"
-                  placeholder="Mínimo 6 caracteres"
-                >
-                @if (usuarioForm.get('contrasena')?.invalid && usuarioForm.get('contrasena')?.touched) {
-                  <div class="invalid-feedback">
-                    @if (usuarioForm.get('contrasena')?.hasError('required')) {
-                      <i class="bi bi-exclamation-circle-fill me-1"></i> La contraseña es obligatoria
-                    }
-                    @if (usuarioForm.get('contrasena')?.hasError('minlength')) {
-                      <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 6 caracteres
-                    }
-                  </div>
-                }
-              </div>
-              
-              <div class="col-md-6">
-                <label for="rol" class="form-label fw-semibold">
-                  <i class="bi bi-person-rolodex me-1 text-success"></i>
-                  Rol <span class="text-danger">*</span>
-                </label>
-                <select 
-                  class="form-select" 
-                  id="rol"
-                  formControlName="rol"
-                  [class.is-invalid]="usuarioForm.get('rol')?.invalid && usuarioForm.get('rol')?.touched"
-                >
-                  <option value="usuario">Usuario</option>
-                  <option value="admin">Administrador</option>
-                  <option value="empleado">Empleado</option>
-                </select>
-                @if (usuarioForm.get('rol')?.invalid && usuarioForm.get('rol')?.touched) {
-                  <div class="invalid-feedback">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un rol
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- Botón para guardar usuario -->
-            <div class="mt-4 pt-3 border-top">
-              <button 
-                type="submit" 
-                class="btn btn-success"
-                [disabled]="usuarioForm.invalid || guardandoUsuario"
-              >
-                @if (guardandoUsuario) {
-                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Guardando...
-                } @else {
-                  <i class="bi bi-save me-1"></i>
-                  Guardar Parámetros de Conexión
-                }
-              </button>
-              <div class="form-text mt-2">
-                <i class="bi bi-info-circle me-1"></i>
-                Estos datos se guardarán en la tabla de Usuarios para acceso al sistema.
-              </div>
             </div>
           </form>
         </div>
@@ -674,11 +438,6 @@
                       <a class="dropdown-item" href="#" (click)="filtrarPorCategoria(categoria.id)">
                         <i class="bi bi-star-fill me-2 text-warning"></i> 
                         {{ categoria.nombre }}
-                        @if (categoria.numeroEstrellas) {
-                          <span class="badge bg-warning-subtle text-warning-emphasis ms-2">
-                            {{ categoria.numeroEstrellas }} ⭐
-                          </span>
-                        }
                       </a>
                     </li>
                   }
@@ -723,19 +482,23 @@
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th scope="col" class="ps-3" style="width: 30%;">
+                    <th scope="col" class="ps-3" style="width: 25%;">
                       <i class="bi bi-sort-alpha-down text-warning-emphasis me-1"></i>
                       Hotel
                     </th>
-                    <th scope="col" style="width: 25%;">
+                    <th scope="col" style="width: 20%;">
                       <i class="bi bi-building-fill text-warning-emphasis me-1"></i>
                       Ciudad
                     </th>
-                    <th scope="col" style="width: 20%;">
+                    <th scope="col" style="width: 15%;">
                       <i class="bi bi-star-fill text-warning-emphasis me-1"></i>
                       Categoría
                     </th>
-                    <th scope="col" class="text-end" style="width: 15%;">
+                    <th scope="col" style="width: 20%;">
+                      <i class="bi bi-person-badge-fill text-warning-emphasis me-1"></i>
+                      Administrador
+                    </th>
+                    <th scope="col" class="text-end" style="width: 10%;">
                       <i class="bi bi-cash text-warning-emphasis me-1"></i>
                       Precio
                     </th>
@@ -759,29 +522,23 @@
                         </div>
                       </td>
                       <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0">
-                            <i class="bi bi-geo-alt-fill text-info"></i>
-                          </div>
-                          <div class="flex-grow-1 ms-2">
-                            <span class="badge text-bg-info-subtle text-info-emphasis">
-                              {{ obtenerNombreCiudad(hotel.ciudadId!) }}
-                            </span>
-                          </div>
-                        </div>
+                        <span class="badge text-bg-info-subtle text-info-emphasis">
+                          {{ hotel.ciudades?.nombre || 'Sin ciudad' }}
+                        </span>
                       </td>
                       <td>
-                        <span [class]="getCategoriaBadgeClass(hotel.categoriaId!)">
-                          {{ getCategoriaLabel(hotel.categoriaId!) }}
+                        <span [class]="getCategoriaBadgeClass(hotel.categorias?.id)">
+                          {{ hotel.categorias?.nombre || 'Sin categoría' }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="text-body-emphasis">
+                          {{ hotel.usuarios?.nombre }} {{ hotel.usuarios?.apellidos }}
                         </span>
                       </td>
                       <td class="text-end">
-                        @if (hotel.precioPromedio) {
-                          <span class="fw-semibold">${{ hotel.precioPromedio | number }}</span>
-                          <small class="text-body-tertiary d-block">USD/noche</small>
-                        } @else {
-                          <span class="text-body-tertiary fst-italic">Consultar</span>
-                        }
+                        <span class="fw-semibold">${{ hotel.precio | number:'1.2-2' }}</span>
+                        <small class="text-body-tertiary d-block">USD</small>
                       </td>
                       <td class="text-center pe-3">
                         <div class="btn-group btn-group-sm" role="group">
@@ -828,7 +585,7 @@
                 @if (filtroCategoria) {
                   <span class="badge text-bg-warning-subtle text-warning-emphasis ms-2">
                     <i class="bi bi-funnel-fill me-1"></i>
-                    {{ getCategoriaLabel(filtroCategoria) }}
+                    Filtrado
                   </span>
                 }
               </small>
@@ -882,8 +639,8 @@
               <div class="col-md-8">
                 <h3 class="text-warning-emphasis mb-2">{{ hotelDetalles.nombre }}</h3>
                 <div class="mb-3">
-                  <span [class]="getCategoriaBadgeClass(hotelDetalles.categoriaId!) + ' fs-6'">
-                    {{ getCategoriaLabel(hotelDetalles.categoriaId!) }}
+                  <span [class]="getCategoriaBadgeClass(hotelDetalles.categorias?.id) + ' fs-6'">
+                    {{ hotelDetalles.categorias?.nombre || 'Sin categoría' }}
                   </span>
                 </div>
                 <div class="row g-3">
@@ -891,9 +648,13 @@
                     <strong class="text-body-emphasis">Ciudad:</strong>
                     <span class="ms-2">
                       <span class="badge text-bg-info-subtle text-info-emphasis">
-                        {{ obtenerNombreCiudad(hotelDetalles.ciudadId!) }}
+                        {{ hotelDetalles.ciudades?.nombre || 'Sin ciudad' }}
                       </span>
                     </span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Administrador:</strong>
+                    <p class="mt-1">{{ hotelDetalles.usuarios?.nombre }} {{ hotelDetalles.usuarios?.apellidos }}</p>
                   </div>
                   <div class="col-12">
                     <strong class="text-body-emphasis">Descripción:</strong>
@@ -904,16 +665,13 @@
                     <pre class="mt-1 bg-light-subtle p-2 rounded">{{ hotelDetalles.contactos }}</pre>
                   </div>
                   <div class="col-md-6">
-                    <strong class="text-body-emphasis">Habitaciones:</strong>
-                    <p class="mb-0">{{ hotelDetalles.habitaciones || 'No especificado' }}</p>
+                    <strong class="text-body-emphasis">Precio:</strong>
+                    <p class="mb-0">${{ hotelDetalles.precio | number:'1.2-2' }} USD</p>
                   </div>
                   <div class="col-md-6">
-                    <strong class="text-body-emphasis">Precio promedio:</strong>
-                    <p class="mb-0">{{ hotelDetalles.precioPromedio ? '$' + (hotelDetalles.precioPromedio | number) + ' USD/noche' : 'Consultar' }}</p>
-                  </div>
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Fecha de Registro:</strong>
-                    <p class="mb-0">{{ hotelDetalles.fechaCreacion | date:'longDate' }}</p>
+                    <!-- CORRECCIÓN: Eliminar el operador opcional ? porque habitaciones siempre existe -->
+                    <strong class="text-body-emphasis">Habitaciones:</strong>
+                    <p class="mb-0">{{ hotelDetalles.habitaciones.length || 0 }} registradas</p>
                   </div>
                 </div>
               </div>
@@ -966,11 +724,11 @@
                   </div>
                   <div class="col-12">
                     <strong class="text-body-emphasis">Ciudad:</strong>
-                    <span class="ms-2">{{ obtenerNombreCiudad(hotelAEliminar.ciudadId!) }}</span>
+                    <span class="ms-2">{{ hotelAEliminar.ciudades?.nombre || 'Sin ciudad' }}</span>
                   </div>
                   <div class="col-12">
                     <strong class="text-body-emphasis">Categoría:</strong>
-                    <span class="ms-2">{{ getCategoriaLabel(hotelAEliminar.categoriaId!) }}</span>
+                    <span class="ms-2">{{ hotelAEliminar.categorias?.nombre || 'Sin categoría' }}</span>
                   </div>
                 </div>
               </div>

@@ -431,7 +431,7 @@
                       </td>
                       <td>
                         <span class="badge text-bg-success-subtle text-success-emphasis">
-                          {{ obtenerNombreRol(usuario.rolId) }}
+                          {{ obtenerNombreRol(usuario.roles?.id) }}
                         </span>
                       </td>
                       <td class="text-center pe-3">
@@ -531,7 +531,7 @@
                     <strong class="text-body-emphasis">Rol:</strong>
                     <p>
                       <span class="badge text-bg-success-subtle text-success-emphasis">
-                        {{ obtenerNombreRol(usuarioDetalles.rolId) }}
+                        {{ obtenerNombreRol(usuarioDetalles.roles?.id) }}
                       </span>
                     </p>
                   </div>
@@ -593,7 +593,7 @@
                   </div>
                   <div class="col-12">
                     <strong class="text-body-emphasis">Rol:</strong>
-                    <span class="ms-2">{{ obtenerNombreRol(usuarioAEliminar.rolId) }}</span>
+                    <span class="ms-2">{{ obtenerNombreRol(usuarioAEliminar.roles?.id) }}</span>
                   </div>
                 </div>
               </div>

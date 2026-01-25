@@ -1,0 +1,65 @@
+/* Estilos específicos para el componente de habitaciones */
+
+/* Ajustes para el switch de disponibilidad */
+.form-switch .form-check-input:checked {
+  background-color: #198754; /* Verde para disponible */
+  border-color: #198754;
+}
+
+.form-switch .form-check-input:not(:checked) {
+  background-color: #dc3545; /* Rojo para no disponible */
+  border-color: #dc3545;
+}
+
+/* Estilos para la tabla de habitaciones */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Estilos para los badges de estado */
+.badge-disponible {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #198754;
+}
+
+.badge-ocupada {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Animaciones suaves */
+.toast {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Mejoras visuales para formulario */
+.form-control:focus, .form-select:focus {
+  border-color: #0dcaf0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+}
