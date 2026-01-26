@@ -1,129 +1,152 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { HttpClientModule } from '@angular/common/http';
+import { RegistroService } from '../../servicios/registro.service';
 
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div class="container-fluid p-0">
-      <div class="row g-0">
-        <!-- Columna izquierda con formulario -->
-        <div class="col-md-6 d-flex align-items-center">
-          <div class="p-4 p-md-5 w-100">
-            <h3 class="fw-bold mb-4" style="color: #1a365d;">Crear Cuenta</h3>
-
-            <form (ngSubmit)="onSubmit()" #registroForm="ngForm">
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="nombre" class="form-label">Nombre</label>
-                  <input type="text" class="form-control" id="nombre" 
-                         [(ngModel)]="datos.nombre" name="nombre" 
-                         placeholder="Juan" required>
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                  <label for="apellido" class="form-label">Apellido</label>
-                  <input type="text" class="form-control" id="apellido" 
-                         [(ngModel)]="datos.apellido" name="apellido" 
-                         placeholder="Pérez" required>
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label for="email" class="form-label">Correo electrónico</label>
-                <input type="email" class="form-control" id="email" 
-                       [(ngModel)]="datos.email" name="email" 
-                       placeholder="juan@ejemplo.com" required>
-              </div>
-
-              <div class="mb-3">
-                <label for="password" class="form-label">Contraseña</label>
-                <input type="password" class="form-control" id="password" 
-                       [(ngModel)]="datos.password" name="password" 
-                       placeholder="••••••••" required>
-              </div>
-
-              <div class="mb-4">
-                <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
-                <input type="password" class="form-control" id="confirmPassword" 
-                       [(ngModel)]="datos.confirmPassword" name="confirmPassword" 
-                       placeholder="••••••••" required>
-              </div>
-
-              <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" id="terminos" required>
-                <label class="form-check-label" for="terminos">
-                  Acepto los <a href="#" class="text-decoration-none" style="color: #1a365d;">Términos y Condiciones</a>
-                </label>
-              </div>
-
-              <button type="submit" class="btn w-100 py-2 mb-3 fw-medium" 
-                      [disabled]="registroForm.invalid"
-                      style="background-color: #1a365d; color: white;">
-                Registrarse
-              </button>
-
-              <div class="text-center">
-                <span class="text-muted">¿Ya tienes una cuenta?</span>
-                <button type="button" class="btn btn-link p-0 ms-1" 
-                        (click)="cambiarALogin.emit()" 
-                        style="color: #1a365d;">
-                  Inicia sesión aquí
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Columna derecha con imagen -->
-        <div class="col-md-6 d-none d-md-block">
-          <div class="registro-image h-100" 
-               style="background: linear-gradient(rgba(26, 54, 93, 0.8), rgba(26, 54, 93, 0.8)), url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'); 
-                      background-size: cover; background-position: center;">
-            <div class="d-flex flex-column justify-content-center align-items-center h-100 text-white p-5">
-              <h2 class="fw-bold mb-4">Únete a nuestra comunidad</h2>
-              <p class="text-center">Regístrate para acceder a ofertas exclusivas y planificar el viaje perfecto por Guinea Ecuatorial.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .registro-image {
-      min-height: 600px;
-    }
-  `]
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule],
+  templateUrl: './registro.html',
+  styleUrls: ['./registro.css']
 })
-export class Registro {
-  @Output() cerrar = new EventEmitter<void>();
-  @Output() cambiarALogin = new EventEmitter<void>();
-  @Output() registroExitoso = new EventEmitter<any>();
+export class RegistroComponent implements OnInit {
+  registroForm: FormGroup;
+  isLoading: boolean = false;
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  usarDebugEndpoint: boolean = false; // Cambiar a true para probar el endpoint de debug
 
-  datos = {
-    nombre: '',
-    apellido: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  };
+  constructor(
+    private fb: FormBuilder,
+    private registroService: RegistroService,
+    private router: Router
+  ) {
+    this.registroForm = this.fb.group({
+      nombre: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/)]],
+      apellidos: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,80}$/)]],
+      telefono: ['', [Validators.required, Validators.pattern(/^[0-9]{8,20}$/)]],
+      nacionalidad: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/)]],
+      numPasaporte: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]{5,20}$/)]],
+      usuario: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_]{4,20}$/)]],
+      contrasena: ['', [Validators.required, Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)]],
+      email: ['', [Validators.required, Validators.email]],
+      confirmarContrasena: ['', [Validators.required]]
+    }, { validators: this.contrasenasCoinciden });
+  }
 
-  onSubmit() {
-    // Validar que las contraseñas coincidan
-    if (this.datos.password !== this.datos.confirmPassword) {
-      alert('Las contraseñas no coinciden');
+  ngOnInit(): void {}
+
+  contrasenasCoinciden(g: FormGroup) {
+    const pass = g.get('contrasena')?.value;
+    const confirmPass = g.get('confirmarContrasena')?.value;
+    return pass === confirmPass ? null : { contrasenasNoCoinciden: true };
+  }
+
+  get f() {
+    return this.registroForm.controls;
+  }
+
+  campoValido(campo: string): boolean {
+    const control = this.registroForm.get(campo);
+    return control ? control.valid && (control.dirty || control.touched) : false;
+  }
+
+  campoInvalido(campo: string): boolean {
+    const control = this.registroForm.get(campo);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
+  }
+
+  mostrarError(campo: string): boolean {
+    const control = this.registroForm.get(campo);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
+  }
+
+  limpiarFormulario(): void {
+    this.registroForm.reset();
+    this.mensajeExito = '';
+    this.mensajeError = '';
+  }
+
+  onIrALogin(): void {
+    this.router.navigate(['/login']);
+  }
+
+  onSubmit(): void {
+    if (this.registroForm.invalid) {
+      Object.keys(this.registroForm.controls).forEach(key => {
+        const control = this.registroForm.get(key);
+        control?.markAsTouched();
+      });
       return;
     }
 
-    // Crear usuario
-    const usuario = {
-      nombre: `${this.datos.nombre} ${this.datos.apellido}`,
-      email: this.datos.email
+    this.isLoading = true;
+    this.mensajeError = '';
+    this.mensajeExito = '';
+
+    // Opción 1: Enviar con estructura de roles
+    const usuarioConRol = {
+      nombre: this.registroForm.value.nombre,
+      apellidos: this.registroForm.value.apellidos,
+      telefono: this.registroForm.value.telefono,
+      nacionalidad: this.registroForm.value.nacionalidad,
+      numPasaporte: this.registroForm.value.numPasaporte,
+      usuario: this.registroForm.value.usuario,
+      contrasena: this.registroForm.value.contrasena,
+      email: this.registroForm.value.email,
+      roles: { id: 3 }
     };
 
-    console.log('✅ REGISTRO: Usuario creado');
-    this.registroExitoso.emit(usuario);
+    // Opción 2: Enviar solo ID del rol
+    const usuarioConIdRol = {
+      nombre: this.registroForm.value.nombre,
+      apellidos: this.registroForm.value.apellidos,
+      telefono: this.registroForm.value.telefono,
+      nacionalidad: this.registroForm.value.nacionalidad,
+      numPasaporte: this.registroForm.value.numPasaporte,
+      usuario: this.registroForm.value.usuario,
+      contrasena: this.registroForm.value.contrasena,
+      email: this.registroForm.value.email,
+      idRol: 3
+    };
+
+    console.log('Datos a enviar:', usuarioConRol);
+
+    // Elegir qué método usar
+    const observable = this.usarDebugEndpoint 
+      ? this.registroService.registrarUsuarioDebug(usuarioConRol)
+      : this.registroService.registrarUsuario(usuarioConRol);
+
+    observable.subscribe({
+      next: (response) => {
+        console.log('Respuesta del backend:', response);
+        this.isLoading = false;
+        this.mensajeExito = '¡Registro exitoso! Ahora puede iniciar sesión.';
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Error completo:', error);
+        this.isLoading = false;
+        
+        // Mensajes más específicos
+        if (error.message.includes('Código: 0')) {
+          this.mensajeError = 'No se puede conectar al servidor. Verifica: 1) Backend corriendo, 2) Puerto 8765, 3) CORS configurado';
+        } else if (error.message.includes('Código: 500')) {
+          this.mensajeError = 'Error interno del servidor (500). Revisa los logs del backend Spring Boot. Posible problema: estructura del campo "roles"';
+        } else {
+          this.mensajeError = error.message;
+        }
+        
+        // Sugerir probar con endpoint de debug
+        if (!this.usarDebugEndpoint && error.message.includes('500')) {
+          this.mensajeError += '\n\n¿Quieres probar con el endpoint de debugging?';
+        }
+      }
+    });
   }
 }

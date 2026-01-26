@@ -2,13 +2,13 @@
 import { Component, OnInit, HostListener, Inject, PLATFORM_ID, Output, EventEmitter } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Registro } from '../registro/registro';
+import { RegistroComponent } from '../registro/registro';
 import { Login } from '../login/login';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, Registro, Login],
+  imports: [CommonModule, RouterModule, RegistroComponent, Login],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css']
 })

@@ -1,7 +1,7 @@
-<nav class="navbar navbar-expand-lg navbar-light border-bottom" style="background-color: #f8f9fa;">
-  <div class="container-fluid px-4">
+<nav class="navbar navbar-expand-lg navbar-light border-bottom d-inline-flex" style="background-color: #f8f9fa;">
+  <div class="d-flex flex-wrap align-items-center justify-content-between w-auto px-4">
     <!-- Logo y Marca -->
-    <a class="navbar-brand d-flex align-items-center" (click)="onMostrarInicio()" style="cursor: pointer;">
+    <a class="navbar-brand d-flex align-items-center me-4" (click)="onMostrarInicio()" style="cursor: pointer;">
       <div class="logo-container me-3">
         <div class="logo-icon bg-primary rounded d-flex align-items-center justify-content-center" style="background-color: #1a365d !important;">
           <i class="bi bi-globe-americas text-white fs-4"></i>
@@ -14,7 +14,7 @@
     </a>
 
     <!-- Botón Hamburguesa -->
-    <button class="navbar-toggler border-0" type="button" 
+    <button class="navbar-toggler border-0 ms-auto" type="button" 
             data-bs-toggle="collapse" data-bs-target="#navbarContent"
             aria-controls="navbarContent" aria-expanded="false" 
             aria-label="Toggle navigation">
@@ -22,12 +22,12 @@
     </button>
 
     <!-- Contenido del Navbar -->
-    <div class="collapse navbar-collapse" id="navbarContent">
+    <div class="collapse navbar-collapse flex-grow-0" id="navbarContent">
       <!-- Enlaces de Navegación -->
-      <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <!-- Enlace Inicio -->
-        <li class="nav-item mx-2">
-          <button class="nav-link d-flex align-items-center fw-medium border-0 bg-transparent" 
+        <li class="nav-item">
+          <button class="nav-link d-flex align-items-center fw-medium border-0 bg-transparent px-3" 
                   (click)="onMostrarInicio()"
                   style="color: #1a365d; cursor: pointer;">
             <i class="bi bi-house-door me-2" style="color: #1a365d;"></i>
@@ -36,8 +36,8 @@
         </li>
         
         <!-- Enlace Hoteles -->
-        <li class="nav-item mx-2">
-          <button class="nav-link d-flex align-items-center fw-medium border-0 bg-transparent" 
+        <li class="nav-item">
+          <button class="nav-link d-flex align-items-center fw-medium border-0 bg-transparent px-3" 
                   (click)="onMostrarHoteles()"
                   style="color: #1a365d; cursor: pointer;">
             <i class="bi bi-buildings me-2" style="color: #1a365d;"></i>
@@ -46,8 +46,8 @@
         </li>
         
         <!-- Enlace Contactos -->
-        <li class="nav-item mx-2">
-          <button class="nav-link d-flex align-items-center fw-medium border-0 bg-transparent" 
+        <li class="nav-item">
+          <button class="nav-link d-flex align-items-center fw-medium border-0 bg-transparent px-3" 
                   (click)="onMostrarContactos()"
                   style="color: #1a365d; cursor: pointer;">
             <i class="bi bi-telephone me-2" style="color: #1a365d;"></i>
@@ -56,8 +56,8 @@
         </li>
         
         <!-- Destinos (mantenemos como dropdown) -->
-        <li class="nav-item mx-2 dropdown">
-          <button class="nav-link d-flex align-items-center fw-medium dropdown-toggle border-0 bg-transparent" 
+        <li class="nav-item dropdown">
+          <button class="nav-link d-flex align-items-center fw-medium dropdown-toggle border-0 bg-transparent px-3" 
                   data-bs-toggle="dropdown" aria-expanded="false"
                   style="color: #1a365d;">
             <i class="bi bi-geo-alt me-2" style="color: #1a365d;"></i>
@@ -75,18 +75,18 @@
       </ul>
 
       <!-- Botones de Acción -->
-      <div class="navbar-actions d-flex align-items-center">
+      <div class="navbar-actions d-flex align-items-center ms-4">
         <!-- Usuario NO logueado -->
         <ng-container *ngIf="!usuarioLogueado">
-          <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-outline-primary d-flex align-items-center gap-2 px-4 py-2"
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-primary d-flex align-items-center gap-2 px-3 py-2"
                     (click)="onMostrarLogin()"
                     style="border-color: #1a365d; color: #1a365d;">
               <i class="bi bi-box-arrow-in-right"></i>
               <span class="d-none d-md-inline">Iniciar Sesión</span>
             </button>
             
-            <button class="btn d-flex align-items-center gap-2 px-4 py-2 fw-medium"
+            <button class="btn d-flex align-items-center gap-2 px-3 py-2 fw-medium"
                     (click)="onMostrarRegistro()"
                     style="background-color: #1a365d; color: white; border-color: #1a365d;">
               <i class="bi bi-person-plus"></i>
@@ -97,7 +97,7 @@
 
         <!-- Usuario SÍ logueado -->
         <ng-container *ngIf="usuarioLogueado">
-          <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center gap-2">
             <!-- Notificaciones -->
             <div class="dropdown">
               <button class="btn btn-outline-primary position-relative rounded-circle p-2" 

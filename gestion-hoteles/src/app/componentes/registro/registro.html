@@ -8,7 +8,20 @@
     <p class="text-muted mb-0">Complete todos los campos para crear su cuenta</p>
   </div>
 
-  <!-- Formulario -->
+  @if (mensajeExito) {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle me-2"></i>{{ mensajeExito }}
+      <button type="button" class="btn-close" (click)="mensajeExito = ''"></button>
+    </div>
+  }
+
+  @if (mensajeError) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>{{ mensajeError }}
+      <button type="button" class="btn-close" (click)="mensajeError = ''"></button>
+    </div>
+  }
+
   <form [formGroup]="registroForm" (ngSubmit)="onSubmit()" novalidate class="needs-validation">
     
     <!-- Sección: Información Personal -->
@@ -32,16 +45,17 @@
               formControlName="nombre"
               [class.is-valid]="campoValido('nombre')"
               [class.is-invalid]="campoInvalido('nombre')"
-              placeholder="Ingrese su nombre"
-              [attr.aria-describedby]="f['nombre'].invalid ? 'nombreError' : null">
-            <div id="nombreError" class="invalid-feedback" *ngIf="mostrarError('nombre')">
-              <div *ngIf="f['nombre'].errors?.['required']">
-                <i class="bi bi-exclamation-circle me-1"></i>El nombre es obligatorio
+              placeholder="Ingrese su nombre">
+            @if (mostrarError('nombre')) {
+              <div class="invalid-feedback">
+                @if (f['nombre'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>El nombre es obligatorio</div>
+                }
+                @if (f['nombre'].errors?.['pattern']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>2-50 letras (solo caracteres válidos)</div>
+                }
               </div>
-              <div *ngIf="f['nombre'].errors?.['pattern']">
-                <i class="bi bi-exclamation-circle me-1"></i>2-50 letras (solo caracteres válidos)
-              </div>
-            </div>
+            }
           </div>
           
           <div class="col-md-6">
@@ -56,14 +70,16 @@
               [class.is-valid]="campoValido('apellidos')"
               [class.is-invalid]="campoInvalido('apellidos')"
               placeholder="Introduzca sus apellidos">
-            <div class="invalid-feedback" *ngIf="mostrarError('apellidos')">
-              <div *ngIf="f['apellidos'].errors?.['required']">
-                <i class="bi bi-exclamation-circle me-1"></i>Los apellidos son obligatorios
+            @if (mostrarError('apellidos')) {
+              <div class="invalid-feedback">
+                @if (f['apellidos'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>Los apellidos son obligatorios</div>
+                }
+                @if (f['apellidos'].errors?.['pattern']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>2-80 letras (solo caracteres válidos)</div>
+                }
               </div>
-              <div *ngIf="f['apellidos'].errors?.['pattern']">
-                <i class="bi bi-exclamation-circle me-1"></i>2-80 letras (solo caracteres válidos)
-              </div>
-            </div>
+            }
           </div>
         </div>
 
@@ -80,15 +96,17 @@
               formControlName="telefono"
               [class.is-valid]="campoValido('telefono')"
               [class.is-invalid]="campoInvalido('telefono')"
-              placeholder="+240 ">
-            <div class="invalid-feedback" *ngIf="mostrarError('telefono')">
-              <div *ngIf="f['telefono'].errors?.['required']">
-                <i class="bi bi-exclamation-circle me-1"></i>El teléfono es obligatorio
+              placeholder="Ej. 600123456">
+            @if (mostrarError('telefono')) {
+              <div class="invalid-feedback">
+                @if (f['telefono'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>El teléfono es obligatorio</div>
+                }
+                @if (f['telefono'].errors?.['pattern']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>8-20 dígitos</div>
+                }
               </div>
-              <div *ngIf="f['telefono'].errors?.['pattern']">
-                <i class="bi bi-exclamation-circle me-1"></i>Formato: 8-20 dígitos
-              </div>
-            </div>
+            }
           </div>
           
           <div class="col-md-6">
@@ -102,15 +120,17 @@
               formControlName="nacionalidad"
               [class.is-valid]="campoValido('nacionalidad')"
               [class.is-invalid]="campoInvalido('nacionalidad')"
-              placeholder="Nacionalidad">
-            <div class="invalid-feedback" *ngIf="mostrarError('nacionalidad')">
-              <div *ngIf="f['nacionalidad'].errors?.['required']">
-                <i class="bi bi-exclamation-circle me-1"></i>La nacionalidad es obligatoria
+              placeholder="Ej. Española">
+            @if (mostrarError('nacionalidad')) {
+              <div class="invalid-feedback">
+                @if (f['nacionalidad'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>La nacionalidad es obligatoria</div>
+                }
+                @if (f['nacionalidad'].errors?.['pattern']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>3-50 letras (solo caracteres válidos)</div>
+                }
               </div>
-              <div *ngIf="f['nacionalidad'].errors?.['pattern']">
-                <i class="bi bi-exclamation-circle me-1"></i>3-50 letras (solo caracteres válidos)
-              </div>
-            </div>
+            }
           </div>
         </div>
       </div>
@@ -126,25 +146,27 @@
       <div class="card-body">
         <div class="row">
           <div class="col-12">
-            <label for="documento" class="form-label fw-medium">
+            <label for="numPasaporte" class="form-label fw-medium">
               <i class="bi bi-card-text me-1 text-primary"></i>DNI o Pasaporte <span class="text-danger">*</span>
             </label>
             <input 
               type="text" 
               class="form-control form-control-lg" 
-              id="documento"
-              formControlName="documento"
-              [class.is-valid]="campoValido('documento')"
-              [class.is-invalid]="campoInvalido('documento')"
-              placeholder="DIP o Pasaporte">
-            <div class="invalid-feedback" *ngIf="mostrarError('documento')">
-              <div *ngIf="f['documento'].errors?.['required']">
-                <i class="bi bi-exclamation-circle me-1"></i>El documento es obligatorio
+              id="numPasaporte"
+              formControlName="numPasaporte"
+              [class.is-valid]="campoValido('numPasaporte')"
+              [class.is-invalid]="campoInvalido('numPasaporte')"
+              placeholder="Ej. 12345678A o ABC123456">
+            @if (mostrarError('numPasaporte')) {
+              <div class="invalid-feedback">
+                @if (f['numPasaporte'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>El documento es obligatorio</div>
+                }
+                @if (f['numPasaporte'].errors?.['pattern']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>5-20 caracteres alfanuméricos</div>
+                }
               </div>
-              <div *ngIf="f['documento'].errors?.['pattern']">
-                <i class="bi bi-exclamation-circle me-1"></i>5-20 caracteres alfanuméricos
-              </div>
-            </div>
+            }
           </div>
         </div>
       </div>
@@ -158,7 +180,34 @@
         </h5>
       </div>
       <div class="card-body">
+        <!-- Email -->
         <div class="row g-3">
+          <div class="col-md-6">
+            <label for="email" class="form-label fw-medium">
+              <i class="bi bi-envelope me-1 text-primary"></i>Correo Electrónico <span class="text-danger">*</span>
+            </label>
+            <input 
+              type="email" 
+              class="form-control form-control-lg" 
+              id="email"
+              formControlName="email"
+              [class.is-valid]="campoValido('email')"
+              [class.is-invalid]="campoInvalido('email')"
+              placeholder="ejemplo@correo.com">
+            @if (mostrarError('email')) {
+              <div class="invalid-feedback">
+                @if (f['email'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>El correo electrónico es obligatorio</div>
+                }
+                @if (f['email'].errors?.['email']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>Formato de correo inválido</div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
           <div class="col-md-6">
             <label for="usuario" class="form-label fw-medium">
               <i class="bi bi-person-circle me-1 text-primary"></i>Usuario <span class="text-danger">*</span>
@@ -171,14 +220,16 @@
               [class.is-valid]="campoValido('usuario')"
               [class.is-invalid]="campoInvalido('usuario')"
               placeholder="4-20 caracteres">
-            <div class="invalid-feedback" *ngIf="mostrarError('usuario')">
-              <div *ngIf="f['usuario'].errors?.['required']">
-                <i class="bi bi-exclamation-circle me-1"></i>El usuario es obligatorio
+            @if (mostrarError('usuario')) {
+              <div class="invalid-feedback">
+                @if (f['usuario'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>El usuario es obligatorio</div>
+                }
+                @if (f['usuario'].errors?.['pattern']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>4-20 caracteres (letras, números, guión bajo)</div>
+                }
               </div>
-              <div *ngIf="f['usuario'].errors?.['pattern']">
-                <i class="bi bi-exclamation-circle me-1"></i>4-20 caracteres (letras, números, guión bajo)
-              </div>
-            </div>
+            }
             <small class="form-text text-muted mt-1 d-block">
               <i class="bi bi-info-circle me-1"></i>No se permiten espacios ni caracteres especiales
             </small>
@@ -196,82 +247,46 @@
               [class.is-valid]="campoValido('contrasena')"
               [class.is-invalid]="campoInvalido('contrasena')"
               placeholder="••••••••">
-            <div class="invalid-feedback" *ngIf="mostrarError('contrasena')">
-              <div *ngIf="f['contrasena'].errors?.['required']">
-                <i class="bi bi-exclamation-circle me-1"></i>La contraseña es obligatoria
+            @if (mostrarError('contrasena')) {
+              <div class="invalid-feedback">
+                @if (f['contrasena'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>La contraseña es obligatoria</div>
+                }
+                @if (f['contrasena'].errors?.['pattern']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>8+ caracteres con mayúscula, minúscula, número y carácter especial</div>
+                }
               </div>
-              <div *ngIf="f['contrasena'].errors?.['pattern']">
-                <i class="bi bi-exclamation-circle me-1"></i>
-                8+ caracteres con mayúscula, minúscula, número y carácter especial
-              </div>
-            </div>
+            }
             <small class="form-text text-muted mt-1 d-block">
               <i class="bi bi-lightbulb me-1"></i>Mínimo 8 caracteres con mayúscula, minúscula, número y carácter especial
             </small>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Sección: Foto (Opcional) -->
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-transparent border-bottom">
-        <h5 class="mb-0 fw-semibold text-primary">
-          <i class="bi bi-camera me-2"></i>Foto de Perfil <span class="text-muted fw-normal fs-6">(opcional)</span>
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="row align-items-center">
-          <div class="col-md-4 text-center mb-3 mb-md-0">
-            <div class="position-relative d-inline-block">
-              <img 
-                [src]="fotoPreview || 'https://via.placeholder.com/150/6c757d/ffffff?text=Sin+foto'" 
-                class="img-thumbnail rounded-circle border-3 border-light shadow-sm" 
-                style="width: 150px; height: 150px; object-fit: cover;" 
-                alt="Vista previa de la foto">
-              <button 
-                *ngIf="fotoPreview" 
-                type="button" 
-                class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-1 shadow"
-                (click)="removerFoto()"
-                title="Eliminar foto">
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
-          </div>
-          
-          <div class="col-md-8">
-            <div class="mb-3">
-              <label for="foto" class="form-label fw-medium">Seleccionar archivo</label>
-              <div class="input-group input-group-lg">
-                <input 
-                  type="file" 
-                  class="form-control" 
-                  id="foto"
-                  (change)="onFileSelected($event)"
-                  accept="image/jpeg,image/png,image/gif"
-                  [class.is-valid]="fotoValida && !fotoError">
-                <button 
-                  class="btn btn-outline-primary" 
-                  type="button"
-                  (click)="seleccionarArchivo()">
-                  <i class="bi bi-folder2-open me-1"></i>Examinar
-                </button>
+        <!-- Confirmar Contraseña -->
+        <div class="row g-3 mt-3">
+          <div class="col-md-6 offset-md-6">
+            <label for="confirmarContrasena" class="form-label fw-medium">
+              <i class="bi bi-key-fill me-1 text-primary"></i>Confirmar Contraseña <span class="text-danger">*</span>
+            </label>
+            <input 
+              type="password" 
+              class="form-control form-control-lg" 
+              id="confirmarContrasena"
+              formControlName="confirmarContrasena"
+              [class.is-valid]="campoValido('confirmarContrasena') && registroForm.errors?.['contrasenasNoCoinciden'] === undefined"
+              [class.is-invalid]="campoInvalido('confirmarContrasena') || registroForm.errors?.['contrasenasNoCoinciden']"
+              placeholder="••••••••">
+            @if (mostrarError('confirmarContrasena') || registroForm.errors?.['contrasenasNoCoinciden']) {
+              <div class="invalid-feedback">
+                @if (f['confirmarContrasena'].errors?.['required']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>Confirme la contraseña</div>
+                }
+                @if (registroForm.errors?.['contrasenasNoCoinciden']) {
+                  <div><i class="bi bi-exclamation-circle me-1"></i>Las contraseñas no coinciden</div>
+                }
               </div>
-            </div>
-            
-            <div *ngIf="fotoError" class="alert alert-danger alert-dismissible fade show" role="alert">
-              <i class="bi bi-exclamation-triangle me-2"></i>{{ fotoError }}
-              <button type="button" class="btn-close" (click)="fotoError = ''"></button>
-            </div>
-            
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
-              <small>
-                Formatos aceptados: JPG, PNG, GIF. Tamaño máximo: 2MB.
-                Este campo es opcional y puede completarse más tarde.
-              </small>
-            </div>
+            }
           </div>
         </div>
       </div>
@@ -292,13 +307,12 @@
         type="submit" 
         class="btn btn-primary btn-lg py-3 fw-semibold"
         [disabled]="registroForm.invalid || isLoading">
-        <span *ngIf="!isLoading">
-          <i class="bi bi-person-plus me-1"></i>Registrarse
-        </span>
-        <span *ngIf="isLoading">
-          <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-          Enviando...
-        </span>
+        @if (!isLoading) {
+          <span><i class="bi bi-person-plus me-1"></i>Registrarse</span>
+        }
+        @if (isLoading) {
+          <span><span class="spinner-border spinner-border-sm me-1" role="status"></span>Enviando...</span>
+        }
       </button>
 
       <button 
@@ -313,9 +327,7 @@
 
   <!-- Enlace a login -->
   <div class="text-center pt-3 border-top">
-    <p class="text-muted mb-2">
-      ¿Ya tiene una cuenta?
-    </p>
+    <p class="text-muted mb-2">¿Ya tiene una cuenta?</p>
     <button type="button" class="btn btn-outline-primary w-100 py-2 fw-medium" (click)="onIrALogin()">
       <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
     </button>
