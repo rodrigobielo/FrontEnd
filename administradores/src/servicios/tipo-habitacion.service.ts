@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { TipoHabitacion } from '../modelos/habitacion.model';
+import { TipoHabitacion } from '../modelos/tipo-habitacion.model';
 
 @Injectable({
   providedIn: 'root'

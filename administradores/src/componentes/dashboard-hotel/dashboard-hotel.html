@@ -5,7 +5,7 @@
       <!-- Logo y nombre de la aplicación -->
       <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/dashboard-hotel">
         <i class="bi bi-house-door-fill me-2"></i>
-        <span>{{nombreHotel}} - Panel</span>
+        <span>{{nombreHotel}} - Panel de Administración</span>
       </a>
       
       <!-- Botón para colapsar sidebar en móviles -->
@@ -67,39 +67,39 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'habitaciones']" routerLinkActive="active">
+              <a class="nav-link" (click)="navegarAHabitaciones()" style="cursor: pointer;">
                 <i class="bi bi-door-closed me-2"></i>
-                Mis Habitaciones
+                Habitaciones del Hotel
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'tipos-habitaciones']" routerLinkActive="active">
+              <a class="nav-link" (click)="navegarATiposHabitacion()" style="cursor: pointer;">
                 <i class="bi bi-grid-3x3-gap me-2"></i>
-                Tipos de Habitaciones
+                Tipos de Habitación
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'reservas']" routerLinkActive="active">
+              <a class="nav-link" (click)="navegarAReservas()" style="cursor: pointer;">
                 <i class="bi bi-calendar-check me-2"></i>
-                Mis Reservas
+                Reservas del Hotel
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'clientes']" routerLinkActive="active">
+              <a class="nav-link" (click)="navegarAClientes()" style="cursor: pointer;">
                 <i class="bi bi-people me-2"></i>
-                Mis Clientes
+                Clientes del Hotel
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'pagos']" routerLinkActive="active">
+              <a class="nav-link" (click)="navegarAPagos()" style="cursor: pointer;">
                 <i class="bi bi-credit-card me-2"></i>
-                Mis Pagos
+                Pagos del Hotel
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'fotos']" routerLinkActive="active">
+              <a class="nav-link" (click)="navegarAFotos()" style="cursor: pointer;">
                 <i class="bi bi-images me-2"></i>
-                Fotos Mi Hotel
+                Fotos del Hotel
               </a>
             </li>
           </ul>
@@ -156,7 +156,7 @@
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
           <h1 class="h2 fw-bold">
             <i class="bi bi-house-door me-2 text-primary"></i>
-            {{nombreHotel}} - Dashboard
+            {{nombreHotel}} - Panel de Control
           </h1>
           <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group me-2">
@@ -198,7 +198,7 @@
                           {{card.count}}
                         </ng-container>
                         <ng-container *ngIf="card.total !== undefined">
-                          {{card.total | currency}}
+                          {{formatFcfa(card.total)}}
                         </ng-container>
                       </div>
                       <div class="mt-2">
@@ -207,7 +207,7 @@
                           {{card.disponibles}} disponibles
                         </span>
                         <span *ngIf="card.precioMin !== undefined" class="badge bg-success">
-                          Desde {{card.precioMin | currency}}
+                          Desde {{formatFcfa(card.precioMin)}}
                         </span>
                         <span *ngIf="card.change !== undefined" class="badge" 
                               [ngClass]="getChangeBadgeClass(card.change)">
@@ -231,30 +231,30 @@
                 <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
                   <button class="btn btn-sm" 
                           [class]="'btn-' + card.color"
-                          (click)="onAddClick(card.title)">
+                          (click)="onAddClick(card)">
                     <i class="bi bi-plus-circle me-1"></i>
-                    <ng-container *ngIf="card.title === 'Mis Pagos' || card.title === 'Mis Clientes'">
+                    <ng-container *ngIf="card.title === 'Pagos del Hotel' || card.title === 'Clientes del Hotel'">
                       Registrar
                     </ng-container>
-                    <ng-container *ngIf="card.title === 'Fotos Mi Hotel'">
+                    <ng-container *ngIf="card.title === 'Fotos del Hotel'">
                       Subir
                     </ng-container>
-                    <ng-container *ngIf="card.title === 'Mis Reservas'">
+                    <ng-container *ngIf="card.title === 'Reservas del Hotel'">
                       Nueva
                     </ng-container>
-                    <ng-container *ngIf="!(card.title === 'Mis Pagos' || card.title === 'Mis Clientes' || card.title === 'Fotos Mi Hotel' || card.title === 'Mis Reservas')">
+                    <ng-container *ngIf="!(card.title === 'Pagos del Hotel' || card.title === 'Clientes del Hotel' || card.title === 'Fotos del Hotel' || card.title === 'Reservas del Hotel')">
                       Añadir
                     </ng-container>
                   </button>
                   <button class="btn btn-sm" 
                           [class]="'btn-outline-' + card.color"
-                          (click)="onListClick(card.title)">
+                          (click)="onListClick(card)">
                     <i class="bi bi-list me-1"></i>
-                    <ng-container *ngIf="card.title === 'Fotos Mi Hotel'">
+                    <ng-container *ngIf="card.title === 'Fotos del Hotel'">
                       Galerías
                     </ng-container>
-                    <ng-container *ngIf="card.title !== 'Fotos Mi Hotel'">
-                      Ver {{card.title === 'Tipos de Habitaciones' ? 'Todos' : 'Todas'}}
+                    <ng-container *ngIf="card.title !== 'Fotos del Hotel'">
+                      Ver {{card.title === 'Tipos de Habitación' ? 'Todos' : 'Todas'}}
                     </ng-container>
                   </button>
                 </div>
@@ -328,7 +328,7 @@
                   </div>
                   <div class="col-6 text-center mb-3">
                     <div class="p-3 bg-light rounded-3">
-                      <div class="h4 fw-bold text-success">{{estadisticas.ingresosHoy | currency}}</div>
+                      <div class="h4 fw-bold text-success">{{formatFcfa(estadisticas.ingresosHoy)}}</div>
                       <small class="text-muted">Ingresos Hoy</small>
                     </div>
                   </div>
@@ -442,7 +442,7 @@
         <div class="alert alert-info mt-3">
           <i class="bi bi-info-circle me-2"></i>
           <strong>Ocupación actual:</strong> {{estadisticas.ocupacion}}% | 
-          <strong>Reservas hoy:</strong> {{summaryCards[2].count}}
+          <strong>Reservas hoy:</strong> {{summaryCards[2]?.count || 0}}
         </div>
       </div>
       <div class="modal-footer justify-content-center">

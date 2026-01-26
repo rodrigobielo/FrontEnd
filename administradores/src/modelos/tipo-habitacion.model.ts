@@ -1,9 +1,12 @@
 export interface TipoHabitacion {
   id?: number;
   nombre: string;
-  descripcion?: string;
-  capacidad?: number;
-  comodidades?: string;
+  descripcion: string;
+  capacidad: number;
+  aireAcondicionador: boolean;
+  minibar: boolean;
+  television: boolean;
+  numeroCamas: number;
 }
 
 // Función de utilidad para crear objeto TipoHabitacion vacío
@@ -12,6 +15,20 @@ export function createEmptyTipoHabitacion(): TipoHabitacion {
     nombre: '',
     descripcion: '',
     capacidad: 1,
-    comodidades: ''
+    aireAcondicionador: false,
+    minibar: false,
+    television: false,
+    numeroCamas: 1
   };
+}
+
+// Interface para formulario
+export interface TipoHabitacionFormData {
+  nombre: string;
+  descripcion: string;
+  capacidad: number;
+  aireAcondicionador: boolean;
+  minibar: boolean;
+  television: boolean;
+  numeroCamas: number;
 }

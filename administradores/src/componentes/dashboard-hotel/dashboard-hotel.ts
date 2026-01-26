@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../servicios/auth.service';
@@ -11,8 +11,7 @@ import { AuthService } from '../../servicios/auth.service';
     CommonModule, 
     RouterModule, 
     FormsModule,
-    DatePipe,
-    CurrencyPipe
+    DatePipe
   ],
   templateUrl: './dashboard-hotel.html',
   styleUrls: ['./dashboard-hotel.css']
@@ -48,38 +47,95 @@ export class DashboardHotel implements OnInit, AfterViewInit {
       return;
     }
 
-    // Inicializar datos de ejemplo para el dashboard del hotel
-    this.summaryCards = [
-      { title: 'Mis Habitaciones', count: 0, disponibles: 0, icon: 'door-closed', color: 'primary' },
-      { title: 'Tipos de Habitaciones', count: 0, precioMin: 0, icon: 'grid-3x3-gap', color: 'success' },
-      { title: 'Mis Reservas', count: 0, change: 0, icon: 'calendar-check', color: 'info' },
-      { title: 'Mis Clientes', count: 0, nuevosHoy: 0, icon: 'people', color: 'warning' },
-      { title: 'Mis Pagos', total: 0, change: 0, icon: 'credit-card', color: 'danger' },
-      { title: 'Fotos Mi Hotel', count: 0, galerias: 0, icon: 'images', color: 'purple' }
-    ];
-
-    this.reservasRecientes = [];
-    this.estadisticas = {
-      ocupacion: 0,
-      ingresosHoy: 0,
-      reservasPendientes: 0,
-      clientesNuevos: 0,
-      pagosPendientes: 0,
-      fotosSubidas: 0
-    };
-
     // Obtener el hotel asignado
     const hotelId = this.authService.getCurrentHotelId();
     if (hotelId) {
-      // Aquí iría la llamada para obtener los datos del hotel, pero por ahora usamos un objeto vacío
-      this.currentHotel = { id: hotelId, nombre: 'Mi Hotel' };
+      this.currentHotel = { id: hotelId, nombre: 'Hotel Paradise' };
     } else {
-      this.currentHotel = { id: 1, nombre: 'Mi Hotel' };
+      this.currentHotel = { id: 1, nombre: 'Hotel Paradise' };
     }
+
+    // Inicializar datos de ejemplo para el dashboard del hotel
+    this.initializeSummaryCards();
+    this.initializeReservasRecientes();
+    this.initializeEstadisticas();
+  }
+
+  initializeSummaryCards(): void {
+    this.summaryCards = [
+      { 
+        title: 'Habitaciones del Hotel', 
+        count: 25, 
+        disponibles: 8, 
+        icon: 'door-closed', 
+        color: 'primary',
+        route: ['/hoteles', this.currentHotel?.id, 'habitaciones']
+      },
+      { 
+        title: 'Tipos de Habitación', 
+        count: 4, 
+        precioMin: 25000, 
+        icon: 'grid-3x3-gap', 
+        color: 'success',
+        route: ['/hoteles', this.currentHotel?.id, 'tipos-habitaciones']
+      },
+      { 
+        title: 'Reservas del Hotel', 
+        count: 18, 
+        change: 12, 
+        icon: 'calendar-check', 
+        color: 'info',
+        route: ['/hoteles', this.currentHotel?.id, 'reservas']
+      },
+      { 
+        title: 'Clientes del Hotel', 
+        count: 45, 
+        nuevosHoy: 3, 
+        icon: 'people', 
+        color: 'warning',
+        route: ['/hoteles', this.currentHotel?.id, 'clientes']
+      },
+      { 
+        title: 'Pagos del Hotel', 
+        total: 1250000, 
+        change: 8, 
+        icon: 'credit-card', 
+        color: 'danger',
+        route: ['/hoteles', this.currentHotel?.id, 'pagos']
+      },
+      { 
+        title: 'Fotos del Hotel', 
+        count: 36, 
+        galerias: 4, 
+        icon: 'images', 
+        color: 'purple',
+        route: ['/hoteles', this.currentHotel?.id, 'fotos']
+      }
+    ];
+  }
+
+  initializeReservasRecientes(): void {
+    this.reservasRecientes = [
+      { habitacion: '101 - Suite Presidencial', cliente: 'Juan Pérez', checkIn: new Date(), checkOut: new Date(Date.now() + 86400000 * 3), estado: 'En curso' },
+      { habitacion: '205 - Habitación Doble', cliente: 'María García', checkIn: new Date(Date.now() + 86400000), checkOut: new Date(Date.now() + 86400000 * 4), estado: 'Confirmada' },
+      { habitacion: '102 - Suite Ejecutiva', cliente: 'Carlos Rodríguez', checkIn: new Date(Date.now() - 86400000), checkOut: new Date(Date.now() + 86400000 * 2), estado: 'En curso' },
+      { habitacion: '308 - Habitación Individual', cliente: 'Ana López', checkIn: new Date(Date.now() + 86400000 * 2), checkOut: new Date(Date.now() + 86400000 * 5), estado: 'Pendiente' },
+      { habitacion: '401 - Suite Familiar', cliente: 'Roberto Sánchez', checkIn: new Date(Date.now() + 86400000 * 3), checkOut: new Date(Date.now() + 86400000 * 7), estado: 'Confirmada' }
+    ];
+  }
+
+  initializeEstadisticas(): void {
+    this.estadisticas = {
+      ocupacion: 72,
+      ingresosHoy: 185000,
+      reservasPendientes: 5,
+      clientesNuevos: 15,
+      pagosPendientes: 3,
+      fotosSubidas: 8
+    };
   }
 
   ngAfterViewInit(): void {
-    // Mostrar modal de bienvenida si es necesario
     setTimeout(() => {
       const modalElement = document.getElementById('welcomeModal');
       if (modalElement) {
@@ -93,7 +149,26 @@ export class DashboardHotel implements OnInit, AfterViewInit {
     }, 500);
   }
 
-  // Métodos necesarios para la plantilla
+  // Método para formatear valores en FCFA
+  formatFcfa(value: number | string | undefined): string {
+    if (value === undefined || value === null) {
+      return '0 FCFA';
+    }
+    
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    if (isNaN(numValue)) {
+      return '0 FCFA';
+    }
+    
+    const formattedValue = new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(numValue);
+    
+    return `${formattedValue} FCFA`;
+  }
+
   getChangeBadgeClass(change: number): string {
     return change >= 0 ? 'bg-success' : 'bg-danger';
   }
@@ -113,12 +188,51 @@ export class DashboardHotel implements OnInit, AfterViewInit {
     return clases[estado] || 'bg-secondary';
   }
 
-  onAddClick(cardType: string): void {
-    console.log(`Añadir nuevo ${cardType} para el hotel ${this.currentHotel?.nombre}`);
+  // Métodos de navegación CORREGIDOS
+  onAddClick(card: any): void {
+    if (!card.route || !this.currentHotel?.id) {
+      console.error('Ruta o ID del hotel no disponible');
+      return;
+    }
+    
+    // Construir la ruta específica para cada acción
+    let route: any[] = [];
+    let queryParams = {};
+    
+    switch(card.title) {
+      case 'Habitaciones del Hotel':
+        route = ['/hoteles', this.currentHotel.id, 'habitaciones', 'nueva'];
+        break;
+      case 'Tipos de Habitación':
+        route = ['/hoteles', this.currentHotel.id, 'tipos-habitaciones', 'nuevo'];
+        break;
+      case 'Reservas del Hotel':
+        route = ['/hoteles', this.currentHotel.id, 'reservas', 'nueva'];
+        break;
+      case 'Clientes del Hotel':
+        route = ['/hoteles', this.currentHotel.id, 'clientes', 'registrar'];
+        break;
+      case 'Pagos del Hotel':
+        route = ['/hoteles', this.currentHotel.id, 'pagos', 'registrar'];
+        break;
+      case 'Fotos del Hotel':
+        route = ['/hoteles', this.currentHotel.id, 'fotos', 'subir'];
+        break;
+      default:
+        route = card.route;
+    }
+    
+    this.router.navigate(route, { queryParams });
   }
 
-  onListClick(cardType: string): void {
-    console.log(`Ver lista de ${cardType} para el hotel ${this.currentHotel?.nombre}`);
+  onListClick(card: any): void {
+    if (!card.route || !this.currentHotel?.id) {
+      console.error('Ruta o ID del hotel no disponible');
+      return;
+    }
+    
+    // Usar la ruta definida en la tarjeta
+    this.router.navigate(card.route);
   }
 
   cerrarSesion(event?: Event): void {
@@ -133,7 +247,9 @@ export class DashboardHotel implements OnInit, AfterViewInit {
   }
 
   verTodasReservas(): void {
-    console.log('Ver todas las reservas del hotel');
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'reservas']);
+    }
   }
 
   generarReporteDiario(): void {
@@ -141,27 +257,76 @@ export class DashboardHotel implements OnInit, AfterViewInit {
   }
 
   crearReservaRapida(): void {
-    console.log('Crear reserva rápida para el hotel');
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'reservas', 'nueva-rapida']);
+    }
   }
 
   registrarPago(): void {
-    console.log('Registrar pago para el hotel');
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'pagos', 'registrar']);
+    }
   }
 
   checkInRapido(): void {
-    console.log('Check-in rápido para el hotel');
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'reservas'], 
+        { queryParams: { action: 'checkin' } });
+    }
   }
 
   checkOutRapido(): void {
-    console.log('Check-out rápido para el hotel');
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'reservas'], 
+        { queryParams: { action: 'checkout' } });
+    }
   }
 
   subirFoto(): void {
-    console.log('Subir foto para el hotel');
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'fotos', 'subir']);
+    }
   }
 
   generarReporte(): void {
     console.log('Generar reporte para el hotel');
+  }
+
+  // Métodos de navegación directa para el sidebar
+  navegarAHabitaciones(): void {
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'habitaciones']);
+    }
+  }
+
+  navegarATiposHabitacion(): void {
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'tipos-habitaciones']);
+    }
+  }
+
+  navegarAReservas(): void {
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'reservas']);
+    }
+  }
+
+  navegarAClientes(): void {
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'clientes']);
+    }
+  }
+
+  navegarAPagos(): void {
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'pagos']);
+    }
+  }
+
+  navegarAFotos(): void {
+    if (this.currentHotel?.id) {
+      this.router.navigate(['/hoteles', this.currentHotel.id, 'fotos']);
+    }
   }
 
   // Getters para la plantilla
@@ -170,6 +335,6 @@ export class DashboardHotel implements OnInit, AfterViewInit {
   }
 
   get nombreHotel(): string {
-    return this.currentHotel?.nombre || 'Mi Hotel';
+    return this.currentHotel?.nombre || 'Hotel Paradise';
   }
 }

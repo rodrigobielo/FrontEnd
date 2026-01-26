@@ -9,9 +9,10 @@ import { HabitacionService } from '../../servicios/habitacion.service';
 import { HotelService } from '../../servicios/hotel.service';
 import { TipoHabitacionService } from '../../servicios/tipo-habitacion.service';
 
-// Modelos - IMPORTACIÓN CORREGIDA
-import { Habitacion, TipoHabitacion, createEmptyHabitacionForm } from '../../modelos/habitacion.model';
+// Modelos
+import { Habitacion, HabitacionFormData } from '../../modelos/habitacion.model';
 import { Hotel } from '../../modelos/hotel.model';
+import { TipoHabitacion } from '../../modelos/tipo-habitacion.model';
 
 @Component({
   selector: 'app-habitaciones',
@@ -39,19 +40,23 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   filtroHotel: number | null = null;
   filtroTexto: string = '';
   
-  // Datos - inicialización segura
-  hoteles: Hotel[] = [];
-  tiposHabitacion: TipoHabitacion[] = [];
+  // Datos
   habitaciones: Habitacion[] = [];
   habitacionesFiltradas: Habitacion[] = [];
+  hoteles: Hotel[] = [];
+  tiposHabitacion: TipoHabitacion[] = [];
   habitacionEditando: Habitacion | null = null;
+  habitacionDetalles: Habitacion | null = null;
   habitacionAEliminar: Habitacion | null = null;
   
   // Estadísticas
   totalHabitaciones: number = 0;
 
-  // Modal de confirmación
+  // Variables para modales
+  private detallesModalInstance: any;
   private confirmarModalInstance: any;
+
+  @ViewChild('detallesModal') detallesModalRef!: ElementRef;
   @ViewChild('confirmarEliminarModal') confirmarModalRef!: ElementRef;
 
   constructor() {
@@ -59,10 +64,13 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     this.habitacionForm = this.fb.group({
       precioNoche: [null, [
         Validators.required,
-        Validators.min(1)
+        Validators.min(0),
+        Validators.max(10000)
       ]],
-      disponibilidad: [true, [Validators.required]],
+      disponibilidad: [true],
       caracteristicas: ['', [
+        Validators.required,
+        Validators.minLength(10),
         Validators.maxLength(500)
       ]],
       hotelId: ['', [Validators.required]],
@@ -86,6 +94,9 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   private initModales(): void {
     if (typeof window !== 'undefined' && (window as any).bootstrap) {
+      if (this.detallesModalRef?.nativeElement) {
+        this.detallesModalInstance = new (window as any).bootstrap.Modal(this.detallesModalRef.nativeElement);
+      }
       if (this.confirmarModalRef?.nativeElement) {
         this.confirmarModalInstance = new (window as any).bootstrap.Modal(this.confirmarModalRef.nativeElement);
       }
@@ -93,19 +104,21 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private destroyModales(): void {
+    if (this.detallesModalInstance) {
+      this.detallesModalInstance.dispose();
+    }
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.dispose();
     }
   }
 
-  // Cargar hoteles dinámicamente desde la base de datos
+  // Cargar hoteles
   cargarHoteles(): void {
     this.cargandoHoteles = true;
     this.hotelService.getHoteles().subscribe({
       next: (hoteles: Hotel[]) => {
         this.hoteles = hoteles || [];
         this.cargandoHoteles = false;
-        console.log('Hoteles cargados:', this.hoteles);
       },
       error: (error: any) => {
         console.error('Error cargando hoteles:', error);
@@ -116,14 +129,13 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // Cargar tipos de habitación dinámicamente desde la base de datos
+  // Cargar tipos de habitación
   cargarTiposHabitacion(): void {
     this.cargandoTiposHabitacion = true;
     this.tipoHabitacionService.getTiposHabitacion().subscribe({
       next: (tipos: TipoHabitacion[]) => {
         this.tiposHabitacion = tipos || [];
         this.cargandoTiposHabitacion = false;
-        console.log('Tipos de habitación cargados:', this.tiposHabitacion);
       },
       error: (error: any) => {
         console.error('Error cargando tipos de habitación:', error);
@@ -143,7 +155,6 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         this.habitacionesFiltradas = [...this.habitaciones];
         this.totalHabitaciones = this.habitaciones.length;
         this.cargando = false;
-        console.log('Habitaciones cargadas:', this.habitaciones);
       },
       error: (error: any) => {
         console.error('Error cargando habitaciones:', error);
@@ -178,11 +189,18 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     
     // Filtrar por texto
     if (this.filtroTexto) {
-      resultado = resultado.filter(habitacion =>
-        habitacion.caracteristicas.toLowerCase().includes(this.filtroTexto) ||
-        habitacion.hoteles?.nombre.toLowerCase().includes(this.filtroTexto) ||
-        habitacion.tiposHabitaciones?.nombre.toLowerCase().includes(this.filtroTexto)
-      );
+      resultado = resultado.filter(habitacion => {
+        const texto = this.filtroTexto;
+        const caracteristicas = habitacion.caracteristicas.toLowerCase();
+        const nombreHotel = habitacion.hoteles?.nombre?.toLowerCase() || '';
+        const nombreCiudad = habitacion.hoteles?.ciudades?.nombre?.toLowerCase() || '';
+        const nombreTipo = habitacion.tiposHabitaciones?.nombre?.toLowerCase() || '';
+
+        return caracteristicas.includes(texto) ||
+               nombreHotel.includes(texto) ||
+               nombreCiudad.includes(texto) ||
+               nombreTipo.includes(texto);
+      });
     }
     
     this.habitacionesFiltradas = resultado;
@@ -205,6 +223,15 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     this.habitacionForm.markAsUntouched();
   }
 
+  // Cancelar edición
+  cancelarEdicion(): void {
+    this.modoEdicion = false;
+    this.habitacionEditando = null;
+    this.habitacionForm.reset();
+    this.habitacionForm.markAsPristine();
+    this.habitacionForm.markAsUntouched();
+  }
+
   // Editar habitación
   editarHabitacion(habitacion: Habitacion): void {
     this.modoEdicion = true;
@@ -213,7 +240,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     this.habitacionForm.patchValue({
       precioNoche: habitacion.precioNoche,
       disponibilidad: habitacion.disponibilidad,
-      caracteristicas: habitacion.caracteristicas || '',
+      caracteristicas: habitacion.caracteristicas,
       hotelId: habitacion.hoteles?.id || '',
       tipoHabitacionId: habitacion.tiposHabitaciones?.id || ''
     });
@@ -235,7 +262,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Verificar que haya datos disponibles
+    // Verificar que haya hoteles y tipos disponibles
     if (this.hoteles.length === 0) {
       this.mostrarNotificacion('error', 
         'Error', 
@@ -254,28 +281,17 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
     this.guardando = true;
     const habitacionData = this.habitacionForm.value;
-    
-    // Preparar objeto para enviar al backend según la entidad Java
-    const habitacionParaEnviar = {
-      precioNoche: habitacionData.precioNoche,
-      disponibilidad: habitacionData.disponibilidad,
-      caracteristicas: habitacionData.caracteristicas,
-      hoteles: { id: habitacionData.hotelId },
-      tiposHabitaciones: { id: habitacionData.tipoHabitacionId }
-    };
 
-    // Usar aserción no nula para habitacionEditando.id en modo edición
+    // Usar aserción no nula para id en modo edición
     if (this.modoEdicion && this.habitacionEditando && this.habitacionEditando.id !== undefined) {
-      // Modo edición
-      this.habitacionService.updateHabitacion(this.habitacionEditando.id!, habitacionParaEnviar).subscribe({
-        next: (habitacionGuardada: Habitacion) => {
+      this.habitacionService.updateHabitacion(this.habitacionEditando.id!, habitacionData).subscribe({
+        next: () => {
           this.cargarHabitaciones();
           this.guardando = false;
           this.nuevoRegistro();
-          
           this.mostrarNotificacion('success', 
             'Habitación actualizada',
-            `Habitación #${habitacionGuardada.id} actualizada correctamente.`
+            `Habitación actualizada correctamente.`
           );
         },
         error: (error: any) => {
@@ -288,16 +304,14 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     } else {
-      // Modo creación
-      this.habitacionService.createHabitacion(habitacionParaEnviar).subscribe({
-        next: (habitacionGuardada: Habitacion) => {
+      this.habitacionService.createHabitacion(habitacionData).subscribe({
+        next: () => {
           this.cargarHabitaciones();
           this.guardando = false;
           this.nuevoRegistro();
-          
           this.mostrarNotificacion('success', 
             'Habitación creada',
-            `Habitación #${habitacionGuardada.id} creada correctamente.`
+            `Habitación creada correctamente.`
           );
         },
         error: (error: any) => {
@@ -312,7 +326,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Cambiar disponibilidad de habitación
+  // Toggle disponibilidad
   toggleDisponibilidad(habitacion: Habitacion): void {
     if (!habitacion.id) {
       this.mostrarNotificacion('error', 'Error', 'No se puede cambiar la disponibilidad de una habitación sin ID');
@@ -320,23 +334,20 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const nuevaDisponibilidad = !habitacion.disponibilidad;
+    this.guardando = true;
     
     this.habitacionService.toggleDisponibilidad(habitacion.id, nuevaDisponibilidad).subscribe({
-      next: (habitacionActualizada: Habitacion) => {
-        // Actualizar la lista localmente
-        const index = this.habitaciones.findIndex(h => h.id === habitacion.id);
-        if (index !== -1) {
-          this.habitaciones[index].disponibilidad = nuevaDisponibilidad;
-          this.aplicarFiltros();
-        }
-        
+      next: () => {
+        this.cargarHabitaciones();
+        this.guardando = false;
         this.mostrarNotificacion('success', 
           'Disponibilidad actualizada',
-          `La habitación #${habitacion.id} ahora está ${nuevaDisponibilidad ? 'disponible' : 'no disponible'}.`
+          `La habitación ahora está ${nuevaDisponibilidad ? 'disponible' : 'no disponible'}.`
         );
       },
       error: (error: any) => {
         console.error('Error cambiando disponibilidad:', error);
+        this.guardando = false;
         this.mostrarNotificacion('error', 
           'Error', 
           'No se pudo cambiar la disponibilidad. Intenta nuevamente.'
@@ -345,7 +356,22 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // Preparar eliminación de habitación
+  // Método para ver detalles de una habitación
+  verDetalles(habitacion: Habitacion): void {
+    this.habitacionDetalles = habitacion;
+    if (this.detallesModalInstance) {
+      this.detallesModalInstance.show();
+    } else {
+      // Fallback si no se inicializó el modal
+      const modalElement = document.getElementById('detallesModal');
+      if (modalElement) {
+        const modal = new (window as any).bootstrap.Modal(modalElement);
+        modal.show();
+      }
+    }
+  }
+
+  // Método para preparar la eliminación de una habitación
   eliminarHabitacion(habitacion: Habitacion): void {
     this.habitacionAEliminar = habitacion;
     if (this.confirmarModalInstance) {
@@ -360,7 +386,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Confirmar eliminación
+  // Método para confirmar la eliminación
   confirmarEliminar(): void {
     if (!this.habitacionAEliminar || this.habitacionAEliminar.id === undefined) {
       this.mostrarNotificacion('error', 'Error', 'No se puede eliminar la habitación porque no tiene un ID válido.');
@@ -375,7 +401,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         this.guardando = false;
         this.mostrarNotificacion('success', 
           'Habitación eliminada', 
-          `La habitación #${this.habitacionAEliminar!.id} ha sido eliminada correctamente.`
+          `La habitación ha sido eliminada correctamente.`
         );
         this.cargarHabitaciones(); // Recargar la lista
         

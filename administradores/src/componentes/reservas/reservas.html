@@ -1,0 +1,835 @@
+<div class="container-fluid py-4">
+  <!-- Encabezado de la página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 fw-bold mb-0">
+        <i class="bi bi-calendar-check-fill text-primary me-2"></i>
+        Gestión de Reservas
+      </h1>
+      <p class="text-body-secondary mb-0">Administra las reservas de los hoteles</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+        <i class="bi bi-arrow-left me-1"></i> Volver
+      </button>
+      <button class="btn btn-outline-primary" (click)="cargarReservas()" title="Recargar">
+        <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de información -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card border-primary-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-calendar-week text-primary-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Total Reservas</h5>
+              <p class="card-text display-6 fw-bold text-primary">{{ totalReservas }}</p>
+              <small class="text-body-tertiary">Registradas en el sistema</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-success-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-calendar-day text-success-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Reservas Hoy</h5>
+              <p class="card-text display-6 fw-bold text-success">{{ reservasHoy }}</p>
+              <small class="text-body-tertiary">Realizadas hoy</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-info-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-cash-coin text-info-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Ingresos</h5>
+              <p class="card-text display-6 fw-bold text-info">${{ ingresosTotales | number:'1.2-2' }}</p>
+              <small class="text-body-tertiary">Total de reservas pagadas</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-warning-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-people-fill text-warning-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Ocupación</h5>
+              <p class="card-text display-6 fw-bold text-warning">{{ ocupacionPromedio | number:'1.1-1' }}</p>
+              <small class="text-body-tertiary">Huéspedes promedio</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tarjetas de clasificación -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card border-primary-subtle h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-clock-history text-primary-emphasis me-2"></i>
+            Recientes (7 días)
+          </h6>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="display-5 fw-bold text-primary">{{ reservasRecientes.length }}</span>
+            <i class="bi bi-calendar2-week fs-1 text-primary-emphasis"></i>
+          </div>
+          <small class="text-body-tertiary">Reservas realizadas en los últimos 7 días</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-info-subtle h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-check-circle text-info-emphasis me-2"></i>
+            Confirmadas
+          </h6>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="display-5 fw-bold text-info">{{ reservasConfirmadas.length }}</span>
+            <i class="bi bi-calendar-check fs-1 text-info-emphasis"></i>
+          </div>
+          <small class="text-body-tertiary">Reservas confirmadas pendientes de pago</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-success-subtle h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-credit-card-2-front text-success-emphasis me-2"></i>
+            Pagadas
+          </h6>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="display-5 fw-bold text-success">{{ reservasPagadas.length }}</span>
+            <i class="bi bi-cash-stack fs-1 text-success-emphasis"></i>
+          </div>
+          <small class="text-body-tertiary">Reservas confirmadas y pagadas</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-danger-subtle h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-x-circle text-danger-emphasis me-2"></i>
+            Rechazadas/Canceladas
+          </h6>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="display-5 fw-bold text-danger">{{ reservasRechazadas.length }}</span>
+            <i class="bi bi-calendar-x fs-1 text-danger-emphasis"></i>
+          </div>
+          <small class="text-body-tertiary">Reservas canceladas o rechazadas</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de reservas (toda la pantalla) -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul text-primary me-2"></i>
+              Lista de Reservas
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="min-width: 250px;">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Buscar por código, huésped, hotel..."
+                  (input)="filtrarReservas($event)"
+                >
+              </div>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-funnel-fill me-1"></i> Filtrar por Estado
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="#" (click)="filtrarPorEstado('')">
+                      <i class="bi bi-list-check me-2"></i> Todos los estados
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  
+                  @for (estado of estados; track estado.valor) {
+                    <li>
+                      <a class="dropdown-item" href="#" (click)="filtrarPorEstado(estado.valor)">
+                        <i class="bi {{estado.icon}} me-2 text-{{estado.clase}}-emphasis"></i> 
+                        {{ estado.label }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          @if (cargando) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-body-secondary">Cargando reservas...</p>
+            </div>
+          } @else if (reservasFiltradas.length === 0) {
+            <div class="text-center py-5">
+              <i class="bi bi-calendar-x display-1 text-body-tertiary mb-3"></i>
+              <h5 class="text-body-secondary mb-2">No hay reservas registradas</h5>
+              <p class="text-body-tertiary mb-0">No se encontraron reservas con los filtros aplicados</p>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-3">
+                      <i class="bi bi-key text-primary-emphasis me-1"></i>
+                      Código
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-person text-primary-emphasis me-1"></i>
+                      Huésped
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-building text-primary-emphasis me-1"></i>
+                      Hotel / Habitación
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-calendar-range text-primary-emphasis me-1"></i>
+                      Fechas
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-people-fill text-primary-emphasis me-1"></i>
+                      Huéspedes
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-cash text-primary-emphasis me-1"></i>
+                      Total
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-tags text-primary-emphasis me-1"></i>
+                      Estado
+                    </th>
+                    <th scope="col" class="text-center pe-3">
+                      <i class="bi bi-gear-fill text-primary-emphasis me-1"></i>
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (reserva of reservasFiltradas; track reserva.id) {
+                    <tr>
+                      <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-grow-1">
+                            <strong class="d-block font-monospace">{{ reserva.codigo }}</strong>
+                            <small class="text-body-tertiary">
+                              ID: {{ reserva.id }}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex flex-column">
+                          <strong>{{ reserva.usuario?.nombre || 'N/A' }}</strong>
+                          <small class="text-body-tertiary">{{ reserva.usuario?.email || 'N/A' }}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex flex-column">
+                          <strong>{{ reserva.habitacion?.hotel?.nombre || 'N/A' }}</strong>
+                          <small class="text-body-tertiary">
+                            Hab. {{ reserva.habitacion?.numero || 'N/A' }} 
+                            ({{ reserva.habitacion?.tipo || 'N/A' }})
+                          </small>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex flex-column">
+                          <small class="text-body-tertiary">
+                            <i class="bi bi-calendar-plus me-1"></i>
+                            {{ formatearFecha(reserva.fechaEntrada) }}
+                          </small>
+                          <small class="text-body-tertiary">
+                            <i class="bi bi-calendar-minus me-1"></i>
+                            {{ formatearFecha(reserva.fechaSalida) }}
+                          </small>
+                          <small class="text-body-tertiary">
+                            <i class="bi bi-moon-stars me-1"></i>
+                            {{ calcularNoches(reserva.fechaEntrada, reserva.fechaSalida) }} noche(s)
+                          </small>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="text-center">
+                          <span class="badge text-bg-secondary-subtle text-secondary-emphasis fs-6">
+                            {{ reserva.numeroHuespedes }}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <strong>${{ reserva.precioTotal | number:'1.2-2' }}</strong>
+                        <small class="text-body-tertiary d-block">USD</small>
+                      </td>
+                      <td>
+                        <span class="badge" [ngClass]="getClaseEstado(reserva.estadoReserva)">
+                          <i class="bi {{ getIconoEstado(reserva.estadoReserva) }} me-1"></i>
+                          {{ getLabelEstado(reserva.estadoReserva) }}
+                        </span>
+                      </td>
+                      <td class="text-center pe-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-info"
+                            (click)="verDetalles(reserva)"
+                            title="Ver detalles"
+                          >
+                            <i class="bi bi-eye-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-warning"
+                            (click)="cambiarEstadoReserva(reserva)"
+                            title="Cambiar estado"
+                          >
+                            <i class="bi bi-flag-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarReserva(reserva)"
+                            title="Eliminar reserva"
+                          >
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        
+        @if (reservasFiltradas.length > 0 && !cargando) {
+          <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+              <small class="text-body-secondary">
+                Mostrando {{ reservasFiltradas.length }} de {{ totalReservas }} reservas
+                @if (filtroEstado) {
+                  <span class="badge ms-2" [ngClass]="getClaseEstado(filtroEstado)">
+                    <i class="bi {{ getIconoEstado(filtroEstado) }} me-1"></i>
+                    {{ getLabelEstado(filtroEstado) }}
+                  </span>
+                }
+              </small>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" (click)="filtrarPorEstado('')">
+                  <i class="bi bi-list-check me-1"></i> Todas ({{ totalReservas }})
+                </button>
+                <button class="btn btn-outline-info" (click)="filtrarPorEstado(ESTADOS_RESERVA.CONFIRMADA)">
+                  <i class="bi bi-check-circle me-1"></i> Confirmadas ({{ reservasConfirmadas.length }})
+                </button>
+                <button class="btn btn-outline-success" (click)="filtrarPorEstado(ESTADOS_RESERVA.PAGADA)">
+                  <i class="bi bi-credit-card me-1"></i> Pagadas ({{ reservasPagadas.length }})
+                </button>
+                <button class="btn btn-outline-danger" (click)="filtrarPorEstado(ESTADOS_RESERVA.RECHAZADA)">
+                  <i class="bi bi-x-circle me-1"></i> Rechazadas ({{ reservasRechazadas.length }})
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-primary text-white">
+          <h1 class="modal-title fs-5" id="detallesModalLabel">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Detalles de la Reserva
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          @if (reservaDetalles) {
+            <div class="row">
+              <div class="col-md-4 text-center mb-3 mb-md-0">
+                <div class="bg-primary-subtle p-4 rounded-3">
+                  <i class="bi bi-calendar-check display-1 text-primary"></i>
+                  <div class="mt-3">
+                    <span class="badge fs-6" [ngClass]="getClaseEstado(reservaDetalles.estadoReserva)">
+                      <i class="bi {{ getIconoEstado(reservaDetalles.estadoReserva) }} me-1"></i>
+                      {{ getLabelEstado(reservaDetalles.estadoReserva) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="mb-3">
+                  <h3 class="text-primary-emphasis mb-1">Reserva #{{ reservaDetalles.codigo }}</h3>
+                  <div class="d-flex gap-2">
+                    <span class="badge text-bg-secondary-subtle text-secondary-emphasis">
+                      ID: {{ reservaDetalles.id }}
+                    </span>
+                    <span class="badge text-bg-info-subtle text-info-emphasis">
+                      {{ calcularNoches(reservaDetalles.fechaEntrada, reservaDetalles.fechaSalida) }} noche(s)
+                    </span>
+                  </div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Huésped:</strong>
+                    <p class="mt-1">
+                      {{ reservaDetalles.usuario?.nombre || 'N/A' }} 
+                      <span class="text-body-tertiary">({{ reservaDetalles.usuario?.email || 'N/A' }})</span>
+                    </p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Número de huéspedes:</strong>
+                    <p>{{ reservaDetalles.numeroHuespedes }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Precio Total:</strong>
+                    <p>${{ reservaDetalles.precioTotal | number:'1.2-2' }} USD</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Fecha de Reserva:</strong>
+                    <p>{{ reservaDetalles.fechaReserva | date:'dd/MM/yyyy HH:mm' }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Habitación:</strong>
+                    <p>
+                      {{ reservaDetalles.habitacion?.numero || 'N/A' }}
+                      <span class="text-body-tertiary">({{ reservaDetalles.habitacion?.tipo || 'N/A' }})</span>
+                    </p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Fecha de Entrada:</strong>
+                    <p>{{ reservaDetalles.fechaEntrada | date:'dd/MM/yyyy' }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Fecha de Salida:</strong>
+                    <p>{{ reservaDetalles.fechaSalida | date:'dd/MM/yyyy' }}</p>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Hotel:</strong>
+                    <p class="mt-1">{{ reservaDetalles.habitacion?.hotel?.nombre || 'N/A' }}</p>
+                  </div>
+                  @if (reservaDetalles.pedidoEspecial) {
+                    <div class="col-12">
+                      <strong class="text-body-emphasis">Pedido Especial:</strong>
+                      <div class="alert alert-info border-info-subtle bg-info-subtle mt-1">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ reservaDetalles.pedidoEspecial }}
+                      </div>
+                    </div>
+                  }
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Código de Reserva:</strong>
+                    <div class="input-group mt-1">
+                      <span class="input-group-text">
+                        <i class="bi bi-key"></i>
+                      </span>
+                      <input type="text" class="form-control font-monospace" 
+                             [value]="reservaDetalles.codigo" readonly>
+                      <button class="btn btn-outline-secondary" type="button" 
+                              title="Copiar código" (click)="copiarCodigo(reservaDetalles.codigo)">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de cambio de estado -->
+  <div class="modal fade" id="estadoModal" tabindex="-1" aria-labelledby="estadoModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-warning text-white">
+          <h1 class="modal-title fs-5" id="estadoModalLabel">
+            <i class="bi bi-flag-fill me-2"></i>
+            Cambiar Estado de Reserva
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form [formGroup]="estadoForm" (ngSubmit)="guardarCambioEstado()">
+            @if (reservaCambiarEstado) {
+              <div class="mb-4">
+                <div class="alert alert-info border-info-subtle bg-info-subtle">
+                  <div class="d-flex">
+                    <i class="bi bi-info-circle-fill text-info-emphasis me-2"></i>
+                    <div>
+                      <strong>Reserva:</strong> {{ reservaCambiarEstado.codigo }}<br>
+                      <strong>Huésped:</strong> {{ reservaCambiarEstado.usuario?.nombre || 'N/A' }}<br>
+                      <strong>Hotel:</strong> {{ reservaCambiarEstado.habitacion?.hotel?.nombre || 'N/A' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="nuevoEstado" class="form-label fw-semibold">
+                  <i class="bi bi-tags me-1 text-warning-emphasis"></i>
+                  Nuevo Estado <span class="text-danger">*</span>
+                </label>
+                <select 
+                  class="form-select" 
+                  id="nuevoEstado"
+                  formControlName="nuevoEstado"
+                >
+                  @for (estado of estados; track estado.valor) {
+                    <option [value]="estado.valor">
+                      {{ estado.label }}
+                    </option>
+                  }
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="codigo" class="form-label fw-semibold">
+                  <i class="bi bi-key me-1 text-warning-emphasis"></i>
+                  Código de Reserva <span class="text-danger">*</span>
+                </label>
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-hash"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    class="form-control font-monospace" 
+                    id="codigo"
+                    formControlName="codigo"
+                    [class.is-valid]="estadoForm.get('codigo')?.valid && estadoForm.get('codigo')?.touched"
+                    [class.is-invalid]="estadoForm.get('codigo')?.invalid && estadoForm.get('codigo')?.touched"
+                    placeholder="Ingrese el código de reserva"
+                  >
+                  <div class="invalid-feedback">
+                    @if (estadoForm.get('codigo')?.hasError('required')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> El código es obligatorio
+                    }
+                    @if (estadoForm.get('codigo')?.hasError('minlength')) {
+                      <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 3 caracteres
+                    }
+                  </div>
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> Este código identificará la reserva
+                </div>
+              </div>
+
+              @if (requiereMotivoRechazo()) {
+                <div class="mb-3">
+                  <label for="motivoRechazo" class="form-label fw-semibold">
+                    <i class="bi bi-chat-left-text me-1 text-danger-emphasis"></i>
+                    Motivo {{ estadoForm.get('nuevoEstado')?.value === ESTADOS_RESERVA.RECHAZADA ? 'del Rechazo' : 'de la Cancelación' }}
+                  </label>
+                  <textarea 
+                    class="form-control" 
+                    id="motivoRechazo"
+                    formControlName="motivoRechazo"
+                    rows="3"
+                    placeholder="Explique brevemente el motivo..."
+                  ></textarea>
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i> Este motivo será registrado en el sistema
+                  </div>
+                </div>
+              }
+            }
+          </form>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-warning" 
+            (click)="guardarCambioEstado()"
+            [disabled]="estadoForm.invalid || guardando"
+          >
+            @if (guardando) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Actualizando...
+            } @else {
+              <i class="bi bi-check-circle me-1"></i>
+              Actualizar Estado
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de selección de habitación para confirmar reserva -->
+  <div class="modal fade" id="habitacionModal" tabindex="-1" aria-labelledby="habitacionModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-info text-white">
+          <h1 class="modal-title fs-5" id="habitacionModalLabel">
+            <i class="bi bi-door-closed-fill me-2"></i>
+            Seleccionar Habitación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          @if (reservaConfirmar) {
+            <div class="mb-4">
+              <div class="alert alert-info border-info-subtle bg-info-subtle">
+                <div class="d-flex">
+                  <i class="bi bi-info-circle-fill text-info-emphasis me-2"></i>
+                  <div>
+                    <strong>Confirmar Reserva:</strong> {{ reservaConfirmar.codigo }}<br>
+                    <strong>Hotel:</strong> {{ reservaConfirmar.habitacion?.hotel?.nombre || 'N/A' }}<br>
+                    <strong>Tipo de Habitación:</strong> {{ reservaConfirmar.habitacion?.tipo || 'N/A' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            @if (cargandoHabitaciones) {
+              <div class="text-center py-4">
+                <div class="spinner-border text-info mb-3" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="text-body-secondary">Cargando habitaciones disponibles...</p>
+              </div>
+            } @else if (habitacionesDisponibles.length === 0) {
+              <div class="text-center py-4">
+                <i class="bi bi-door-closed display-4 text-body-tertiary mb-3"></i>
+                <h5 class="text-body-secondary mb-2">No hay habitaciones disponibles</h5>
+                <p class="text-body-tertiary mb-0">
+                  No hay habitaciones disponibles del tipo "{{ reservaConfirmar.habitacion?.tipo || 'N/A' }}" 
+                  en {{ reservaConfirmar.habitacion?.hotel?.nombre || 'el hotel seleccionado' }}
+                </p>
+              </div>
+            } @else {
+              <div class="mb-3">
+                <label for="habitacionSeleccionada" class="form-label fw-semibold">
+                  <i class="bi bi-list-ul me-1 text-info-emphasis"></i>
+                  Selecciona una habitación disponible <span class="text-danger">*</span>
+                </label>
+                <select 
+                  class="form-select" 
+                  id="habitacionSeleccionada"
+                  [(ngModel)]="habitacionSeleccionada"
+                  (ngModelChange)="onHabitacionSeleccionadaChange()"
+                  [class.is-valid]="habitacionSeleccionada"
+                >
+                  <option value="" disabled>Selecciona una habitación</option>
+                  @for (habitacion of habitacionesDisponibles; track habitacion.id) {
+                    <option [value]="habitacion.id">
+                      Habitación {{ habitacion.numero }} - 
+                      ${{ habitacion.precioNoche | number:'1.2-2' }}/noche
+                      @if (habitacion.descripcion) {
+                        <span class="text-body-tertiary">({{ habitacion.descripcion }})</span>
+                      }
+                    </option>
+                  }
+                </select>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i> 
+                  Se mostrarán solo las habitaciones disponibles del tipo requerido
+                </div>
+              </div>
+
+              @if (habitacionSeleccionadaObj) {
+                <div class="card border-info-subtle mt-3">
+                  <div class="card-body">
+                    <h6 class="card-title text-info-emphasis mb-3">
+                      <i class="bi bi-door-open me-2"></i>
+                      Habitación Seleccionada
+                    </h6>
+                    <div class="row g-2">
+                      <div class="col-12">
+                        <strong class="text-body-emphasis">Número:</strong>
+                        <span class="ms-2">{{ habitacionSeleccionadaObj.numero }}</span>
+                      </div>
+                      <div class="col-12">
+                        <strong class="text-body-emphasis">Tipo:</strong>
+                        <span class="ms-2">{{ habitacionSeleccionadaObj.tipo }}</span>
+                      </div>
+                      <div class="col-12">
+                        <strong class="text-body-emphasis">Precio por noche:</strong>
+                        <span class="ms-2">${{ habitacionSeleccionadaObj.precioNoche | number:'1.2-2' }} USD</span>
+                      </div>
+                      @if (habitacionSeleccionadaObj.descripcion) {
+                        <div class="col-12">
+                          <strong class="text-body-emphasis">Descripción:</strong>
+                          <p class="mt-1 mb-0">{{ habitacionSeleccionadaObj.descripcion }}</p>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-info" 
+            (click)="confirmarConHabitacion()"
+            [disabled]="!habitacionSeleccionada || guardando || habitacionesDisponibles.length === 0"
+          >
+            @if (guardando) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Confirmando...
+            } @else {
+              <i class="bi bi-check-circle me-1"></i>
+              Confirmar Reserva
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-danger text-white">
+          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <i class="bi bi-trash-fill text-danger display-4"></i>
+          </div>
+          <h5 class="text-center mb-3">¿Estás seguro de eliminar esta reserva?</h5>
+          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
+            Se eliminarán todos los datos asociados a esta reserva.
+          </div>
+          @if (reservaAEliminar) {
+            <div class="card border-danger-subtle">
+              <div class="card-body">
+                <h6 class="card-title text-danger-emphasis mb-3">
+                  <i class="bi bi-calendar-check me-2"></i>
+                  Reserva a eliminar
+                </h6>
+                <div class="row g-2">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Código:</strong>
+                    <span class="ms-2 font-monospace">{{ reservaAEliminar.codigo }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Huésped:</strong>
+                    <span class="ms-2">{{ reservaAEliminar.usuario?.nombre || 'N/A' }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Hotel:</strong>
+                    <span class="ms-2">{{ reservaAEliminar.habitacion?.hotel?.nombre || 'N/A' }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Fechas:</strong>
+                    <span class="ms-2">
+                      {{ reservaAEliminar.fechaEntrada | date:'dd/MM' }} - 
+                      {{ reservaAEliminar.fechaSalida | date:'dd/MM/yy' }}
+                    </span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Total:</strong>
+                    <span class="ms-2">${{ reservaAEliminar.precioTotal | number:'1.2-2' }} USD</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Estado:</strong>
+                    <span class="ms-2 badge" [ngClass]="getClaseEstado(reservaAEliminar.estadoReserva)">
+                      {{ getLabelEstado(reservaAEliminar.estadoReserva) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash-fill me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

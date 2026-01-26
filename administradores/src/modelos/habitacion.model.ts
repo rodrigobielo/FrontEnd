@@ -1,49 +1,53 @@
-import { Hotel } from './hotel.model';
-
-export interface TipoHabitacion {
-  id?: number;
-  nombre: string;
-  descripcion?: string;
-  capacidad?: number;
-  comodidades?: string;
-}
-
 export interface Habitacion {
   id?: number;
   precioNoche: number;
   disponibilidad: boolean;
   caracteristicas: string;
-  hoteles: Hotel | null;
-  tiposHabitaciones: TipoHabitacion | null;
+  hoteles?: {
+    id?: number;
+    nombre?: string;
+    ciudades?: {
+      id?: number;
+      nombre?: string;
+    };
+  };
+  tiposHabitaciones?: {
+    id?: number;
+    nombre?: string;
+    capacidad?: number;
+    aireAcondicionador?: boolean;
+    minibar?: boolean;
+    television?: boolean;
+  };
+  // Propiedades adicionales para el servicio de reservas
+  numero?: string;
+  tipo?: string;
+  descripcion?: string;
+  disponible?: boolean;
+  hotelId?: number;
+  hotel?: {
+    id?: number;
+    nombre?: string;
+  };
 }
 
-// Versión simplificada para formulario
+// Interfaz para el formulario de habitación
 export interface HabitacionFormData {
-  precioNoche: number | null;
+  precioNoche: number;
   disponibilidad: boolean;
   caracteristicas: string;
-  hotelId: number | null;
-  tipoHabitacionId: number | null;
+  hotelId: number;
+  tipoHabitacionId: number;
 }
 
-// Función de utilidad para crear objeto Habitacion vacío
+// Función de utilidad
 export function createEmptyHabitacion(): Habitacion {
   return {
     precioNoche: 0,
     disponibilidad: true,
     caracteristicas: '',
-    hoteles: null,
-    tiposHabitaciones: null
-  };
-}
-
-// Función de utilidad para crear datos de formulario vacíos
-export function createEmptyHabitacionForm(): HabitacionFormData {
-  return {
-    precioNoche: null,
-    disponibilidad: true,
-    caracteristicas: '',
-    hotelId: null,
-    tipoHabitacionId: null
+    numero: '',
+    tipo: '',
+    disponible: true
   };
 }

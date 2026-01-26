@@ -3,7 +3,7 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h1 class="h2 fw-bold mb-0">
-        <i class="bi bi-door-closed-fill text-info me-2"></i>
+        <i class="bi bi-door-open-fill text-success me-2"></i>
         Gestión de Habitaciones
       </h1>
       <p class="text-body-secondary mb-0">Administra las habitaciones de los hoteles</p>
@@ -12,7 +12,7 @@
       <button class="btn btn-outline-secondary" routerLink="/dashboard">
         <i class="bi bi-arrow-left me-1"></i> Volver
       </button>
-      <button class="btn btn-info" (click)="nuevoRegistro()">
+      <button class="btn btn-success" (click)="nuevoRegistro()">
         <i class="bi bi-plus-circle me-1"></i> Nueva Habitación
       </button>
     </div>
@@ -21,15 +21,15 @@
   <!-- Tarjetas de información -->
   <div class="row mb-4">
     <div class="col-md-4 mb-3 mb-md-0">
-      <div class="card border-info-subtle border-2">
+      <div class="card border-success-subtle border-2">
         <div class="card-body">
           <div class="d-flex align-items-center">
             <div class="flex-shrink-0">
-              <i class="bi bi-info-circle-fill text-info-emphasis fs-1"></i>
+              <i class="bi bi-door-open text-success-emphasis fs-1"></i>
             </div>
             <div class="flex-grow-1 ms-3">
               <h5 class="card-title mb-1">Total de Habitaciones</h5>
-              <p class="card-text display-6 fw-bold text-info">{{ totalHabitaciones }}</p>
+              <p class="card-text display-6 fw-bold text-success">{{ totalHabitaciones }}</p>
               <small class="text-body-tertiary">Registradas en el sistema</small>
             </div>
           </div>
@@ -41,21 +41,21 @@
       <div class="card border-light-subtle shadow-sm">
         <div class="card-body">
           <h6 class="card-title mb-3">
-            <i class="bi bi-lightbulb-fill text-info-emphasis me-2"></i>
+            <i class="bi bi-lightbulb-fill text-success-emphasis me-2"></i>
             Información importante
           </h6>
           <ul class="list-unstyled mb-0">
             <li class="mb-2">
-              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
-              Cada habitación debe estar asociada a un hotel específico.
+              <i class="bi bi-check-circle-fill text-success-emphasis me-2"></i>
+              Cada habitación debe estar asociada a un hotel y un tipo de habitación.
             </li>
             <li class="mb-2">
-              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
-              Selecciona el tipo de habitación adecuado (Individual, Doble, Suite, etc.)
+              <i class="bi bi-check-circle-fill text-success-emphasis me-2"></i>
+              El precio por noche y la disponibilidad son campos obligatorios.
             </li>
             <li>
-              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
-              Actualiza la disponibilidad según el estado actual de la habitación.
+              <i class="bi bi-check-circle-fill text-success-emphasis me-2"></i>
+              Las características describen detalles específicos de la habitación.
             </li>
           </ul>
         </div>
@@ -64,113 +64,108 @@
   </div>
 
   <div class="row g-4">
-    <!-- Formulario principal de habitaciones -->
+    <!-- Formulario de habitaciones -->
     <div class="col-lg-5">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-white border-0 py-3">
           <h5 class="mb-0">
-            <i class="bi bi-pencil-square text-info me-2"></i>
+            <i class="bi bi-pencil-square text-success me-2"></i>
             {{ modoEdicion ? 'Editar Habitación' : 'Nueva Habitación' }}
           </h5>
         </div>
         <div class="card-body">
           <form [formGroup]="habitacionForm" (ngSubmit)="guardarHabitacion()" novalidate>
-            <!-- Campos en fila: Hotel y Tipo de Habitación -->
-            <div class="row g-3 mb-4">
-              <!-- Dropdown de Hoteles -->
-              <div class="col-md-6">
-                <label for="hotel" class="form-label fw-semibold">
-                  <i class="bi bi-building-fill me-1 text-info-emphasis"></i>
-                  Hotel <span class="text-danger">*</span>
-                </label>
+            <!-- Hotel -->
+            <div class="mb-3">
+              <label for="hotelId" class="form-label fw-semibold">
+                <i class="bi bi-house-fill me-1 text-success-emphasis"></i>
+                Hotel <span class="text-danger">*</span>
+              </label>
+              
+              @if (cargandoHoteles) {
+                <div class="alert alert-info">
+                  <i class="bi bi-hourglass-split me-2"></i>
+                  Cargando hoteles...
+                </div>
+              } @else if (hoteles.length === 0) {
+                <div class="alert alert-warning">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  No hay hoteles disponibles. Debes crear hoteles primero.
+                </div>
+              } @else {
                 <div class="input-group has-validation">
                   <span class="input-group-text">
-                    <i class="bi bi-house-fill"></i>
+                    <i class="bi bi-building"></i>
                   </span>
                   <select 
                     class="form-select" 
-                    id="hotel"
+                    id="hotelId"
                     formControlName="hotelId"
                     [class.is-valid]="habitacionForm.get('hotelId')?.valid && habitacionForm.get('hotelId')?.touched"
                     [class.is-invalid]="habitacionForm.get('hotelId')?.invalid && habitacionForm.get('hotelId')?.touched"
                   >
-                    <option value="" disabled selected>
-                      @if (cargandoHoteles) {
-                        <span class="text-muted">Cargando hoteles...</span>
-                      } @else if (hoteles.length === 0) {
-                        <span class="text-danger">No hay hoteles disponibles</span>
-                      } @else {
-                        Selecciona un hotel
-                      }
-                    </option>
+                    <option value="" disabled selected>Selecciona un hotel</option>
                     @for (hotel of hoteles; track hotel.id) {
-                      <option [value]="hotel.id">{{ hotel.nombre }}</option>
+                      <option [value]="hotel.id">{{ hotel.nombre }} - {{ hotel.ciudades?.nombre }}</option>
                     }
                   </select>
-                  <div class="valid-feedback">
-                    <i class="bi bi-check-circle-fill me-1"></i> Hotel seleccionado
-                  </div>
                   <div class="invalid-feedback">
                     <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un hotel
                   </div>
                 </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Hotel al que pertenece la habitación
-                </div>
-              </div>
+              }
+            </div>
+
+            <!-- Tipo de Habitación -->
+            <div class="mb-3">
+              <label for="tipoHabitacionId" class="form-label fw-semibold">
+                <i class="bi bi-door-closed me-1 text-success-emphasis"></i>
+                Tipo de Habitación <span class="text-danger">*</span>
+              </label>
               
-              <!-- Dropdown de Tipos de Habitación -->
-              <div class="col-md-6">
-                <label for="tipoHabitacion" class="form-label fw-semibold">
-                  <i class="bi bi-door-open-fill me-1 text-info-emphasis"></i>
-                  Tipo de Habitación <span class="text-danger">*</span>
-                </label>
+              @if (cargandoTiposHabitacion) {
+                <div class="alert alert-info">
+                  <i class="bi bi-hourglass-split me-2"></i>
+                  Cargando tipos de habitación...
+                </div>
+              } @else if (tiposHabitacion.length === 0) {
+                <div class="alert alert-warning">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  No hay tipos de habitación disponibles. Debes crear tipos primero.
+                </div>
+              } @else {
                 <div class="input-group has-validation">
                   <span class="input-group-text">
-                    <i class="bi bi-tag-fill"></i>
+                    <i class="bi bi-card-text"></i>
                   </span>
                   <select 
                     class="form-select" 
-                    id="tipoHabitacion"
+                    id="tipoHabitacionId"
                     formControlName="tipoHabitacionId"
                     [class.is-valid]="habitacionForm.get('tipoHabitacionId')?.valid && habitacionForm.get('tipoHabitacionId')?.touched"
                     [class.is-invalid]="habitacionForm.get('tipoHabitacionId')?.invalid && habitacionForm.get('tipoHabitacionId')?.touched"
                   >
-                    <option value="" disabled selected>
-                      @if (cargandoTiposHabitacion) {
-                        <span class="text-muted">Cargando tipos...</span>
-                      } @else if (tiposHabitacion.length === 0) {
-                        <span class="text-danger">No hay tipos disponibles</span>
-                      } @else {
-                        Selecciona un tipo
-                      }
-                    </option>
+                    <option value="" disabled selected>Selecciona un tipo</option>
                     @for (tipo of tiposHabitacion; track tipo.id) {
-                      <option [value]="tipo.id">{{ tipo.nombre }}</option>
+                      <option [value]="tipo.id">{{ tipo.nombre }} (Capacidad: {{ tipo.capacidad }})</option>
                     }
                   </select>
-                  <div class="valid-feedback">
-                    <i class="bi bi-check-circle-fill me-1"></i> Tipo seleccionado
-                  </div>
                   <div class="invalid-feedback">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un tipo
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar un tipo de habitación
                   </div>
                 </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Clasificación de la habitación
-                </div>
-              </div>
+              }
             </div>
 
-            <!-- Campo: Precio por noche -->
-            <div class="mb-4">
+            <!-- Precio por Noche -->
+            <div class="mb-3">
               <label for="precioNoche" class="form-label fw-semibold">
-                <i class="bi bi-cash-coin me-1 text-info-emphasis"></i>
-                Precio por noche <span class="text-danger">*</span>
+                <i class="bi bi-currency-dollar me-1 text-success-emphasis"></i>
+                Precio por Noche <span class="text-danger">*</span>
               </label>
               <div class="input-group has-validation">
                 <span class="input-group-text">
-                  <i class="bi bi-currency-dollar"></i>
+                  <i class="bi bi-cash"></i>
                 </span>
                 <input 
                   type="number" 
@@ -179,33 +174,27 @@
                   formControlName="precioNoche"
                   [class.is-valid]="habitacionForm.get('precioNoche')?.valid && habitacionForm.get('precioNoche')?.touched"
                   [class.is-invalid]="habitacionForm.get('precioNoche')?.invalid && habitacionForm.get('precioNoche')?.touched"
-                  placeholder="Ej: 100"
+                  placeholder="Ej: 150.00"
                   min="0"
-                  step="1"
+                  step="0.01"
                 >
                 <span class="input-group-text">USD</span>
-                <div class="valid-feedback">
-                  <i class="bi bi-check-circle-fill me-1"></i> Precio válido
-                </div>
                 <div class="invalid-feedback">
                   @if (habitacionForm.get('precioNoche')?.hasError('required')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> El precio por noche es obligatorio
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El precio es obligatorio
                   }
                   @if (habitacionForm.get('precioNoche')?.hasError('min')) {
                     <i class="bi bi-exclamation-circle-fill me-1"></i> El precio debe ser mayor a 0
                   }
                 </div>
               </div>
-              <div class="form-text">
-                <i class="bi bi-info-circle me-1"></i> Precio por noche en dólares
-              </div>
             </div>
 
-            <!-- Campo: Disponibilidad -->
-            <div class="mb-4">
+            <!-- Disponibilidad -->
+            <div class="mb-3">
               <label class="form-label fw-semibold">
-                <i class="bi bi-toggle-on me-1 text-info-emphasis"></i>
-                Disponibilidad <span class="text-danger">*</span>
+                <i class="bi bi-check-circle me-1 text-success-emphasis"></i>
+                Disponibilidad
               </label>
               <div class="form-check form-switch">
                 <input 
@@ -218,33 +207,23 @@
                   [class.is-invalid]="habitacionForm.get('disponibilidad')?.invalid && habitacionForm.get('disponibilidad')?.touched"
                 >
                 <label class="form-check-label" for="disponibilidad">
-                  @if (habitacionForm.get('disponibilidad')?.value) {
-                    <span class="text-success fw-semibold">Disponible</span>
-                  } @else {
-                    <span class="text-danger fw-semibold">No disponible</span>
-                  }
+                  Habitación disponible para reservas
                 </label>
-                <div class="valid-feedback">
-                  <i class="bi bi-check-circle-fill me-1"></i> Disponibilidad definida
-                </div>
-                <div class="invalid-feedback">
-                  <i class="bi bi-exclamation-circle-fill me-1"></i> Debes definir la disponibilidad
-                </div>
               </div>
               <div class="form-text">
-                <i class="bi bi-info-circle me-1"></i> Activa si la habitación está disponible para reservas
+                <i class="bi bi-info-circle me-1"></i> Desactiva esta opción si la habitación está en mantenimiento o no disponible
               </div>
             </div>
 
-            <!-- Campo: Características -->
+            <!-- Características -->
             <div class="mb-4">
               <label for="caracteristicas" class="form-label fw-semibold">
-                <i class="bi bi-card-text me-1 text-info-emphasis"></i>
-                Características
+                <i class="bi bi-card-text me-1 text-success-emphasis"></i>
+                Características <span class="text-danger">*</span>
               </label>
               <div class="input-group has-validation">
                 <span class="input-group-text align-items-start pt-2">
-                  <i class="bi bi-text-paragraph"></i>
+                  <i class="bi bi-list-stars"></i>
                 </span>
                 <textarea 
                   class="form-control" 
@@ -252,22 +231,22 @@
                   formControlName="caracteristicas"
                   [class.is-valid]="habitacionForm.get('caracteristicas')?.valid && habitacionForm.get('caracteristicas')?.touched"
                   [class.is-invalid]="habitacionForm.get('caracteristicas')?.invalid && habitacionForm.get('caracteristicas')?.touched"
-                  rows="3"
-                  placeholder="Describe las características de la habitación: tamaño, vista, comodidades, etc."
+                  rows="4"
+                  placeholder="Describe las características específicas de esta habitación: vista, tamaño, mobiliario, servicios adicionales..."
                   maxlength="500"
                 ></textarea>
-                <div class="valid-feedback">
-                  <i class="bi bi-check-circle-fill me-1"></i> Características válidas
-                </div>
                 <div class="invalid-feedback">
-                  @if (habitacionForm.get('caracteristicas')?.hasError('maxlength')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Máximo 500 caracteres
+                  @if (habitacionForm.get('caracteristicas')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Las características son obligatorias
+                  }
+                  @if (habitacionForm.get('caracteristicas')?.hasError('minlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 10 caracteres
                   }
                 </div>
               </div>
               <div class="d-flex justify-content-between mt-1">
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Información adicional para los huéspedes
+                  <i class="bi bi-info-circle me-1"></i> Incluye detalles específicos de esta habitación
                 </div>
                 <small class="text-body-tertiary">
                   {{ habitacionForm.get('caracteristicas')?.value?.length || 0 }}/500
@@ -279,9 +258,8 @@
             <div class="d-flex gap-2 mt-4 pt-3 border-top">
               <button 
                 type="submit" 
-                class="btn btn-info flex-fill"
+                class="btn btn-success flex-fill"
                 [disabled]="habitacionForm.invalid || guardando"
-                [title]="habitacionForm.invalid ? 'Completa todos los campos requeridos' : ''"
               >
                 @if (guardando) {
                   <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -295,20 +273,12 @@
               <button 
                 type="button" 
                 class="btn btn-outline-secondary"
-                (click)="nuevoRegistro()"
+                (click)="cancelarEdicion()"
                 [disabled]="guardando"
               >
                 <i class="bi bi-x-circle me-1"></i>
                 Cancelar
               </button>
-            </div>
-            
-            <!-- Información de campos requeridos -->
-            <div class="mt-3 pt-2">
-              <small class="text-body-tertiary">
-                <i class="bi bi-asterisk text-danger me-1"></i>
-                Campos marcados con asterisco (*) son obligatorios
-              </small>
             </div>
           </form>
         </div>
@@ -321,7 +291,7 @@
         <div class="card-header bg-white border-0 py-3">
           <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <h5 class="mb-0">
-              <i class="bi bi-list-ul text-info me-2"></i>
+              <i class="bi bi-list-ul text-success me-2"></i>
               Habitaciones Registradas
             </h5>
             <div class="d-flex align-items-center gap-2">
@@ -339,7 +309,7 @@
               <div class="dropdown">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
                         data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="bi bi-funnel-fill me-1"></i> Filtrar por hotel
+                  <i class="bi bi-funnel-fill me-1"></i> Filtrar
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li>
@@ -349,17 +319,15 @@
                   </li>
                   <li><hr class="dropdown-divider"></li>
                   
-                  <!-- Hoteles dinámicos desde BD -->
                   @for (hotel of hoteles; track hotel.id) {
                     <li>
                       <a class="dropdown-item" href="#" (click)="filtrarPorHotel(hotel.id)">
-                        <i class="bi bi-building-fill me-2 text-info"></i> 
+                        <i class="bi bi-building me-2"></i> 
                         {{ hotel.nombre }}
                       </a>
                     </li>
                   }
                   
-                  <!-- Mensaje si no hay hoteles -->
                   @if (hoteles.length === 0 && !cargandoHoteles) {
                     <li>
                       <a class="dropdown-item disabled" href="#">
@@ -370,7 +338,7 @@
                   }
                 </ul>
               </div>
-              <button class="btn btn-sm btn-outline-info" (click)="cargarHabitaciones()" title="Recargar">
+              <button class="btn btn-sm btn-outline-success" (click)="cargarHabitaciones()" title="Recargar">
                 <i class="bi bi-arrow-clockwise"></i>
               </button>
             </div>
@@ -379,90 +347,75 @@
         
         <div class="card-body p-0">
           @if (cargando) {
-            <!-- Estado de carga -->
             <div class="text-center py-5">
-              <div class="spinner-border text-info mb-3" role="status">
+              <div class="spinner-border text-success mb-3" role="status">
                 <span class="visually-hidden">Cargando...</span>
               </div>
               <p class="text-body-secondary">Cargando habitaciones...</p>
             </div>
           } @else if (habitacionesFiltradas.length === 0) {
-            <!-- Estado sin datos -->
             <div class="text-center py-5">
-              <i class="bi bi-door-closed display-1 text-body-tertiary mb-3"></i>
+              <i class="bi bi-door-open display-1 text-body-tertiary mb-3"></i>
               <h5 class="text-body-secondary mb-2">No hay habitaciones registradas</h5>
               <p class="text-body-tertiary mb-0">Comienza agregando una nueva habitación</p>
             </div>
           } @else {
-            <!-- Tabla de habitaciones -->
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th scope="col" class="ps-3" style="width: 25%;">
-                      <i class="bi bi-hash text-info-emphasis me-1"></i>
-                      ID / Características
-                    </th>
-                    <th scope="col" style="width: 20%;">
-                      <i class="bi bi-building-fill text-info-emphasis me-1"></i>
+                    <th scope="col" class="ps-3">
+                      <i class="bi bi-building text-success-emphasis me-1"></i>
                       Hotel
                     </th>
-                    <th scope="col" style="width: 15%;">
-                      <i class="bi bi-tag-fill text-info-emphasis me-1"></i>
+                    <th scope="col">
+                      <i class="bi bi-door-closed text-success-emphasis me-1"></i>
                       Tipo
                     </th>
-                    <th scope="col" class="text-end" style="width: 15%;">
-                      <i class="bi bi-cash text-info-emphasis me-1"></i>
+                    <th scope="col">
+                      <i class="bi bi-cash text-success-emphasis me-1"></i>
                       Precio
                     </th>
-                    <th scope="col" class="text-center" style="width: 15%;">
-                      <i class="bi bi-toggle-on text-info-emphasis me-1"></i>
-                      Disponibilidad
+                    <th scope="col">
+                      <i class="bi bi-check-circle text-success-emphasis me-1"></i>
+                      Estado
                     </th>
-                    <th scope="col" class="text-center pe-3" style="width: 10%;">
-                      <i class="bi bi-gear-fill text-info-emphasis me-1"></i>
+                    <th scope="col" class="text-center pe-3">
+                      <i class="bi bi-gear-fill text-success-emphasis me-1"></i>
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (habitacion of habitacionesFiltradas; track habitacion.id) {
-                    <tr [class.table-info-subtle]="habitacion.id === habitacionEditando?.id">
+                    <tr [class.table-success-subtle]="habitacion.id === habitacionEditando?.id">
                       <td class="ps-3">
                         <div class="d-flex align-items-center">
                           <div class="flex-grow-1">
-                            <strong class="d-block">Habitación #{{ habitacion.id }}</strong>
-                            <small class="text-body-tertiary text-truncate d-block" style="max-width: 200px;">
-                              {{ habitacion.caracteristicas | slice:0:50 }}
-                              @if (habitacion.caracteristicas.length > 50) {
-                                ...
-                              }
-                            </small>
+                            <strong class="d-block">{{ habitacion.hoteles?.nombre }}</strong>
+                            <small class="text-body-tertiary">{{ habitacion.hoteles?.ciudades?.nombre }}</small>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span class="badge text-bg-info-subtle text-info-emphasis">
-                          {{ habitacion.hoteles?.nombre || 'Sin hotel' }}
+                        <span class="badge text-bg-primary-subtle text-primary-emphasis">
+                          {{ habitacion.tiposHabitaciones?.nombre }}
                         </span>
                       </td>
                       <td>
-                        <span class="badge text-bg-secondary-subtle text-secondary-emphasis">
-                          {{ habitacion.tiposHabitaciones?.nombre || 'Sin tipo' }}
-                        </span>
-                      </td>
-                      <td class="text-end">
-                        <span class="fw-semibold">${{ habitacion.precioNoche | number }}</span>
+                        <strong>${{ habitacion.precioNoche | number:'1.2-2' }}</strong>
                         <small class="text-body-tertiary d-block">USD/noche</small>
                       </td>
-                      <td class="text-center">
+                      <td>
                         @if (habitacion.disponibilidad) {
                           <span class="badge text-bg-success-subtle text-success-emphasis">
-                            <i class="bi bi-check-circle-fill me-1"></i> Disponible
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            Disponible
                           </span>
                         } @else {
                           <span class="badge text-bg-danger-subtle text-danger-emphasis">
-                            <i class="bi bi-x-circle-fill me-1"></i> Ocupada
+                            <i class="bi bi-x-circle-fill me-1"></i>
+                            No Disponible
                           </span>
                         }
                       </td>
@@ -470,11 +423,19 @@
                         <div class="btn-group btn-group-sm" role="group">
                           <button 
                             type="button" 
-                            class="btn btn-outline-info"
+                            class="btn btn-outline-success"
                             (click)="editarHabitacion(habitacion)"
                             title="Editar habitación"
                           >
                             <i class="bi bi-pencil-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-info"
+                            (click)="verDetalles(habitacion)"
+                            title="Ver detalles"
+                          >
+                            <i class="bi bi-eye-fill"></i>
                           </button>
                           <button 
                             type="button" 
@@ -483,9 +444,9 @@
                             title="Cambiar disponibilidad"
                           >
                             @if (habitacion.disponibilidad) {
-                              <i class="bi bi-toggle-off"></i>
+                              <i class="bi bi-x-circle-fill"></i>
                             } @else {
-                              <i class="bi bi-toggle-on"></i>
+                              <i class="bi bi-check-circle-fill"></i>
                             }
                           </button>
                           <button 
@@ -506,41 +467,120 @@
           }
         </div>
         
-        <!-- Paginación -->
         @if (habitacionesFiltradas.length > 0 && !cargando) {
           <div class="card-footer bg-white border-0 py-3">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
               <small class="text-body-secondary">
                 Mostrando {{ habitacionesFiltradas.length }} de {{ totalHabitaciones }} habitaciones
                 @if (filtroHotel) {
-                  <span class="badge text-bg-info-subtle text-info-emphasis ms-2">
+                  <span class="badge text-bg-success-subtle text-success-emphasis ms-2">
                     <i class="bi bi-funnel-fill me-1"></i>
-                    Filtrado por hotel
+                    Filtrado
                   </span>
                 }
               </small>
-              <nav aria-label="Navegación de habitaciones">
-                <ul class="pagination pagination-sm mb-0">
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                      <i class="bi bi-chevron-left"></i>
-                    </a>
-                  </li>
-                  <li class="page-item active" aria-current="page">
-                    <span class="page-link">1</span>
-                  </li>
-                  <li class="page-item"><a class="page-link" href="#">2</a></li>
-                  <li class="page-item"><a class="page-link" href="#">3</a></li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">
-                      <i class="bi bi-chevron-right"></i>
-                    </a>
-                  </li>
-                </ul>
-              </nav>
             </div>
           </div>
         }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-success text-white">
+          <h1 class="modal-title fs-5" id="detallesModalLabel">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Detalles de la Habitación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          @if (habitacionDetalles) {
+            <div class="row">
+              <div class="col-md-4 text-center mb-3 mb-md-0">
+                <div class="bg-success-subtle p-4 rounded-3">
+                  <i class="bi bi-door-open display-1 text-success"></i>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="mb-3">
+                  <h3 class="text-success-emphasis mb-1">Habitación #{{ habitacionDetalles.id }}</h3>
+                  <div class="d-flex gap-2">
+                    <span class="badge text-bg-primary-subtle text-primary-emphasis">
+                      {{ habitacionDetalles.tiposHabitaciones?.nombre }}
+                    </span>
+                    @if (habitacionDetalles.disponibilidad) {
+                      <span class="badge text-bg-success-subtle text-success-emphasis">
+                        <i class="bi bi-check-circle-fill me-1"></i> Disponible
+                      </span>
+                    } @else {
+                      <span class="badge text-bg-danger-subtle text-danger-emphasis">
+                        <i class="bi bi-x-circle-fill me-1"></i> No Disponible
+                      </span>
+                    }
+                  </div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Hotel:</strong>
+                    <p class="mt-1">
+                      {{ habitacionDetalles.hoteles?.nombre }} 
+                      <span class="text-body-tertiary">({{ habitacionDetalles.hoteles?.ciudades?.nombre }})</span>
+                    </p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Precio por Noche:</strong>
+                    <p>${{ habitacionDetalles.precioNoche | number:'1.2-2' }} USD</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Tipo de Habitación:</strong>
+                    <p>{{ habitacionDetalles.tiposHabitaciones?.nombre }}</p>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Capacidad:</strong>
+                    <p>{{ habitacionDetalles.tiposHabitaciones?.capacidad }} persona(s)</p>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Características:</strong>
+                    <p class="mt-1">{{ habitacionDetalles.caracteristicas }}</p>
+                  </div>
+                  @if (habitacionDetalles.tiposHabitaciones) {
+                    <div class="col-12">
+                      <strong class="text-body-emphasis">Comodidades del Tipo:</strong>
+                      <div class="d-flex gap-2 mt-2">
+                        @if (habitacionDetalles.tiposHabitaciones.aireAcondicionador) {
+                          <span class="badge text-bg-info-subtle text-info-emphasis p-2">
+                            <i class="bi bi-snow me-1"></i> Aire Acondicionado
+                          </span>
+                        }
+                        @if (habitacionDetalles.tiposHabitaciones.minibar) {
+                          <span class="badge text-bg-warning-subtle text-warning-emphasis p-2">
+                            <i class="bi bi-cup-straw me-1"></i> Minibar
+                          </span>
+                        }
+                        @if (habitacionDetalles.tiposHabitaciones.television) {
+                          <span class="badge text-bg-danger-subtle text-danger-emphasis p-2">
+                            <i class="bi bi-tv me-1"></i> Televisión
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cerrar
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -566,27 +606,41 @@
           <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
             <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
             <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
-            Se eliminarán todos los datos relacionados con esta habitación.
+            Las reservas asociadas a esta habitación podrían verse afectadas.
           </div>
           @if (habitacionAEliminar) {
             <div class="card border-danger-subtle">
               <div class="card-body">
                 <h6 class="card-title text-danger-emphasis mb-3">
-                  <i class="bi bi-trash-fill me-2"></i>
+                  <i class="bi bi-door-open me-2"></i>
                   Habitación a eliminar
                 </h6>
                 <div class="row g-2">
                   <div class="col-12">
-                    <strong class="text-body-emphasis">ID:</strong>
-                    <span class="ms-2">{{ habitacionAEliminar.id }}</span>
-                  </div>
-                  <div class="col-12">
                     <strong class="text-body-emphasis">Hotel:</strong>
-                    <span class="ms-2">{{ habitacionAEliminar.hoteles?.nombre || 'Sin hotel' }}</span>
+                    <span class="ms-2">{{ habitacionAEliminar.hoteles?.nombre }}</span>
                   </div>
                   <div class="col-12">
-                    <strong class="text-body-emphasis">Precio por noche:</strong>
-                    <span class="ms-2">${{ habitacionAEliminar.precioNoche }}</span>
+                    <strong class="text-body-emphasis">Tipo:</strong>
+                    <span class="ms-2">{{ habitacionAEliminar.tiposHabitaciones?.nombre }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Precio:</strong>
+                    <span class="ms-2">${{ habitacionAEliminar.precioNoche | number:'1.2-2' }} USD/noche</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Estado:</strong>
+                    <span class="ms-2">
+                      @if (habitacionAEliminar.disponibilidad) {
+                        <span class="badge text-bg-success-subtle text-success-emphasis">
+                          Disponible
+                        </span>
+                      } @else {
+                        <span class="badge text-bg-danger-subtle text-danger-emphasis">
+                          No Disponible
+                        </span>
+                      }
+                    </span>
                   </div>
                 </div>
               </div>

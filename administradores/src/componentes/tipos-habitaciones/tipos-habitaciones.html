@@ -1,1 +1,585 @@
-<p>tipos-habitaciones works!</p>
+<div class="container-fluid py-4">
+  <!-- Encabezado de la página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 fw-bold mb-0">
+        <i class="bi bi-door-closed-fill text-primary me-2"></i>
+        Gestión de Tipos de Habitaciones
+      </h1>
+      <p class="text-body-secondary mb-0">Administra los tipos de habitaciones disponibles en el sistema</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+        <i class="bi bi-arrow-left me-1"></i> Volver
+      </button>
+      <button class="btn btn-primary" (click)="nuevoRegistro()">
+        <i class="bi bi-plus-circle me-1"></i> Nuevo Tipo
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de información -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card border-primary-subtle border-2">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-door-closed text-primary-emphasis fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Total de Tipos</h5>
+              <p class="card-text display-6 fw-bold text-primary">{{ totalTipos }}</p>
+              <small class="text-body-tertiary">Registrados en el sistema</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-8">
+      <div class="card border-light-subtle shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-lightbulb-fill text-primary-emphasis me-2"></i>
+            Información importante
+          </h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-primary-emphasis me-2"></i>
+              Cada tipo define las características y comodidades de las habitaciones.
+            </li>
+            <li class="mb-2">
+              <i class="bi bi-check-circle-fill text-primary-emphasis me-2"></i>
+              Los tipos de habitación determinan la capacidad, número de camas y servicios.
+            </li>
+            <li>
+              <i class="bi bi-check-circle-fill text-primary-emphasis me-2"></i>
+              Los tipos pueden incluir aire acondicionado, minibar y televisión.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Formulario de tipos de habitaciones -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square text-primary me-2"></i>
+            {{ modoEdicion ? 'Editar Tipo de Habitación' : 'Nuevo Tipo de Habitación' }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="tipoForm" (ngSubmit)="guardarTipo()" novalidate>
+            <!-- Nombre -->
+            <div class="mb-3">
+              <label for="nombre" class="form-label fw-semibold">
+                <i class="bi bi-card-heading me-1 text-primary-emphasis"></i>
+                Nombre del Tipo <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">
+                  <i class="bi bi-tag-fill"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nombre"
+                  formControlName="nombre"
+                  [class.is-valid]="tipoForm.get('nombre')?.valid && tipoForm.get('nombre')?.touched"
+                  [class.is-invalid]="tipoForm.get('nombre')?.invalid && tipoForm.get('nombre')?.touched"
+                  placeholder="Ej: Suite Presidencial, Habitación Doble"
+                >
+                <div class="invalid-feedback">
+                  @if (tipoForm.get('nombre')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El nombre es obligatorio
+                  }
+                  @if (tipoForm.get('nombre')?.hasError('minlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 3 caracteres
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="mb-3">
+              <label for="descripcion" class="form-label fw-semibold">
+                <i class="bi bi-card-text me-1 text-primary-emphasis"></i>
+                Descripción <span class="text-danger">*</span>
+              </label>
+              <div class="input-group has-validation">
+                <span class="input-group-text align-items-start pt-2">
+                  <i class="bi bi-text-paragraph"></i>
+                </span>
+                <textarea 
+                  class="form-control" 
+                  id="descripcion"
+                  formControlName="descripcion"
+                  [class.is-valid]="tipoForm.get('descripcion')?.valid && tipoForm.get('descripcion')?.touched"
+                  [class.is-invalid]="tipoForm.get('descripcion')?.invalid && tipoForm.get('descripcion')?.touched"
+                  rows="3"
+                  placeholder="Describe las características del tipo de habitación..."
+                ></textarea>
+                <div class="invalid-feedback">
+                  @if (tipoForm.get('descripcion')?.hasError('required')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> La descripción es obligatoria
+                  }
+                  @if (tipoForm.get('descripcion')?.hasError('minlength')) {
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 10 caracteres
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Capacidad y Número de Camas -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="capacidad" class="form-label fw-semibold">
+                  <i class="bi bi-people-fill me-1 text-primary-emphasis"></i>
+                  Capacidad <span class="text-danger">*</span>
+                </label>
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-person-plus"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="capacidad"
+                    formControlName="capacidad"
+                    [class.is-valid]="tipoForm.get('capacidad')?.valid && tipoForm.get('capacidad')?.touched"
+                    [class.is-invalid]="tipoForm.get('capacidad')?.invalid && tipoForm.get('capacidad')?.touched"
+                    min="1"
+                    max="10"
+                  >
+                  <span class="input-group-text">personas</span>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> La capacidad debe ser entre 1 y 10 personas
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <label for="numeroCamas" class="form-label fw-semibold">
+                  <i class="bi bi-bed me-1 text-primary-emphasis"></i>
+                  Número de Camas <span class="text-danger">*</span>
+                </label>
+                <div class="input-group has-validation">
+                  <span class="input-group-text">
+                    <i class="bi bi-bed-fill"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="numeroCamas"
+                    formControlName="numeroCamas"
+                    [class.is-valid]="tipoForm.get('numeroCamas')?.valid && tipoForm.get('numeroCamas')?.touched"
+                    [class.is-invalid]="tipoForm.get('numeroCamas')?.invalid && tipoForm.get('numeroCamas')?.touched"
+                    min="1"
+                    max="10"
+                  >
+                  <span class="input-group-text">camas</span>
+                  <div class="invalid-feedback">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> El número de camas debe ser entre 1 y 10
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comodidades -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-wifi me-1 text-primary-emphasis"></i>
+                Comodidades
+              </label>
+              <div class="border rounded-3 p-3">
+                <div class="row g-3">
+                  <!-- Aire Acondicionado -->
+                  <div class="col-md-4">
+                    <div class="form-check form-switch">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        role="switch" 
+                        id="aireAcondicionador"
+                        formControlName="aireAcondicionador"
+                      >
+                      <label class="form-check-label" for="aireAcondicionador">
+                        <i class="bi bi-snow text-primary me-1"></i>
+                        Aire Acondicionado
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- Minibar -->
+                  <div class="col-md-4">
+                    <div class="form-check form-switch">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        role="switch" 
+                        id="minibar"
+                        formControlName="minibar"
+                      >
+                      <label class="form-check-label" for="minibar">
+                        <i class="bi bi-cup-straw text-primary me-1"></i>
+                        Minibar
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- Televisión -->
+                  <div class="col-md-4">
+                    <div class="form-check form-switch">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        role="switch" 
+                        id="television"
+                        formControlName="television"
+                      >
+                      <label class="form-check-label" for="television">
+                        <i class="bi bi-tv text-primary me-1"></i>
+                        Televisión
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i> Activa las comodidades disponibles en este tipo de habitación
+              </div>
+            </div>
+
+            <!-- Botones del formulario -->
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+              <button 
+                type="submit" 
+                class="btn btn-primary flex-fill"
+                [disabled]="tipoForm.invalid || guardando"
+              >
+                @if (guardando) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Guardando...
+                } @else {
+                  <i class="bi bi-save me-1"></i>
+                  {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                }
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="cancelarEdicion()"
+                [disabled]="guardando"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de tipos de habitaciones -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul text-primary me-2"></i>
+              Tipos de Habitaciones Registrados
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="min-width: 200px;">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Buscar tipo..."
+                  (input)="filtrarTipos($event)"
+                >
+              </div>
+              <button class="btn btn-sm btn-outline-primary" (click)="cargarTipos()" title="Recargar">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          @if (cargando) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-body-secondary">Cargando tipos de habitaciones...</p>
+            </div>
+          } @else if (tiposFiltrados.length === 0) {
+            <div class="text-center py-5">
+              <i class="bi bi-door-closed display-1 text-body-tertiary mb-3"></i>
+              <h5 class="text-body-secondary mb-2">No hay tipos de habitaciones registrados</h5>
+              <p class="text-body-tertiary mb-0">Comienza agregando un nuevo tipo</p>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-3">
+                      <i class="bi bi-card-heading text-primary-emphasis me-1"></i>
+                      Tipo
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-people-fill text-primary-emphasis me-1"></i>
+                      Capacidad
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-bed-fill text-primary-emphasis me-1"></i>
+                      Camas
+                    </th>
+                    <th scope="col">
+                      <i class="bi bi-wifi text-primary-emphasis me-1"></i>
+                      Comodidades
+                    </th>
+                    <th scope="col" class="text-center pe-3">
+                      <i class="bi bi-gear-fill text-primary-emphasis me-1"></i>
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (tipo of tiposFiltrados; track tipo.id) {
+                    <tr [class.table-primary-subtle]="tipo.id === tipoEditando?.id">
+                      <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-door-closed text-primary fs-5"></i>
+                          </div>
+                          <div class="flex-grow-1 ms-2">
+                            <strong class="d-block">{{ tipo.nombre }}</strong>
+                            <small class="text-body-tertiary">{{ tipo.descripcion | slice:0:60 }}...</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge text-bg-info-subtle text-info-emphasis">
+                          {{ tipo.capacidad }} persona(s)
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge text-bg-secondary-subtle text-secondary-emphasis">
+                          {{ tipo.numeroCamas }} cama(s)
+                        </span>
+                      </td>
+                      <td>
+                        <div class="d-flex gap-1">
+                          @if (tipo.aireAcondicionador) {
+                            <span class="badge text-bg-success-subtle text-success-emphasis" title="Aire Acondicionado">
+                              <i class="bi bi-snow"></i>
+                            </span>
+                          }
+                          @if (tipo.minibar) {
+                            <span class="badge text-bg-warning-subtle text-warning-emphasis" title="Minibar">
+                              <i class="bi bi-cup-straw"></i>
+                            </span>
+                          }
+                          @if (tipo.television) {
+                            <span class="badge text-bg-danger-subtle text-danger-emphasis" title="Televisión">
+                              <i class="bi bi-tv"></i>
+                            </span>
+                          }
+                          @if (!tipo.aireAcondicionador && !tipo.minibar && !tipo.television) {
+                            <small class="text-body-tertiary">Sin comodidades</small>
+                          }
+                        </div>
+                      </td>
+                      <td class="text-center pe-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-primary"
+                            (click)="editarTipo(tipo)"
+                            title="Editar tipo"
+                          >
+                            <i class="bi bi-pencil-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-info"
+                            (click)="verDetalles(tipo)"
+                            title="Ver detalles"
+                          >
+                            <i class="bi bi-eye-fill"></i>
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarTipo(tipo)"
+                            title="Eliminar tipo"
+                          >
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        
+        @if (tiposFiltrados.length > 0 && !cargando) {
+          <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+              <small class="text-body-secondary">
+                Mostrando {{ tiposFiltrados.length }} de {{ totalTipos }} tipos
+              </small>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-primary text-white">
+          <h1 class="modal-title fs-5" id="detallesModalLabel">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Detalles del Tipo de Habitación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          @if (tipoDetalles) {
+            <div class="row">
+              <div class="col-md-4 text-center mb-3 mb-md-0">
+                <div class="bg-primary-subtle p-4 rounded-3">
+                  <i class="bi bi-door-closed display-1 text-primary"></i>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <h3 class="text-primary-emphasis mb-3">{{ tipoDetalles.nombre }}</h3>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Descripción:</strong>
+                    <p class="mt-1">{{ tipoDetalles.descripcion }}</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Capacidad:</strong>
+                    <p>{{ tipoDetalles.capacidad }} persona(s)</p>
+                  </div>
+                  <div class="col-6">
+                    <strong class="text-body-emphasis">Número de Camas:</strong>
+                    <p>{{ tipoDetalles.numeroCamas }} cama(s)</p>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Comodidades:</strong>
+                    <div class="d-flex gap-2 mt-2">
+                      @if (tipoDetalles.aireAcondicionador) {
+                        <span class="badge text-bg-success-subtle text-success-emphasis p-2">
+                          <i class="bi bi-snow me-1"></i> Aire Acondicionado
+                        </span>
+                      }
+                      @if (tipoDetalles.minibar) {
+                        <span class="badge text-bg-warning-subtle text-warning-emphasis p-2">
+                          <i class="bi bi-cup-straw me-1"></i> Minibar
+                        </span>
+                      }
+                      @if (tipoDetalles.television) {
+                        <span class="badge text-bg-danger-subtle text-danger-emphasis p-2">
+                          <i class="bi bi-tv me-1"></i> Televisión
+                        </span>
+                      }
+                      @if (!tipoDetalles.aireAcondicionador && !tipoDetalles.minibar && !tipoDetalles.television) {
+                        <span class="text-body-tertiary">Sin comodidades especiales</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
+       aria-hidden="true" data-bs-theme="light">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 bg-danger text-white">
+          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <i class="bi bi-trash-fill text-danger display-4"></i>
+          </div>
+          <h5 class="text-center mb-3">¿Estás seguro de eliminar este tipo de habitación?</h5>
+          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
+            Las habitaciones asociadas a este tipo podrían verse afectadas.
+          </div>
+          @if (tipoAEliminar) {
+            <div class="card border-danger-subtle">
+              <div class="card-body">
+                <h6 class="card-title text-danger-emphasis mb-3">
+                  <i class="bi bi-door-closed me-2"></i>
+                  Tipo de Habitación a eliminar
+                </h6>
+                <div class="row g-2">
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Nombre:</strong>
+                    <span class="ms-2">{{ tipoAEliminar.nombre }}</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Capacidad:</strong>
+                    <span class="ms-2">{{ tipoAEliminar.capacidad }} persona(s)</span>
+                  </div>
+                  <div class="col-12">
+                    <strong class="text-body-emphasis">Camas:</strong>
+                    <span class="ms-2">{{ tipoAEliminar.numeroCamas }} cama(s)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash-fill me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
