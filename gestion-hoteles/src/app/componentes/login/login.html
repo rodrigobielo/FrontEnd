@@ -1,136 +1,72 @@
-<div class="p-4 p-md-5">
-  <div class="text-center mb-4">
-    <div class="mb-3">
-      <i class="bi bi-person-circle text-primary display-4"></i>
-    </div>
-    <h2 class="fw-bold mb-2" style="color: #1a365d;">Iniciar Sesión</h2>
-    <p class="text-muted mb-0">Ingrese sus credenciales para acceder a su cuenta</p>
-  </div>
-
-  <!-- Mensajes de alerta -->
-  <div *ngIf="mensaje" class="alert alert-{{tipoMensaje}} alert-dismissible fade show mb-4" role="alert">
-    <div class="d-flex align-items-center">
-      <i class="bi" 
-         [class.bi-check-circle-fill]="tipoMensaje === 'success'" 
-         [class.bi-exclamation-triangle-fill]="tipoMensaje === 'danger'"
-         class="me-2"></i>
-      <span class="flex-grow-1">{{ mensaje }}</span>
-      <button type="button" class="btn-close" (click)="mensaje = ''"></button>
-    </div>
-  </div>
-
-  <!-- Formulario de login -->
-  <form (ngSubmit)="onSubmit()" #loginForm="ngForm" novalidate class="mb-4">
-    <!-- Campo Usuario -->
-    <div class="mb-3">
-      <label for="usuario" class="form-label fw-semibold">
-        <i class="bi bi-person-fill me-2 text-primary"></i>Usuario
-      </label>
-      <div class="input-group input-group-lg">
-        <span class="input-group-text bg-white border-end-0">
-          <i class="bi bi-person text-muted"></i>
-        </span>
-        <input type="text" 
-               class="form-control form-control-lg border-start-0 ps-0" 
-               id="usuario" 
-               name="usuario" 
-               [(ngModel)]="usuario" 
-               placeholder="Ingrese su usuario o email" 
-               required
-               [disabled]="cargando"
-               autocomplete="username">
-      </div>
-      <div class="form-text text-muted mt-1">
-        <small><i class="bi bi-info-circle me-1"></i>Use su nombre de usuario o email registrado</small>
+<div class="container-fluid p-0">
+  <div class="row g-0">
+    <!-- Columna izquierda con imagen -->
+    <div class="col-md-6 d-none d-md-block">
+      <div class="login-image h-100" 
+           style="background: linear-gradient(rgba(26, 54, 93, 0.8), rgba(26, 54, 93, 0.8)), url('https://images.unsplash.com/photo-1500835556837-99ac94a94552?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'); 
+                  background-size: cover; background-position: center;">
+        <div class="d-flex flex-column justify-content-center align-items-center h-100 text-white p-5">
+          <h2 class="fw-bold mb-4">Bienvenido de nuevo</h2>
+          <p class="text-center">Descubre las maravillas de Guinea Ecuatorial. Inicia sesión para planificar tu próximo viaje.</p>
+        </div>
       </div>
     </div>
 
-    <!-- Campo Contraseña -->
-    <div class="mb-3">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <label for="password" class="form-label fw-semibold mb-0">
-          <i class="bi bi-key-fill me-2 text-primary"></i>Contraseña
-        </label>
-        <a href="#" class="text-decoration-none small text-primary fw-medium">
-          <i class="bi bi-question-circle me-1"></i>¿Olvidó su contraseña?
-        </a>
-      </div>
-      <div class="input-group input-group-lg">
-        <span class="input-group-text bg-white border-end-0">
-          <i class="bi bi-lock text-muted"></i>
-        </span>
-        <input [type]="mostrarPassword ? 'text' : 'password'" 
-               class="form-control form-control-lg border-start-0 ps-0" 
-               id="password" 
-               name="password" 
-               [(ngModel)]="password" 
-               placeholder="Ingrese su contraseña" 
-               required
-               [disabled]="cargando"
-               autocomplete="current-password">
-        <button class="btn btn-outline-secondary border-start-0" 
-                type="button" 
-                (click)="toggleMostrarPassword()"
-                [disabled]="cargando">
-          <i class="bi" 
-             [class.bi-eye]="!mostrarPassword" 
-             [class.bi-eye-slash]="mostrarPassword"></i>
-        </button>
-      </div>
-      <div class="form-text text-muted mt-1">
-        <small>
-          <i class="bi bi-shield-check me-1"></i>
-          La contraseña debe tener al menos 8 caracteres
-        </small>
+    <!-- Columna derecha con formulario -->
+    <div class="col-md-6 d-flex align-items-center">
+      <div class="p-4 p-md-5 w-100">
+        <h3 class="fw-bold mb-4" style="color: #1a365d;">Iniciar Sesión</h3>
+
+        <!-- Mensaje de error -->
+        @if (mensajeError) {
+          <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ mensajeError }}
+            <button type="button" class="btn-close" (click)="mensajeError = ''"></button>
+          </div>
+        }
+
+        <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" 
+                   [(ngModel)]="credentials.email" name="email" 
+                   placeholder="tu@email.com" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="contrasena" class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="contrasena" 
+                   [(ngModel)]="credentials.contrasena" name="contrasena" 
+                   placeholder="Tu contraseña" required>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe">
+              <label class="form-check-label" for="rememberMe">Recordarme</label>
+            </div>
+            <a href="#" class="text-decoration-none" style="color: #1a365d;">¿Olvidaste tu contraseña?</a>
+          </div>
+
+          <button type="submit" class="btn w-100 py-2 mb-3 fw-medium" 
+                  [disabled]="loginForm.invalid || cargando"
+                  style="background-color: #1a365d; color: white;">
+            @if (cargando) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Autenticando...
+            } @else {
+              Iniciar Sesión
+            }
+          </button>
+
+          <div class="text-center mb-4">
+            <span class="text-muted">¿No tienes una cuenta?</span>
+            <button type="button" class="btn btn-link p-0 ms-1" (click)="onIrARegistro()" style="color: #1a365d;">
+              Regístrate aquí
+            </button>
+          </div>
+        </form>
       </div>
     </div>
-
-    <!-- Recordar sesión -->
-    <div class="mb-4 form-check">
-      <input type="checkbox" class="form-check-input" id="recordar">
-      <label class="form-check-label text-muted" for="recordar">
-        <i class="bi bi-check2-square me-1"></i>
-        Recordar mi sesión en este dispositivo
-      </label>
-    </div>
-
-    <!-- Botones de acción -->
-    <div class="d-grid gap-2 mb-4">
-      <button type="submit" 
-              class="btn btn-primary btn-lg py-3 fw-semibold"
-              [disabled]="cargando || !usuario || !password">
-        <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2" role="status"></span>
-        <i *ngIf="!cargando" class="bi bi-box-arrow-in-right me-2"></i>
-        {{ cargando ? 'Autenticando...' : 'Iniciar Sesión' }}
-      </button>
-
-      <button type="button" 
-              class="btn btn-outline-secondary btn-lg py-3"
-              (click)="limpiarFormulario()"
-              [disabled]="cargando">
-        <i class="bi bi-x-circle me-2"></i>Limpiar Formulario
-      </button>
-    </div>
-  </form>
-
-  <!-- Enlace a registro -->
-  <div class="text-center pt-3 border-top">
-    <p class="text-muted mb-2">
-      ¿No tiene una cuenta aún?
-    </p>
-    <button type="button" class="btn btn-outline-primary w-100 py-2 fw-medium" (click)="onIrARegistro()">
-      <i class="bi bi-person-plus me-2"></i>Crear Nueva Cuenta
-    </button>
-  </div>
-
-  <!-- Footer -->
-  <div class="text-center mt-4">
-    <p class="small text-muted">
-      <i class="bi bi-shield-check me-1"></i>
-      Su información está protegida y encriptada. Al iniciar sesión, acepta nuestros 
-      <a href="#" class="text-decoration-none fw-medium">Términos de Servicio</a> 
-      y 
-      <a href="#" class="text-decoration-none fw-medium">Política de Privacidad</a>
-    </p>
   </div>
 </div>
