@@ -26,7 +26,7 @@ export class HabitacionService {
 
   // Crear nueva habitación
   createHabitacion(habitacionData: any): Observable<Habitacion> {
-    return this.http.post<Habitacion>(`${this.apiUrl}/Crear`, habitacionData).pipe(
+    return this.http.post<Habitacion>(`${this.apiUrl}/guardar`, habitacionData).pipe(
       catchError(this.handleError)
     );
   }

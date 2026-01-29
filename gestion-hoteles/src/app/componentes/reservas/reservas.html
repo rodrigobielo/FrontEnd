@@ -1,423 +1,160 @@
-<div class="container-fluid py-4">
+<div class="container-fluid min-vh-100 d-flex flex-column">
   <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">
-      <i class="bi bi-calendar3 me-2"></i>
-      Mis Reservas
-    </h2>
-    <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#nuevaReservaModal">
-      <i class="bi bi-plus-circle me-2"></i>
-      Nueva Reserva
-    </button>
-  </div>
-
-  <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Estado</label>
-          <select class="form-select" [(ngModel)]="filtroEstado">
-            <option value="">Todos</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="confirmada">Confirmadas</option>
-            <option value="cancelada">Canceladas</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Desde</label>
-          <input type="date" class="form-control" [(ngModel)]="filtroDesde">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Hasta</label>
-          <input type="date" class="form-control" [(ngModel)]="filtroHasta">
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-          <button class="btn btn-outline-primary w-100" (click)="filtrarReservas()">Filtrar</button>
-        </div>
+  <nav class="navbar navbar-light bg-light shadow-sm">
+    <div class="container-fluid">
+      <button class="btn btn-outline-primary" (click)="volverAInicio()">
+        <i class="bi bi-arrow-left"></i> Volver al Inicio
+      </button>
+      <h3 class="mb-0">Mis Reservas</h3>
+      <div>
+        <span class="badge bg-info me-2">
+          <i class="bi bi-currency-exchange me-1"></i>Precios en FCFA
+        </span>
+        <button class="btn btn-success btn-sm" (click)="irANuevaReserva()">
+          <i class="bi bi-plus-circle me-1"></i>Nueva Reserva
+        </button>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <!-- Tabs -->
-  <ul class="nav nav-tabs mb-4" id="reservasTab" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="pendientes-tab" data-bs-toggle="tab" data-bs-target="#pendientes" type="button" role="tab">
-        <i class="bi bi-clock me-1"></i> Pendientes (3)
+  <!-- Contenido principal -->
+  <div class="container py-4 flex-grow-1">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="mb-0">Mis Reservas</h1>
+      <button class="btn btn-primary" (click)="irANuevaReserva()">
+        <i class="bi bi-plus-lg me-1"></i>Nueva Reserva
       </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="confirmadas-tab" data-bs-toggle="tab" data-bs-target="#confirmadas" type="button" role="tab">
-        <i class="bi bi-check-circle me-1"></i> Confirmadas (5)
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="canceladas-tab" data-bs-toggle="tab" data-bs-target="#canceladas" type="button" role="tab">
-        <i class="bi bi-x-circle me-1"></i> Canceladas (2)
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">
-        <i class="bi bi-archive me-1"></i> Historial
-      </button>
-    </li>
-  </ul>
+    </div>
 
-  <!-- Contenido de Tabs -->
-  <div class="tab-content" id="reservasTabContent">
-    <!-- Pendientes -->
-    <div class="tab-pane fade show active" id="pendientes" role="tabpanel">
-      <div class="row">
-        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let reserva of reservas.pendientes">
-          <div class="card h-100 border-warning">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
+    <!-- Estado de carga -->
+    <div *ngIf="cargando" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-3">Cargando tus reservas...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !cargando" class="alert alert-danger text-center">
+      <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+      <button class="btn btn-sm btn-outline-danger ms-3" (click)="cargarReservas()">
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Si no hay reservas -->
+    <div *ngIf="!cargando && !error && reservas.length === 0" class="card text-center p-5 shadow-sm">
+      <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+      <h4 class="mb-3">No tienes reservas</h4>
+      <p class="text-muted mb-4">Comienza creando tu primera reserva.</p>
+      <div class="d-flex justify-content-center gap-3">
+        <button class="btn btn-primary" (click)="irANuevaReserva()">
+          <i class="bi bi-plus-circle me-2"></i>Crear Primera Reserva
+        </button>
+        <button class="btn btn-outline-secondary" (click)="volverAInicio()">
+          <i class="bi bi-search me-2"></i>Explorar Hoteles
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista de reservas -->
+    <div *ngIf="!cargando && reservas.length > 0" class="row">
+      <div *ngFor="let reserva of reservas" class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Reserva #{{ reserva.id }}</h5>
+              <span [class]="getEstadoClass(reserva.estadoReserva)">
+                {{ getEstadoText(reserva.estadoReserva) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <!-- Información del hotel -->
+            <div *ngIf="reserva.hotel" class="mb-3">
+              <h6 class="fw-bold">
+                <i class="bi bi-building me-2"></i>{{ reserva.hotel.nombre }}
+              </h6>
+              <p class="text-muted small mb-2">
+                <i class="bi bi-geo-alt me-1"></i>{{ reserva.hotel.ubicacion }}
+              </p>
+            </div>
+
+            <!-- Fechas de la reserva -->
+            <div class="mb-3">
+              <h6 class="fw-bold">Fechas:</h6>
+              <div class="d-flex justify-content-between">
                 <div>
-                  <span class="badge bg-warning text-dark mb-2">Pendiente</span>
-                  <h5 class="card-title mb-1">{{reserva.hotel}}</h5>
-                  <p class="text-muted mb-0">{{reserva.tipo}}</p>
+                  <small class="text-muted">Check-in</small>
+                  <p class="mb-0 fw-semibold">{{ formatearFecha(reserva.fechaEntrada) }}</p>
                 </div>
-                <i class="bi bi-clock text-warning fs-4"></i>
-              </div>
-              
-              <div class="reservation-details mb-3">
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-calendar me-2 text-primary"></i>
-                  <small><strong>Check-in:</strong> {{reserva.checkIn | date:'dd MMM yyyy'}}</small>
+                <div class="text-center">
+                  <i class="bi bi-arrow-right text-primary"></i>
+                  <p class="small text-muted mb-0">{{ calcularNoches(reserva.fechaEntrada, reserva.fechaSalida) }} noches</p>
                 </div>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-calendar me-2 text-primary"></i>
-                  <small><strong>Check-out:</strong> {{reserva.checkOut | date:'dd MMM yyyy'}}</small>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-person me-2 text-primary"></i>
-                  <small><strong>Huéspedes:</strong> {{reserva.huespedes}}</small>
-                </div>
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-cash me-2 text-primary"></i>
-                  <small><strong>Total:</strong> €{{reserva.total | number:'1.2-2'}}</small>
+                <div class="text-end">
+                  <small class="text-muted">Check-out</small>
+                  <p class="mb-0 fw-semibold">{{ formatearFecha(reserva.fechaSalida) }}</p>
                 </div>
               </div>
-              
-              <div class="reservation-code mb-3">
-                <small class="text-muted">Código: {{reserva.codigo}}</small>
+            </div>
+
+            <!-- Detalles de la reserva -->
+            <div class="mb-3">
+              <h6 class="fw-bold">Detalles:</h6>
+              <div class="row small">
+                <div class="col-6">
+                  <p class="mb-1">
+                    <i class="bi bi-person me-1"></i>
+                    Huéspedes: {{ reserva.numeroHuespedes }}
+                  </p>
+                </div>
+                <div class="col-6 text-end">
+                  <p *ngIf="reserva.habitacion" class="mb-1">
+                    <i class="bi bi-door-closed me-1"></i>
+                    {{ reserva.habitacion.tipo }}
+                  </p>
+                </div>
               </div>
-              
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-success flex-fill d-flex align-items-center justify-content-center" 
-                        (click)="confirmarReserva(reserva.id)">
-                  <i class="bi bi-check-circle me-1"></i> Confirmar
-                </button>
-                <button class="btn btn-sm btn-outline-danger flex-fill d-flex align-items-center justify-content-center"
-                        (click)="cancelarReserva(reserva.id)">
-                  <i class="bi bi-x-circle me-1"></i> Cancelar
-                </button>
+              <div *ngIf="reserva.pedidoEspecial">
+                <p class="mb-1 small">
+                  <i class="bi bi-chat-text me-1"></i>
+                  {{ reserva.pedidoEspecial }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Precio total -->
+            <div class="border-top pt-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted">Total a pagar</small>
+                  <h4 class="text-primary mb-0">{{ formatearPrecio(reserva.precioTotal) }}</h4>
+                </div>
+                <div>
+                  <small class="text-muted d-block">Fecha de reserva</small>
+                  <small>{{ formatearFecha(reserva.fechaReserva || '') }}</small>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Confirmadas -->
-    <div class="tab-pane fade" id="confirmadas" role="tabpanel">
-      <div class="row">
-        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let reserva of reservas.confirmadas">
-          <div class="card h-100 border-success">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <span class="badge bg-success mb-2">Confirmada</span>
-                  <h5 class="card-title mb-1">{{reserva.hotel}}</h5>
-                  <p class="text-muted mb-0">{{reserva.tipo}}</p>
-                </div>
-                <i class="bi bi-check-circle text-success fs-4"></i>
-              </div>
-              
-              <div class="reservation-details mb-3">
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-calendar me-2 text-primary"></i>
-                  <small><strong>Check-in:</strong> {{reserva.checkIn | date:'dd MMM yyyy'}}</small>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-calendar me-2 text-primary"></i>
-                  <small><strong>Check-out:</strong> {{reserva.checkOut | date:'dd MMM yyyy'}}</small>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-person me-2 text-primary"></i>
-                  <small><strong>Huéspedes:</strong> {{reserva.huespedes}}</small>
-                </div>
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-cash me-2 text-primary"></i>
-                  <small><strong>Total:</strong> €{{reserva.total | number:'1.2-2'}}</small>
-                </div>
-              </div>
-              
-              <div class="reservation-code mb-3">
-                <small class="text-muted">Código: {{reserva.codigo}}</small>
-              </div>
-              
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary flex-fill d-flex align-items-center justify-content-center">
-                  <i class="bi bi-printer me-1"></i> Imprimir
-                </button>
-                <button class="btn btn-sm btn-outline-warning flex-fill d-flex align-items-center justify-content-center">
-                  <i class="bi bi-pencil me-1"></i> Modificar
-                </button>
-              </div>
+          <!-- Botones de acción -->
+          <div class="card-footer bg-transparent border-top-0">
+            <div class="d-flex gap-2">
+              <button *ngIf="reserva.estadoReserva === 'PENDIENTE'" 
+                class="btn btn-outline-danger btn-sm flex-grow-1"
+                (click)="cancelarReserva(reserva.id!)">
+                <i class="bi bi-x-circle me-1"></i>Cancelar Reserva
+              </button>
+              <button *ngIf="reserva.estadoReserva === 'CANCELADA'" 
+                class="btn btn-outline-secondary btn-sm flex-grow-1"
+                (click)="eliminarReserva(reserva.id!)">
+                <i class="bi bi-trash me-1"></i>Eliminar
+              </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Canceladas -->
-    <div class="tab-pane fade" id="canceladas" role="tabpanel">
-      <div class="row">
-        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let reserva of reservas.canceladas">
-          <div class="card h-100 border-danger">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <span class="badge bg-danger mb-2">Cancelada</span>
-                  <h5 class="card-title mb-1">{{reserva.hotel}}</h5>
-                  <p class="text-muted mb-0">{{reserva.tipo}}</p>
-                </div>
-                <i class="bi bi-x-circle text-danger fs-4"></i>
-              </div>
-              
-              <div class="reservation-details mb-3">
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-calendar me-2 text-primary"></i>
-                  <small><strong>Check-in:</strong> {{reserva.checkIn | date:'dd MMM yyyy'}}</small>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-calendar me-2 text-primary"></i>
-                  <small><strong>Check-out:</strong> {{reserva.checkOut | date:'dd MMM yyyy'}}</small>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="bi bi-person me-2 text-primary"></i>
-                  <small><strong>Huéspedes:</strong> {{reserva.huespedes}}</small>
-                </div>
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-cash me-2 text-primary"></i>
-                  <small><strong>Total:</strong> €{{reserva.total | number:'1.2-2'}}</small>
-                </div>
-              </div>
-              
-              <div class="reservation-code mb-3">
-                <small class="text-muted">Código: {{reserva.codigo}}</small>
-              </div>
-              
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary flex-fill d-flex align-items-center justify-content-center">
-                  <i class="bi bi-arrow-repeat me-1"></i> Reagendar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Historial -->
-    <div class="tab-pane fade" id="historial" role="tabpanel">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Reserva</th>
-              <th>Hotel</th>
-              <th>Fechas</th>
-              <th>Estado</th>
-              <th>Total</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>RES-MAL-2024-00123</td>
-              <td>Hotel Plaza Malabo</td>
-              <td>15-20 Mar 2024</td>
-              <td><span class="badge bg-success">Confirmada</span></td>
-              <td>€450.00</td>
-              <td>
-                <button class="btn btn-sm btn-outline-primary">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de nueva reserva -->
-  <div class="modal fade" id="nuevaReservaModal" tabindex="-1" aria-labelledby="nuevaReservaModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="nuevaReservaModalLabel">
-            <i class="bi bi-plus-circle me-2"></i>
-            Nueva Reserva de Hotel
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form #reservaForm="ngForm" (ngSubmit)="crearReserva()">
-            <div class="row g-3">
-              <!-- Hotel -->
-              <div class="col-md-6">
-                <label for="hotel" class="form-label">
-                  <i class="bi bi-building me-1"></i>Hotel
-                </label>
-                <select class="form-select" id="hotel" name="hotel" [(ngModel)]="nuevaReserva.hotel" required>
-                  <option value="" disabled selected>Seleccione un hotel</option>
-                  <option value="Hotel Plaza Malabo">Hotel Plaza Malabo</option>
-                  <option value="Hotel Bahía Bata">Hotel Bahía Bata</option>
-                  <option value="Hotel Mongomo Palace">Hotel Mongomo Palace</option>
-                  <option value="Hotel Utonde">Hotel Utonde</option>
-                  <option value="Hotel Continental">Hotel Continental</option>
-                </select>
-              </div>
-
-              <!-- Tipo de Habitación -->
-              <div class="col-md-6">
-                <label for="tipoHabitacion" class="form-label">
-                  <i class="bi bi-door-open me-1"></i>Tipo de Habitación
-                </label>
-                <select class="form-select" id="tipoHabitacion" name="tipoHabitacion" [(ngModel)]="nuevaReserva.tipo" required>
-                  <option value="" disabled selected>Seleccione tipo</option>
-                  <option value="Habitación Standard">Habitación Standard</option>
-                  <option value="Habitación Deluxe">Habitación Deluxe</option>
-                  <option value="Suite Ejecutiva">Suite Ejecutiva</option>
-                  <option value="Suite Presidencial">Suite Presidencial</option>
-                </select>
-              </div>
-
-              <!-- Fechas -->
-              <div class="col-md-6">
-                <label for="checkIn" class="form-label">
-                  <i class="bi bi-calendar-check me-1"></i>Fecha Check-in
-                </label>
-                <input type="date" class="form-control" id="checkIn" name="checkIn" 
-                       [(ngModel)]="nuevaReserva.checkIn" required
-                       [min]="minDate">
-              </div>
-
-              <div class="col-md-6">
-                <label for="checkOut" class="form-label">
-                  <i class="bi bi-calendar-x me-1"></i>Fecha Check-out
-                </label>
-                <input type="date" class="form-control" id="checkOut" name="checkOut" 
-                       [(ngModel)]="nuevaReserva.checkOut" required
-                       [min]="nuevaReserva.checkIn || minDate">
-              </div>
-
-              <!-- Huéspedes -->
-              <div class="col-md-4">
-                <label for="adultos" class="form-label">
-                  <i class="bi bi-person me-1"></i>Adultos
-                </label>
-                <input type="number" class="form-control" id="adultos" name="adultos" 
-                       [(ngModel)]="nuevaReserva.adultos" min="1" max="4" value="2" required>
-                <small class="text-muted">Máximo 4 por habitación</small>
-              </div>
-
-              <div class="col-md-4">
-                <label for="ninos" class="form-label">
-                  <i class="bi bi-person me-1"></i>Niños
-                </label>
-                <input type="number" class="form-control" id="ninos" name="ninos" 
-                       [(ngModel)]="nuevaReserva.ninos" min="0" max="3" value="0">
-                <small class="text-muted">Edad 0-12 años</small>
-              </div>
-
-              <div class="col-md-4">
-                <label for="noches" class="form-label">
-                  <i class="bi bi-moon me-1"></i>Noches
-                </label>
-                <input type="number" class="form-control" id="noches" name="noches" 
-                       [(ngModel)]="nuevaReserva.noches" min="1" max="30" readonly>
-                <small class="text-muted">Cálculo automático</small>
-              </div>
-
-              <!-- Servicios Adicionales -->
-              <div class="col-12">
-                <label class="form-label">
-                  <i class="bi bi-list-check me-1"></i>Servicios Adicionales
-                </label>
-                <div class="form-check mb-2">
-                  <input class="form-check-input" type="checkbox" id="desayuno" 
-                         [(ngModel)]="nuevaReserva.servicios.desayuno" name="desayuno">
-                  <label class="form-check-label" for="desayuno">
-                    Desayuno incluido (+€25 por persona/día)
-                  </label>
-                </div>
-                <div class="form-check mb-2">
-                  <input class="form-check-input" type="checkbox" id="parking" 
-                         [(ngModel)]="nuevaReserva.servicios.parking" name="parking">
-                  <label class="form-check-label" for="parking">
-                    Parking privado (+€15 por día)
-                  </label>
-                </div>
-                <div class="form-check mb-2">
-                  <input class="form-check-input" type="checkbox" id="wifi" 
-                         [(ngModel)]="nuevaReserva.servicios.wifi" name="wifi">
-                  <label class="form-check-label" for="wifi">
-                    WiFi Premium (+€10 por estancia)
-                  </label>
-                </div>
-              </div>
-
-              <!-- Comentarios -->
-              <div class="col-12">
-                <label for="comentarios" class="form-label">
-                  <i class="bi bi-chat-text me-1"></i>Comentarios Adicionales
-                </label>
-                <textarea class="form-control" id="comentarios" name="comentarios" 
-                          [(ngModel)]="nuevaReserva.comentarios" rows="3"
-                          placeholder="Solicitudes especiales, preferencias, etc."></textarea>
-              </div>
-
-              <!-- Resumen del Precio -->
-              <div class="col-12">
-                <div class="card">
-                  <div class="card-header bg-light">
-                    <h6 class="mb-0">
-                      <i class="bi bi-calculator me-2"></i>Resumen del Precio
-                    </h6>
-                  </div>
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                      <span>Habitación x {{nuevaReserva.noches}} noches</span>
-                      <strong>€{{calcularTotal() | number:'1.2-2'}}</strong>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                      <span>Servicios adicionales</span>
-                      <strong>€{{calcularServicios() | number:'1.2-2'}}</strong>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between fs-5">
-                      <span class="fw-bold">Total</span>
-                      <strong class="text-primary">€{{(calcularTotal() + calcularServicios()) | number:'1.2-2'}}</strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle me-1"></i>Cancelar
-          </button>
-          <button type="button" class="btn btn-primary" 
-                  (click)="crearReserva()"
-                  [disabled]="!reservaForm.form.valid">
-            <i class="bi bi-check-circle me-1"></i>Confirmar Reserva
-          </button>
         </div>
       </div>
     </div>

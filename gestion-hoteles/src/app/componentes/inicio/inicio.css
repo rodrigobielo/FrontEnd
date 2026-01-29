@@ -1,71 +1,78 @@
-/* Estilos para el componente Inicio */
-:host {
-  display: block;
-  background-color: #f8f9fa;
+/* Estilos para que ocupe toda la pantalla */
+html, body {
+  height: 100%;
+  margin: 0;
 }
 
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Contenedor principal que ocupa toda la altura */
+app-inicio {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-.hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+/* Header fijo */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.avatar-circle {
-  transition: all 0.3s ease;
-}
-
-.avatar-circle:hover {
-  transform: scale(1.1);
-}
-
-.carousel-item img {
-  filter: brightness(0.8);
-}
-
-.carousel-caption {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
+/* Hero section ajustable */
+.hero-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px); /* Resta la altura del navbar */
+  background: linear-gradient(rgba(26, 54, 93, 0.9), rgba(26, 54, 93, 0.7)), 
+              url('https://images.unsplash.com/photo-1500835556837-99ac94a94552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80');
+  background-size: cover;
+  background-position: center;
   padding: 20px;
 }
 
-/* Animaciones para las tarjetas */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Contenido responsive */
+.hero-content {
+  max-width: 800px;
+  text-align: center;
 }
 
+/* Card responsive */
 .card {
-  animation: fadeInUp 0.5s ease forwards;
+  transition: transform 0.3s;
 }
 
-.card:nth-child(2) {
-  animation-delay: 0.1s;
+.card:hover {
+  transform: translateY(-5px);
 }
 
-.card:nth-child(3) {
-  animation-delay: 0.2s;
+/* Footer fijo en la parte inferior */
+.footer {
+  margin-top: auto;
+  background-color: #1a365d;
 }
 
-/* Responsive */
+/* Media queries para diferentes tamaños de pantalla */
 @media (max-width: 768px) {
-  .carousel-item img {
-    height: 300px !important;
+  .hero-section {
+    min-height: calc(100vh - 56px);
+    padding: 15px;
   }
   
-  .carousel-caption h3 {
-    font-size: 1.2rem;
+  .hero-content h1 {
+    font-size: 2rem;
   }
   
-  .carousel-caption p {
-    font-size: 0.9rem;
+  .hero-content p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-section {
+    min-height: calc(100vh - 56px);
+  }
+  
+  .hero-content h1 {
+    font-size: 1.75rem;
   }
 }

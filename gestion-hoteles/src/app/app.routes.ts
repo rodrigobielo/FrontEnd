@@ -30,7 +30,7 @@ const redirectIfAuthenticated = () => {
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'inicio',
     pathMatch: 'full'
   },
   {
@@ -45,8 +45,7 @@ export const routes: Routes = [
   },
   {
     path: 'inicio',
-    loadComponent: () => import('./componentes/inicio/inicio').then(m => m.Inicio),
-    canActivate: [authGuard]
+    loadComponent: () => import('./componentes/inicio/inicio').then(m => m.Inicio)
   },
   {
     path: 'hoteles',
@@ -60,7 +59,12 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'nueva-reserva',
+    loadComponent: () => import('./componentes/nueva-reserva/nueva-reserva').then(m => m.NuevaReserva),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
-    redirectTo: 'login'
+    redirectTo: 'inicio'
   }
 ];

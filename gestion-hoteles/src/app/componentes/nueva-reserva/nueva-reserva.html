@@ -1,0 +1,300 @@
+<div class="container-fluid min-vh-100 d-flex flex-column">
+  <!-- Header -->
+  <nav class="navbar navbar-light bg-light shadow-sm">
+    <div class="container-fluid">
+      <button class="btn btn-outline-primary" (click)="volverAReservas()">
+        <i class="bi bi-arrow-left"></i> Volver a Reservas
+      </button>
+      <h3 class="mb-0">Nueva Reserva</h3>
+      <span class="badge bg-info">
+        <i class="bi bi-currency-exchange me-1"></i>Precios en FCFA
+      </span>
+    </div>
+  </nav>
+
+  <!-- Contenido principal -->
+  <div class="container py-4 flex-grow-1">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <!-- Mensajes -->
+        <div *ngIf="mensajeExito" class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="bi bi-check-circle me-2"></i>
+          <div>
+            <strong>¡Reserva creada exitosamente!</strong>
+            <p class="mb-1">Código de reserva: <strong>{{ codigoReservaGenerado }}</strong></p>
+            <p class="mb-0">Serás redirigido en unos segundos...</p>
+          </div>
+        </div>
+
+        <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+          <button type="button" class="btn-close" (click)="error = ''"></button>
+        </div>
+
+        <!-- Formulario -->
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-calendar-plus me-2"></i>Crear Nueva Reserva
+            </h5>
+          </div>
+          
+          <div class="card-body">
+            <form (ngSubmit)="onSubmit()" #reservaForm="ngForm">
+              <!-- Información del usuario -->
+              <div *ngIf="usuario" class="alert alert-info mb-4">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-person-circle me-2 fs-4"></i>
+                  <div>
+                    <strong>Reservando como:</strong> {{usuario.nombre}} {{usuario.apellidos}}
+                    <div class="small">Email: {{usuario.email}}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Código de reserva -->
+              <div class="alert alert-secondary mb-4">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-ticket-perforated me-2"></i>
+                  <div>
+                    <strong>Código de reserva:</strong> 
+                    <span class="badge bg-dark ms-2">{{ codigoReservaGenerado }}</span>
+                    <small class="d-block text-muted mt-1">Guarda este código para consultar tu reserva</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fechas -->
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="fechaEntrada" class="form-label fw-semibold">
+                      <i class="bi bi-calendar-check me-1"></i>Fecha de Entrada
+                    </label>
+                    <input 
+                      type="date" 
+                      class="form-control" 
+                      id="fechaEntrada"
+                      [(ngModel)]="nuevaReserva.fechaEntrada"
+                      name="fechaEntrada"
+                      [min]="hoy()"
+                      (change)="calcularPrecioTotal()"
+                      required>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="fechaSalida" class="form-label fw-semibold">
+                      <i class="bi bi-calendar-x me-1"></i>Fecha de Salida
+                    </label>
+                    <input 
+                      type="date" 
+                      class="form-control" 
+                      id="fechaSalida"
+                      [(ngModel)]="nuevaReserva.fechaSalida"
+                      name="fechaSalida"
+                      [min]="fechaMinimaSalida()"
+                      (change)="calcularPrecioTotal()"
+                      required>
+                  </div>
+                </div>
+                
+                <!-- Información de noches -->
+                <div class="col-12">
+                  <div class="alert alert-info py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span>
+                        <i class="bi bi-moon me-1"></i>
+                        Noches: <strong>{{ calcularNoches() }}</strong>
+                      </span>
+                      <span>
+                        Del {{ formatearFecha(nuevaReserva.fechaEntrada) }} al {{ formatearFecha(nuevaReserva.fechaSalida) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hotel y Habitación -->
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="hotelId" class="form-label fw-semibold">
+                      <i class="bi bi-building me-1"></i>Hotel
+                    </label>
+                    <div *ngIf="cargandoHoteles" class="form-control">
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Cargando hoteles...
+                    </div>
+                    <select 
+                      *ngIf="!cargandoHoteles"
+                      class="form-select" 
+                      id="hotelId"
+                      [(ngModel)]="hotelSeleccionadoId"
+                      name="hotelId"
+                      (change)="onHotelChange($event)"
+                      required>
+                      <option value="" disabled selected>Seleccionar hotel...</option>
+                      <option *ngFor="let hotel of hoteles" [value]="hotel.id">
+                        {{ hotel.nombre }} - {{ hotel.ubicacion }}
+                      </option>
+                    </select>
+                    <div *ngIf="!cargandoHoteles && !hotelSeleccionadoId && reservaForm.submitted" class="text-danger small">
+                      Debe seleccionar un hotel
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="habitacionId" class="form-label fw-semibold">
+                      <i class="bi bi-door-closed me-1"></i>Habitación
+                    </label>
+                    <select 
+                      class="form-select" 
+                      id="habitacionId"
+                      [(ngModel)]="nuevaReserva.habitaciones.id"
+                      name="habitacionId"
+                      (change)="onHabitacionChange($event)"
+                      required
+                      [disabled]="habitaciones.length === 0">
+                      <option value="" disabled selected>Seleccionar habitación...</option>
+                      <option *ngFor="let habitacion of habitaciones" [value]="habitacion.id">
+                        {{ habitacion.tipo }} - Capacidad: {{ habitacion.capacidad }} pers. - 
+                        {{ formatearPrecio(habitacion.precioPorNoche) }}/noche
+                      </option>
+                    </select>
+                    <div *ngIf="habitaciones.length === 0 && !cargandoHoteles" class="text-warning small mt-1">
+                      No hay habitaciones disponibles en este hotel
+                    </div>
+                    <div *ngIf="!nuevaReserva.habitaciones.id && reservaForm.submitted" class="text-danger small mt-1">
+                      Debe seleccionar una habitación
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Número de huéspedes y Pedido especial -->
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="numeroHuespedes" class="form-label fw-semibold">
+                      <i class="bi bi-people me-1"></i>Número de Huéspedes
+                    </label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      id="numeroHuespedes"
+                      [(ngModel)]="nuevaReserva.numeroHuespedes"
+                      name="numeroHuespedes"
+                      min="1"
+                      max="10"
+                      (change)="calcularPrecioTotal()"
+                      required>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="pedidoEspecial" class="form-label fw-semibold">
+                      <i class="bi bi-chat-text me-1"></i>Pedido Especial (Opcional)
+                    </label>
+                    <textarea 
+                      class="form-control" 
+                      id="pedidoEspecial"
+                      [(ngModel)]="nuevaReserva.pedidoEspecial"
+                      name="pedidoEspecial"
+                      rows="2"
+                      placeholder="Ej: Cama extra, solicitud especial, alergias, llegada tarde..."></textarea>
+                    <small class="text-muted">Información adicional para el hotel</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Estado de la reserva -->
+              <div class="mb-4">
+                <div class="alert alert-warning">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <div>
+                      <strong>Estado de la reserva:</strong> 
+                      <span class="badge bg-warning text-dark ms-2">{{ nuevaReserva.estadoReserva }}</span>
+                      <small class="d-block text-muted mt-1">La reserva se creará con estado "PENDIENTE"</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resumen del precio -->
+              <div class="card mb-4 border-primary">
+                <div class="card-body">
+                  <h6 class="card-title text-primary">
+                    <i class="bi bi-calculator me-2"></i>Resumen de Precio
+                  </h6>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p class="mb-2">Noches: <strong>{{ calcularNoches() }}</strong></p>
+                      <p class="mb-2">Huéspedes: <strong>{{ nuevaReserva.numeroHuespedes }}</strong></p>
+                      <p *ngIf="nuevaReserva.habitaciones.id > 0 && getHabitacionSeleccionada()" class="mb-0">
+                        Habitación: <strong>{{ getHabitacionSeleccionada()?.tipo }}</strong>
+                      </p>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="text-end">
+                        <h4 class="text-primary mb-0">
+                          {{ formatearPrecio(nuevaReserva.precioTotal) }}
+                        </h4>
+                        <small class="text-muted">Precio total en francos cfas</small>
+                        <div *ngIf="nuevaReserva.habitaciones.id > 0 && getHabitacionSeleccionada() && calcularNoches() > 0" class="small text-muted mt-1">
+                          {{ formatearPrecio(getHabitacionSeleccionada()?.precioPorNoche || 0) }} x {{ calcularNoches() }} noches
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Botones -->
+              <div class="d-flex justify-content-between">
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary"
+                  (click)="volverAReservas()">
+                  <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                
+                <button 
+                  type="submit" 
+                  class="btn btn-primary"
+                  [disabled]="cargando || habitaciones.length === 0 || nuevaReserva.precioTotal <= 0">
+                  <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2"></span>
+                  <span *ngIf="!cargando"><i class="bi bi-check-circle me-1"></i>Confirmar Reserva</span>
+                  <span *ngIf="cargando">Creando reserva...</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Información sobre moneda -->
+        <div class="card mt-4 border-info">
+          <div class="card-body">
+            <h6 class="card-title text-info">
+              <i class="bi bi-info-circle me-2"></i>Información Importante
+            </h6>
+            <ul class="small mb-0">
+              <li>Todos los precios están en Francos CFA (FCFA)</li>
+              <li>1€ = 655,957 FCFA (tipo de cambio fijo)</li>
+              <li>El check-in es a partir de las 15:00 horas</li>
+              <li>El check-out es hasta las 12:00 horas</li>
+              <li>Se requiere depósito de garantía al hacer check-in</li>
+              <li>Cancelación gratuita hasta 48 horas antes del check-in</li>
+              <li>El código de reserva es necesario para cualquier consulta</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,87 +1,84 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../servicios/auth.service';
 
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './inicio.html',
   styleUrls: ['./inicio.css']
 })
 export class Inicio implements OnInit {
-  usuarioLogueado: boolean = false;
-  usuarioNombre: string = '';
-  usuarioEmail: string = '';
-  
-  isMobile: boolean = false;
+  usuario: any = null;
+  isLoggedIn: boolean = false;
 
-  constructor(private router: Router) {}
-  
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
   ngOnInit(): void {
+    console.log('Inicio ngOnInit - Verificando autenticación...');
     this.verificarAutenticacion();
-    this.verificarTamanoPantalla();
-    window.addEventListener('resize', () => this.verificarTamanoPantalla());
   }
-  
-  ngOnDestroy(): void {
-    window.removeEventListener('resize', () => this.verificarTamanoPantalla());
-  }
-  
-  verificarTamanoPantalla(): void {
-    this.isMobile = window.innerWidth < 992;
-  }
-  
+
   verificarAutenticacion(): void {
-    const usuarioGuardado = localStorage.getItem('usuarioTurismo');
+    this.usuario = this.authService.getUsuarioActual();
+    this.isLoggedIn = this.authService.isAuthenticated();
     
-    if (usuarioGuardado) {
-      try {
-        const usuario = JSON.parse(usuarioGuardado);
-        this.usuarioLogueado = true;
-        this.usuarioNombre = usuario.nombre;
-        this.usuarioEmail = usuario.email;
-      } catch (error) {
-        console.error('Error al parsear usuario:', error);
-        this.cerrarSesion();
-      }
+    console.log('Usuario actual:', this.usuario);
+    console.log('¿Está autenticado?', this.isLoggedIn);
+    console.log('Usuario desde localStorage:', localStorage.getItem('usuarioTurismo'));
+  }
+
+  // Método para obtener iniciales del usuario para el avatar
+  getUsuarioIniciales(): string {
+    if (!this.usuario || !this.usuario.nombre) return 'U';
+    
+    const nombre = this.usuario.nombre;
+    const partes = nombre.split(' ');
+    
+    if (partes.length >= 2) {
+      return (partes[0][0] + partes[1][0]).toUpperCase();
+    } else if (nombre.length >= 2) {
+      return nombre.substring(0, 2).toUpperCase();
     } else {
-      this.cerrarSesion();
+      return nombre.charAt(0).toUpperCase();
     }
   }
-  
-  cerrarSesion(): void {
-    localStorage.removeItem('usuarioTurismo');
+
+  onCerrarSesion(): void {
+    console.log('Cerrando sesión...');
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
-  
-  // Navegación
-  onMostrarInicio(): void {
-    this.router.navigate(['/inicio']);
-    this.cerrarMenuMobile();
+
+  irAReservas(): void {
+    console.log('Navegando a reservas...');
+    if (this.isLoggedIn) {
+      this.router.navigate(['/reservas']);
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
-  
-  onMostrarHoteles(): void {
-    this.router.navigate(['/hoteles']);
-    this.cerrarMenuMobile();
+
+  irAPerfil(): void {
+    console.log('Navegando a perfil...');
+    if (this.isLoggedIn) {
+      this.router.navigate(['/perfil']);
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
-  
-  onMostrarContactos(): void {
-    this.router.navigate(['/contactos']);
-    this.cerrarMenuMobile();
-  }
-  
-  onMostrarReservas(): void {
-    this.router.navigate(['/reservas']);
-    this.cerrarMenuMobile();
-  }
-  
-  cerrarMenuMobile(): void {
-    if (this.isMobile) {
-      const navbarToggler = document.querySelector('.navbar-toggler') as HTMLElement;
-      if (navbarToggler && !navbarToggler.classList.contains('collapsed')) {
-        navbarToggler.click();
-      }
+
+  irANuevaReserva(): void {
+    console.log('Navegando a nueva reserva...');
+    if (this.isLoggedIn) {
+      this.router.navigate(['/nueva-reserva']);
+    } else {
+      this.router.navigate(['/login']);
     }
   }
 }
