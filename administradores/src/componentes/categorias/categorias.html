@@ -7,351 +7,266 @@
         <i class="bi bi-tags-fill text-warning me-2"></i>
         Gestión de Categorías
       </h1>
-      <p class="text-body-secondary mb-0">Administra las categorías y tipos de hoteles</p>
+      <p class="text-muted mb-0">Administra las categorías y tipos de hoteles</p>
     </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+    <div>
+      <button class="btn btn-outline-secondary me-2" routerLink="/dashboard">
         <i class="bi bi-arrow-left me-1"></i> Volver
       </button>
-      <button class="btn btn-warning" (click)="nuevoRegistro()">
-        <i class="bi bi-plus-circle me-1"></i> Nueva Categoría
-      </button>
+      @if (!formularioVisible) {
+        <button class="btn btn-warning" (click)="mostrarFormulario()">
+          <i class="bi bi-plus-circle me-1"></i> Nueva Categoría
+        </button>
+      }
     </div>
   </div>
 
-  <!-- Tarjetas de información -->
-  <div class="row mb-4">
-    <div class="col-md-4 mb-3 mb-md-0">
-      <div class="card border-warning-subtle border-2">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="flex-shrink-0">
-              <i class="bi bi-info-circle-fill text-warning-emphasis fs-1"></i>
+  <!-- Formulario Moderno -->
+  @if (formularioVisible) {
+    <div class="form-overlay animate-slide-down">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+          <div class="card modern-form border-0 shadow-lg">
+            <div class="card-header bg-gradient-warning text-white border-0 py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <i class="bi bi-stars fs-4 me-2"></i>
+                  <h5 class="mb-0 d-inline-block fw-bold">
+                    {{ modoEdicion ? 'Editar Categoría' : 'Crear Nueva Categoría' }}
+                  </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" (click)="cerrarFormulario()" aria-label="Cerrar"></button>
+              </div>
             </div>
-            <div class="flex-grow-1 ms-3">
-              <h5 class="card-title mb-1">Total de Categorías</h5>
-              <p class="card-text display-6 fw-bold text-warning">{{ totalCategorias }}</p>
-              <small class="text-body-tertiary">Registradas en el sistema</small>
+
+            <div class="card-body p-4">
+              <form [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()" novalidate>
+                <!-- Campo: Nombre -->
+                <div class="mb-3">
+                  <label for="nombre" class="form-label fw-bold">
+                    <i class="bi bi-tag me-1 text-warning"></i>
+                    Nombre de la categoría <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="nombre"
+                    formControlName="nombre"
+                    [ngClass]="{
+                      'is-invalid': categoriaForm.get('nombre')?.invalid && 
+                                   (categoriaForm.get('nombre')?.dirty || categoriaForm.get('nombre')?.touched)
+                    }"
+                    placeholder="Ej: 5 Estrellas, Boutique, Hostel"
+                  >
+                  @if (categoriaForm.get('nombre')?.hasError('required') && 
+                       (categoriaForm.get('nombre')?.dirty || categoriaForm.get('nombre')?.touched)) {
+                    <div class="text-danger small mt-1">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                      El nombre es obligatorio
+                    </div>
+                  }
+                  @if (categoriaForm.get('nombre')?.hasError('minlength')) {
+                    <div class="text-danger small mt-1">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                      Mínimo 2 caracteres
+                    </div>
+                  }
+                </div>
+
+                <!-- Campo: Descripción -->
+                <div class="mb-3">
+                  <label for="descripcion" class="form-label fw-bold">
+                    <i class="bi bi-card-text me-1 text-warning"></i>
+                    Descripción
+                  </label>
+                  <textarea 
+                    class="form-control" 
+                    id="descripcion"
+                    formControlName="descripcion"
+                    rows="3"
+                    placeholder="Describe las características de esta categoría..."
+                  ></textarea>
+                  <div class="d-flex justify-content-between mt-1">
+                    <div class="form-text">
+                      <i class="bi bi-info-circle me-1"></i>
+                      Información adicional sobre la categoría
+                    </div>
+                    <div class="text-muted small">
+                      <i class="bi bi-pencil me-1"></i>
+                      {{ categoriaForm.get('descripcion')?.value?.length || 0 }}/500 caracteres
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Campo: Número de estrellas -->
+                <div class="mb-3">
+                  <label for="numeroEstrellas" class="form-label fw-bold">
+                    <i class="bi bi-star-fill me-1 text-warning"></i>
+                    Número de Estrellas
+                  </label>
+                  <select 
+                    class="form-select" 
+                    id="numeroEstrellas"
+                    formControlName="numeroEstrellas"
+                  >
+                    <option [value]="0">Sin estrellas (categoría especial)</option>
+                    <option [value]="1">⭐ 1 Estrella</option>
+                    <option [value]="2">⭐⭐ 2 Estrellas</option>
+                    <option [value]="3">⭐⭐⭐ 3 Estrellas</option>
+                    <option [value]="4">⭐⭐⭐⭐ 4 Estrellas</option>
+                    <option [value]="5">⭐⭐⭐⭐⭐ 5 Estrellas</option>
+                  </select>
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    @if (categoriaForm.get('numeroEstrellas')?.value === 0) {
+                      Para categorías especiales como Boutique, Apart Hotel, Hostel, etc.
+                    } @else {
+                      Nivel de servicio (estrellas) del hotel.
+                    }
+                  </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex gap-2 mt-4">
+                  <button 
+                    type="submit" 
+                    class="btn btn-warning flex-fill"
+                    [disabled]="categoriaForm.invalid || guardando"
+                  >
+                    @if (guardando) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Guardando...
+                    } @else {
+                      <i class="bi bi-save me-1"></i>
+                      {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                    }
+                  </button>
+                  
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="cerrarFormulario()"
+                  >
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <div class="col-md-8">
-      <div class="card border-light-subtle shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title mb-3">
-            <i class="bi bi-lightbulb-fill text-warning-emphasis me-2"></i>
-            Información importante
-          </h6>
-          <ul class="list-unstyled mb-0">
-            <li class="mb-2">
-              <i class="bi bi-check-circle-fill text-warning-emphasis me-2"></i>
-              Las categorías definen el tipo y nivel de servicio del hotel.
-            </li>
-            <li class="mb-2">
-              <i class="bi bi-check-circle-fill text-warning-emphasis me-2"></i>
-              El número de estrellas va de 1 a 5 (0 para categorías especiales).
-            </li>
-            <li>
-              <i class="bi bi-check-circle-fill text-warning-emphasis me-2"></i>
-              Las categorías especiales (Boutique, Apart, Hostel) tienen 0 estrellas.
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+  }
 
-  <div class="row g-4">
-    <!-- Formulario principal de categorías -->
-    <div class="col-lg-5">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white border-0 py-3">
-          <h5 class="mb-0">
-            <i class="bi bi-pencil-square text-warning me-2"></i>
-            {{ modoEdicion ? 'Editar Categoría' : 'Nueva Categoría' }}
-          </h5>
-        </div>
-        <div class="card-body">
-          <form [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()" novalidate>
-            <!-- Campo: Nombre de la categoría -->
-            <div class="mb-4">
-              <label for="nombre" class="form-label fw-semibold">
-                <i class="bi bi-tag-fill me-1 text-warning-emphasis"></i>
-                Nombre <span class="text-danger">*</span>
-              </label>
-              <div class="input-group has-validation">
-                <span class="input-group-text">
-                  <i class="bi bi-tag"></i>
-                </span>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="nombre"
-                  formControlName="nombre"
-                  [class.is-valid]="categoriaForm.get('nombre')?.valid && categoriaForm.get('nombre')?.touched"
-                  [class.is-invalid]="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched"
-                  placeholder="Ej: 5 Estrellas, Boutique, Hostel"
-                  maxlength="50"
-                >
-                <div class="valid-feedback">
-                  <i class="bi bi-check-circle-fill me-1"></i> Nombre válido
-                </div>
-                <div class="invalid-feedback">
-                  @if (categoriaForm.get('nombre')?.hasError('required')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> El nombre es obligatorio
-                  }
-                  @if (categoriaForm.get('nombre')?.hasError('minlength')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 2 caracteres
-                  }
-                </div>
-              </div>
-              <div class="form-text">
-                <i class="bi bi-info-circle me-1"></i> Nombre descriptivo de la categoría
-              </div>
-            </div>
-
-            <!-- Campo: Descripción -->
-            <div class="mb-4">
-              <label for="descripcion" class="form-label fw-semibold">
-                <i class="bi bi-card-text me-1 text-warning-emphasis"></i>
-                Descripción
-              </label>
-              <div class="input-group has-validation">
-                <span class="input-group-text align-items-start pt-2">
-                  <i class="bi bi-text-paragraph"></i>
-                </span>
-                <textarea 
-                  class="form-control" 
-                  id="descripcion"
-                  formControlName="descripcion"
-                  rows="3"
-                  placeholder="Describe las características de esta categoría..."
-                  maxlength="500"
-                ></textarea>
-              </div>
-              <div class="d-flex justify-content-between mt-1">
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Información adicional sobre la categoría
-                </div>
-                <small class="text-body-tertiary">
-                  {{ categoriaForm.get('descripcion')?.value?.length || 0 }}/500
-                </small>
-              </div>
-            </div>
-
-            <!-- Campo: Número de estrellas -->
-            <div class="mb-4">
-              <label for="numeroEstrellas" class="form-label fw-semibold">
-                <i class="bi bi-star-fill me-1 text-warning-emphasis"></i>
-                Número de Estrellas
-              </label>
-              <div class="input-group">
-                <span class="input-group-text">
-                  <i class="bi bi-trophy-fill"></i>
-                </span>
-                <select 
-                  class="form-select" 
-                  id="numeroEstrellas"
-                  formControlName="numeroEstrellas"
-                >
-                  <option [value]="0">Sin estrellas (categoría especial)</option>
-                  <option [value]="1">⭐ 1 Estrella</option>
-                  <option [value]="2">⭐⭐ 2 Estrellas</option>
-                  <option [value]="3">⭐⭐⭐ 3 Estrellas</option>
-                  <option [value]="4">⭐⭐⭐⭐ 4 Estrellas</option>
-                  <option [value]="5">⭐⭐⭐⭐⭐ 5 Estrellas</option>
-                </select>
-              </div>
-              <div class="form-text">
-                <i class="bi bi-info-circle me-1"></i> 
-                @if (categoriaForm.get('numeroEstrellas')?.value === 0) {
-                  Para categorías especiales como Boutique, Apart Hotel, Hostel, etc.
-                } @else {
-                  Nivel de servicio (estrellas) del hotel.
-                }
-              </div>
-            </div>
-
-            <!-- Botones del formulario -->
-            <div class="d-flex gap-2 mt-4 pt-3 border-top">
-              <button 
-                type="submit" 
-                class="btn btn-warning flex-fill"
-                [disabled]="categoriaForm.invalid || guardando"
-              >
-                @if (guardando) {
-                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Guardando...
-                } @else {
-                  <i class="bi bi-save me-1"></i>
-                  {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
-                }
-              </button>
-              
-              <button 
-                type="button" 
-                class="btn btn-outline-secondary"
-                (click)="cancelarEdicion()"
-                [disabled]="guardando"
-              >
-                <i class="bi bi-x-circle me-1"></i>
-                Cancelar
-              </button>
-            </div>
-            
-            <!-- Información de campos requeridos -->
-            <div class="mt-3 pt-2">
-              <small class="text-body-tertiary">
-                <i class="bi bi-asterisk text-danger me-1"></i>
-                Campos marcados con asterisco (*) son obligatorios
-              </small>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Lista de categorías -->
-    <div class="col-lg-7">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white border-0 py-3">
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-            <h5 class="mb-0">
-              <i class="bi bi-list-ul text-warning me-2"></i>
-              Categorías Registradas
-            </h5>
+  <!-- Lista de categorías -->
+  @if (!formularioVisible) {
+    <div class="categorias-container">
+      <!-- Barra de búsqueda y acciones -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
-              <div class="input-group input-group-sm" style="min-width: 200px;">
-                <span class="input-group-text">
-                  <i class="bi bi-search"></i>
-                </span>
+              <i class="bi bi-list-ul fs-4 text-warning"></i>
+              <h5 class="mb-0 fw-bold">Categorías Registradas</h5>
+              @if (!cargando && totalCategorias > 0) {
+                <span class="badge bg-warning rounded-pill">{{ totalCategorias }}</span>
+              }
+            </div>
+            <div class="d-flex gap-2">
+              <div class="search-box">
+                <i class="bi bi-search search-icon"></i>
                 <input 
                   type="text" 
-                  class="form-control" 
+                  class="form-control form-control-sm ps-4" 
                   placeholder="Buscar categoría..."
                   (input)="filtrarCategorias($event)"
+                  style="width: 250px;"
                 >
               </div>
-              <button class="btn btn-sm btn-outline-warning" (click)="cargarCategorias()" title="Recargar">
+              <button class="btn btn-sm btn-outline-warning" (click)="cargarCategorias()" title="Actualizar">
                 <i class="bi bi-arrow-clockwise"></i>
               </button>
             </div>
           </div>
         </div>
-        
+      </div>
+
+      <!-- Tabla de categorías -->
+      <div class="card shadow-sm border-0">
         <div class="card-body p-0">
           @if (cargando) {
-            <!-- Estado de carga -->
             <div class="text-center py-5">
-              <div class="spinner-border text-warning mb-3" role="status">
+              <div class="spinner-border text-warning" role="status">
                 <span class="visually-hidden">Cargando...</span>
               </div>
-              <p class="text-body-secondary">Cargando categorías...</p>
+              <p class="text-muted mt-2 mb-0">Cargando categorías...</p>
             </div>
           } @else if (categoriasFiltradas.length === 0) {
-            <!-- Estado sin datos -->
             <div class="text-center py-5">
-              <i class="bi bi-tags display-1 text-body-tertiary mb-3"></i>
-              <h5 class="text-body-secondary mb-2">No hay categorías registradas</h5>
-              <p class="text-body-tertiary mb-0">Comienza agregando una nueva categoría</p>
+              <i class="bi bi-tags display-1 text-muted"></i>
+              <h5 class="text-muted mt-3 mb-2">No hay categorías registradas</h5>
+              <p class="text-muted mb-0">Comienza agregando una nueva categoría</p>
+              <button class="btn btn-warning mt-3" (click)="mostrarFormulario()">
+                <i class="bi bi-plus-circle me-1"></i> Agregar Categoría
+              </button>
             </div>
           } @else {
-            <!-- Tabla de categorías -->
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-hover mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th scope="col" class="ps-3" style="width: 35%;">
-                      <i class="bi bi-sort-alpha-down text-warning-emphasis me-1"></i>
-                      Categoría
-                    </th>
-                    <th scope="col" style="width: 35%;">
-                      <i class="bi bi-text-paragraph text-warning-emphasis me-1"></i>
-                      Descripción
-                    </th>
-                    <th scope="col" style="width: 20%;">
-                      <i class="bi bi-star-fill text-warning-emphasis me-1"></i>
-                      Estrellas
-                    </th>
-                    <th scope="col" class="text-center pe-3" style="width: 10%;">
-                      <i class="bi bi-gear-fill text-warning-emphasis me-1"></i>
-                      Acciones
-                    </th>
+                    <th width="30%">Categoría</th>
+                    <th width="40%">Descripción</th>
+                    <th width="20%">Estrellas</th>
+                    <th width="10%" class="text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (categoria of categoriasFiltradas; track categoria.id) {
-                    <tr [class.table-warning-subtle]="categoria.id === categoriaEditando?.id">
-                      <td class="ps-3">
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <div class="bg-warning-subtle rounded-circle p-2">
-                              <i class="bi bi-tag-fill text-warning"></i>
-                            </div>
+                  @for (categoria of categoriasFiltradas | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track categoria.id) {
+                    <tr [class.table-warning]="categoria.id === categoriaEditando?.id">
+                      <td class="align-middle">
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="bg-warning-subtle rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <i class="bi bi-tag-fill text-warning"></i>
                           </div>
-                          <div class="flex-grow-1">
-                            <strong class="d-block">{{ categoria.nombre }}</strong>
-                            <small class="text-body-tertiary text-truncate d-block" style="max-width: 200px;">
-                              {{ (categoria.descripcion || '').slice(0, 50) }}{{ (categoria.descripcion || '').length > 50 ? '...' : '' }}
-                            </small>
-                          </div>
+                          <strong>{{ categoria.nombre }}</strong>
                         </div>
                       </td>
-                      <td>
-                        <p class="mb-0 text-body-secondary small">
+                      <td class="align-middle">
+                        <div class="text-truncate" style="max-width: 300px;" [title]="categoria.descripcion">
                           {{ categoria.descripcion || 'Sin descripción' }}
-                        </p>
+                        </div>
                       </td>
-                      <td>
+                      <td class="align-middle">
                         @if (categoria.numeroEstrellas && categoria.numeroEstrellas > 0) {
-                          <div class="d-flex align-items-center">
-                            <span [class]="getEstrellasClass(categoria.numeroEstrellas || 0) + ' me-2'">
-                              {{ categoria.numeroEstrellas || 0 }} Estrella{{ (categoria.numeroEstrellas || 0) > 1 ? 's' : '' }}
+                          <div class="d-flex align-items-center gap-2">
+                            <span [class]="getEstrellasClass(categoria.numeroEstrellas)">
+                              {{ categoria.numeroEstrellas }} Estrella{{ categoria.numeroEstrellas > 1 ? 's' : '' }}
                             </span>
                             <div>
                               @for (i of [1,2,3,4,5]; track i) {
-                                @if (i <= (categoria.numeroEstrellas || 0)) {
-                                  <i class="bi bi-star-fill text-warning"></i>
+                                @if (i <= categoria.numeroEstrellas) {
+                                  <i class="bi bi-star-fill text-warning small"></i>
                                 } @else {
-                                  <i class="bi bi-star text-warning"></i>
+                                  <i class="bi bi-star text-warning small"></i>
                                 }
                               }
                             </div>
                           </div>
                         } @else {
-                          <span class="badge text-bg-secondary">
-                            Especial
-                          </span>
+                          <span class="badge bg-secondary">Especial</span>
                         }
                       </td>
-                      <td class="text-center pe-3">
-                        <div class="btn-group btn-group-sm" role="group">
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-warning"
-                            (click)="editarCategoria(categoria)"
-                            title="Editar categoría"
-                          >
-                            <i class="bi bi-pencil-fill"></i>
+                      <td class="align-middle text-center">
+                        <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-warning" (click)="editarCategoria(categoria)" title="Editar">
+                            <i class="bi bi-pencil"></i>
                           </button>
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-primary"
-                            (click)="verDetalles(categoria)"
-                            title="Ver detalles"
-                          >
-                            <i class="bi bi-eye-fill"></i>
+                          <button class="btn btn-outline-primary" (click)="verDetalles(categoria)" title="Ver">
+                            <i class="bi bi-eye"></i>
                           </button>
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-danger"
-                            (click)="eliminarCategoria(categoria)"
-                            title="Eliminar categoría"
-                          >
-                            <i class="bi bi-trash-fill"></i>
+                          <button class="btn btn-outline-danger" (click)="eliminarCategoria(categoria)" title="Eliminar">
+                            <i class="bi bi-trash"></i>
                           </button>
                         </div>
                       </td>
@@ -366,104 +281,71 @@
         <!-- Paginación -->
         @if (categoriasFiltradas.length > 0 && !cargando) {
           <div class="card-footer bg-white border-0 py-3">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-              <small class="text-body-secondary">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
                 Mostrando {{ categoriasFiltradas.length }} de {{ totalCategorias }} categorías
               </small>
-              <nav aria-label="Navegación de categorías">
-                <ul class="pagination pagination-sm mb-0">
-                  <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                      <i class="bi bi-chevron-left"></i>
-                    </a>
-                  </li>
-                  <li class="page-item active" aria-current="page">
-                    <span class="page-link">1</span>
-                  </li>
-                  <li class="page-item"><a class="page-link" href="#">2</a></li>
-                  <li class="page-item"><a class="page-link" href="#">3</a></li>
-                  <li class="page-item">
-                    <a class="page-link" href="#">
-                      <i class="bi bi-chevron-right"></i>
-                    </a>
-                  </li>
-                </ul>
-              </nav>
+              <pagination-controls 
+                (pageChange)="paginaActual = $event"
+                [autoHide]="true"
+                [maxSize]="5">
+              </pagination-controls>
             </div>
           </div>
         }
       </div>
     </div>
-  </div>
+  }
 
   <!-- Modal de detalles -->
-  <div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" 
-       aria-hidden="true" data-bs-theme="light" #detallesModal>
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-0 bg-warning text-white">
-          <h1 class="modal-title fs-5" id="detallesModalLabel">
+  <div class="modal fade" id="detallesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-white">
+          <h5 class="modal-title">
             <i class="bi bi-info-circle-fill me-2"></i>
             Detalles de la Categoría
-          </h1>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
-                  aria-label="Close"></button>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-4">
+        <div class="modal-body">
           @if (categoriaDetalles) {
-            <div class="row">
-              <div class="col-md-4 text-center mb-3 mb-md-0">
-                <div class="bg-warning-subtle p-4 rounded-3">
-                  <i class="bi bi-tags display-1 text-warning"></i>
-                </div>
+            <div class="text-center mb-3">
+              <div class="bg-warning-subtle rounded-circle p-3 d-inline-flex">
+                <i class="bi bi-tags-fill display-4 text-warning"></i>
               </div>
-              <div class="col-md-8">
-                <h3 class="text-warning-emphasis mb-2">{{ categoriaDetalles.nombre }}</h3>
-                
-                <div class="mb-3">
-                  @if (categoriaDetalles.numeroEstrellas && categoriaDetalles.numeroEstrellas > 0) {
-                    <span [class]="getEstrellasClass(categoriaDetalles.numeroEstrellas || 0) + ' fs-6'">
-                      {{ categoriaDetalles.numeroEstrellas || 0 }} Estrella{{ (categoriaDetalles.numeroEstrellas || 0) > 1 ? 's' : '' }}
-                    </span>
+            </div>
+            <h4 class="text-warning mb-3 text-center">{{ categoriaDetalles.nombre }}</h4>
+            
+            @if (categoriaDetalles.numeroEstrellas && categoriaDetalles.numeroEstrellas > 0) {
+              <div class="text-center mb-3">
+                <span [class]="getEstrellasClass(categoriaDetalles.numeroEstrellas) + ' fs-6'">
+                  {{ categoriaDetalles.numeroEstrellas }} Estrella{{ categoriaDetalles.numeroEstrellas > 1 ? 's' : '' }}
+                </span>
+              </div>
+              <div class="text-center mb-3">
+                @for (i of [1,2,3,4,5]; track i) {
+                  @if (i <= categoriaDetalles.numeroEstrellas) {
+                    <i class="bi bi-star-fill text-warning fs-2 me-1"></i>
                   } @else {
-                    <span class="badge text-bg-secondary fs-6">
-                      Categoría Especial
-                    </span>
+                    <i class="bi bi-star text-warning fs-2 me-1"></i>
                   }
-                </div>
-                
-                <div class="row g-3">
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Descripción:</strong>
-                    <p class="mt-1">{{ categoriaDetalles.descripcion || 'Sin descripción' }}</p>
-                  </div>
-                  
-                  @if (categoriaDetalles.numeroEstrellas && categoriaDetalles.numeroEstrellas > 0) {
-                    <div class="col-12">
-                      <strong class="text-body-emphasis">Nivel de estrellas:</strong>
-                      <div class="mt-2">
-                        @for (i of [1,2,3,4,5]; track i) {
-                          @if (i <= (categoriaDetalles.numeroEstrellas || 0)) {
-                            <i class="bi bi-star-fill text-warning fs-4 me-1"></i>
-                          } @else {
-                            <i class="bi bi-star text-warning fs-4 me-1"></i>
-                          }
-                        }
-                      </div>
-                    </div>
-                  }
-                  
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">ID de Categoría:</strong>
-                    <p class="mb-0">{{ categoriaDetalles.id }}</p>
-                  </div>
-                </div>
+                }
               </div>
+            } @else {
+              <div class="text-center mb-3">
+                <span class="badge bg-secondary fs-6 px-3 py-2">Categoría Especial</span>
+              </div>
+            }
+            
+            <div class="mt-3">
+              <strong><i class="bi bi-card-text me-1"></i> Descripción:</strong>
+              <p class="mt-2">{{ categoriaDetalles.descripcion || 'Sin descripción' }}</p>
             </div>
           }
         </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             <i class="bi bi-x-circle me-1"></i> Cerrar
           </button>
         </div>
@@ -471,63 +353,24 @@
     </div>
   </div>
 
-  <!-- Modal de confirmación para eliminar -->
-  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
-       aria-hidden="true" data-bs-theme="light" #confirmarEliminarModal>
+  <!-- Modal de confirmación -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-0 bg-danger text-white">
-          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            Confirmar eliminación
-          </h1>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
-                  aria-label="Close"></button>
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirmar eliminación</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-4">
-          <div class="text-center mb-4">
-            <i class="bi bi-trash-fill text-danger display-4"></i>
+        <div class="modal-body">
+          <p>¿Estás seguro de eliminar la categoría <strong>{{ categoriaAEliminar?.nombre }}</strong>?</p>
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Esta acción no se puede deshacer.
           </div>
-          <h5 class="text-center mb-3">¿Estás seguro de eliminar esta categoría?</h5>
-          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
-            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
-            <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
-            Los hoteles asociados a esta categoría quedarán sin clasificación.
-          </div>
-          @if (categoriaAEliminar) {
-            <div class="card border-danger-subtle">
-              <div class="card-body">
-                <h6 class="card-title text-danger-emphasis mb-3">
-                  <i class="bi bi-trash-fill me-2"></i>
-                  Categoría a eliminar
-                </h6>
-                <div class="row g-2">
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Nombre:</strong>
-                    <span class="ms-2">{{ categoriaAEliminar.nombre }}</span>
-                  </div>
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Descripción:</strong>
-                    <span class="ms-2">{{ categoriaAEliminar.descripcion || 'Sin descripción' }}</span>
-                  </div>
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Estrellas:</strong>
-                    <span class="ms-2">
-                      {{ categoriaAEliminar.numeroEstrellas || 0 }} Estrella{{ (categoriaAEliminar.numeroEstrellas || 0) > 1 ? 's' : '' }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
         </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle me-1"></i> Cancelar
-          </button>
-          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()" data-bs-dismiss="modal">
-            <i class="bi bi-trash-fill me-1"></i> Eliminar
-          </button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
         </div>
       </div>
     </div>

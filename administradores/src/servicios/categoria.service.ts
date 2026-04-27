@@ -8,7 +8,7 @@ import { Categoria, CategoriaDTO } from '../modelos/categoria.model';
   providedIn: 'root'
 })
 export class CategoriaService {
-  private apiUrl = 'http://localhost:8765/Categorias'; // URL del gateway
+  private apiUrl = 'http://localhost:3333/Categorias'; 
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'

@@ -8,7 +8,7 @@ import { Provincia, ProvinciaBackend, ProvinciaSimple } from '../modelos/provinc
   providedIn: 'root'
 })
 export class ProvinciaService {
-  private apiUrl = 'http://localhost:8765/Provincias';
+  private apiUrl = 'http://localhost:3333/Provincias';
 
   private httpOptions = {
     headers: new HttpHeaders({

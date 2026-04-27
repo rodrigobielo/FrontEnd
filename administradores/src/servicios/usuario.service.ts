@@ -8,7 +8,7 @@ import { Usuario, UsuarioFormData } from '../modelos/usuario.model';
   providedIn: 'root'
 })
 export class UsuarioService {
-  private apiUrl = 'http://localhost:8765/Usuarios';
+  private apiUrl = 'http://localhost:3333/Usuarios';
 
   private httpOptions = {
     headers: new HttpHeaders({

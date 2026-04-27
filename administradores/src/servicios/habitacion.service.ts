@@ -8,7 +8,7 @@ import { Habitacion } from '../modelos/habitacion.model';
 })
 export class HabitacionService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8765/Habitaciones'; // Coincide con @RequestMapping("/Habitaciones")
+  private apiUrl = 'http://localhost:3333/Habitaciones'; // Coincide con @RequestMapping("/Habitaciones")
 
   // Obtener todas las habitaciones
   getHabitaciones(): Observable<Habitacion[]> {

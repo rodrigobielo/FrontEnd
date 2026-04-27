@@ -1,19 +1,19 @@
 <div class="dashboard-container">
-  <!-- Barra de navegación superior -->
+  <!-- Barra de navegación superior mejorada -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
     <div class="container-fluid">
       <!-- Logo y nombre de la aplicación -->
       <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/dashboard-hotel">
-        <i class="bi bi-house-door-fill me-2"></i>
+        <img src="logo.jpeg" alt="Logo" class="navbar-logo me-2" width="35" height="35" style="object-fit: contain; border-radius: 8px;">
         <span>{{nombreHotel}} - Panel de Administración</span>
       </a>
       
       <!-- Botón para colapsar sidebar en móviles -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
         <span class="navbar-toggler-icon"></span>
       </button>
       
-      <!-- Menú de usuario -->
+      <!-- Menú de usuario mejorado -->
       <div class="navbar-nav ms-auto align-items-center">
         <div class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
@@ -21,15 +21,16 @@
               <span class="small text-white-50 d-block">Bienvenido,</span>
               <strong class="text-white">{{nombreUsuario}}</strong>
             </div>
-            <i class="bi bi-person-circle fs-4"></i>
+            <div class="user-avatar">
+              <i class="bi bi-person-circle fs-4"></i>
+            </div>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Mi perfil</a></li>
-            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Configuración</a></li>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+            <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i> Mi perfil</a></li>
+            <li><a class="dropdown-item py-2" href="#"><i class="bi bi-gear me-2"></i> Configuración</a></li>
             <li><hr class="dropdown-divider"></li>
-            <!-- Botón de cerrar sesión -->
             <li>
-              <a class="dropdown-item text-danger" href="#" (click)="cerrarSesion($event)">
+              <a class="dropdown-item text-danger py-2" href="#" (click)="cerrarSesion($event)">
                 <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
               </a>
             </li>
@@ -42,94 +43,82 @@
   <!-- Contenedor principal -->
   <div class="container-fluid">
     <div class="row">
-      <!-- Sidebar -->
+      <!-- Sidebar mejorado -->
       <div class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
         <div class="position-sticky pt-3">
-          <!-- Perfil en sidebar -->
-          <div class="text-center mb-4 p-3 bg-light rounded-3 d-none d-md-block">
+          <!-- Logo y perfil en sidebar -->
+          <div class="text-center mb-4 p-3 bg-gradient-primary rounded-3 d-none d-md-block shadow-sm">
             <div class="mb-3">
-              <i class="bi bi-person-circle display-6 text-primary"></i>
+              <img src="logo.jpeg" alt="Logo" class="sidebar-logo" width="70" height="70" style="object-fit: contain; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             </div>
-            <h6 class="mb-1 fw-bold">{{nombreUsuario}}</h6>
-            <small class="text-muted">{{nombreHotel}}</small>
-            <small class="text-muted d-block">Administrador de Hotel</small>
+            <h6 class="mb-1 fw-bold text-white">{{nombreUsuario}}</h6>
+            <small class="text-white-50">{{nombreHotel}}</small>
+            <small class="text-white-50 d-block">Administrador de Hotel</small>
           </div>
           
-          <!-- Menú principal -->
+          <!-- Menú principal mejorado -->
           <h6 class="sidebar-heading px-3 mt-4 mb-2 text-muted text-uppercase small fw-bold">
             <i class="bi bi-menu-button-wide me-2"></i> Menú Principal
           </h6>
           <ul class="nav flex-column mb-4">
             <li class="nav-item">
-              <a class="nav-link active" routerLink="/dashboard-hotel" routerLinkActive="active">
+              <a class="nav-link active d-flex align-items-center" routerLink="/dashboard-hotel" routerLinkActive="active">
                 <i class="bi bi-speedometer2 me-2"></i>
-                Dashboard
+                <span>Dashboard</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" (click)="navegarAHabitaciones()" style="cursor: pointer;">
+              <a class="nav-link d-flex align-items-center" (click)="navegarAHabitaciones()" style="cursor: pointer;">
                 <i class="bi bi-door-closed me-2"></i>
-                Habitaciones del Hotel
+                <span>Habitaciones del Hotel</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" (click)="navegarATiposHabitacion()" style="cursor: pointer;">
+              <a class="nav-link d-flex align-items-center" (click)="navegarATiposHabitacion()" style="cursor: pointer;">
                 <i class="bi bi-grid-3x3-gap me-2"></i>
-                Tipos de Habitación
+                <span>Tipos de Habitación</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" (click)="navegarAReservas()" style="cursor: pointer;">
+              <a class="nav-link d-flex align-items-center" (click)="navegarAReservas()" style="cursor: pointer;">
                 <i class="bi bi-calendar-check me-2"></i>
-                Reservas del Hotel
+                <span>Reservas del Hotel</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" (click)="navegarAClientes()" style="cursor: pointer;">
+              <a class="nav-link d-flex align-items-center" (click)="navegarAClientes()" style="cursor: pointer;">
                 <i class="bi bi-people me-2"></i>
-                Clientes del Hotel
+                <span>Clientes del Hotel</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" (click)="navegarAPagos()" style="cursor: pointer;">
+              <a class="nav-link d-flex align-items-center" (click)="navegarAPagos()" style="cursor: pointer;">
                 <i class="bi bi-credit-card me-2"></i>
-                Pagos del Hotel
+                <span>Pagos del Hotel</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" (click)="navegarAFotos()" style="cursor: pointer;">
+              <a class="nav-link d-flex align-items-center" (click)="navegarAFotos()" style="cursor: pointer;">
                 <i class="bi bi-images me-2"></i>
-                Fotos del Hotel
+                <span>Fotos del Hotel</span>
               </a>
             </li>
           </ul>
           
-          <!-- Reportes -->
+          <!-- Reportes - Eliminados completamente ocupación y satisfacción -->
           <h6 class="sidebar-heading px-3 mt-4 mb-2 text-muted text-uppercase small fw-bold">
             <i class="bi bi-bar-chart me-2"></i> Reportes
           </h6>
           <ul class="nav flex-column mb-4">
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'reportes', 'ocupacion']">
-                <i class="bi bi-graph-up me-2"></i>
-                Ocupación
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/hoteles', currentHotel?.id, 'reportes', 'finanzas']">
+              <a class="nav-link d-flex align-items-center" [routerLink]="['/hoteles', currentHotel?.id, 'reportes', 'finanzas']">
                 <i class="bi bi-cash-coin me-2"></i>
-                Finanzas
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">
-                <i class="bi bi-star me-2"></i>
-                Satisfacción
+                <span>Finanzas</span>
               </a>
             </li>
           </ul>
           
-          <!-- Botón de cerrar sesión en sidebar -->
+          <!-- Botón de cerrar sesión en sidebar mejorado -->
           <div class="sidebar-footer p-3 mt-3 bg-light rounded-3 d-none d-md-block">
             <button class="btn btn-outline-danger w-100" (click)="cerrarSesion()">
               <i class="bi bi-box-arrow-right me-2"></i>
@@ -137,11 +126,11 @@
             </button>
           </div>
           
-          <!-- Información del sistema -->
+          <!-- Información del sistema mejorada -->
           <div class="sidebar-footer p-3 mt-3 bg-light rounded-3 d-none d-md-block">
             <div class="d-flex align-items-center">
-              <i class="bi bi-info-circle text-primary me-2"></i>
-              <div>
+              <img src="logo.jpeg" alt="Logo" width="30" height="30" style="object-fit: contain; border-radius: 6px;">
+              <div class="ms-2">
                 <small class="text-muted d-block">{{nombreHotel}}</small>
                 <small class="text-muted">Versión 2.1.0</small>
               </div>
@@ -150,11 +139,11 @@
         </div>
       </div>
 
-      <!-- Contenido principal -->
+      <!-- Contenido principal mejorado -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-        <!-- Header del contenido -->
+        <!-- Header del contenido mejorado -->
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
-          <h1 class="h2 fw-bold">
+          <h1 class="h2 fw-bold gradient-text">
             <i class="bi bi-house-door me-2 text-primary"></i>
             {{nombreHotel}} - Panel de Control
           </h1>
@@ -164,17 +153,17 @@
                 <i class="bi bi-calendar me-1"></i> Hoy: {{currentDate | date:'dd/MM/yyyy'}}
               </button>
             </div>
-            <button type="button" class="btn btn-sm btn-primary" (click)="generarReporteDiario()">
+            <button type="button" class="btn btn-sm btn-primary shadow-sm" (click)="generarReporteDiario()">
               <i class="bi bi-file-earmark-text me-1"></i> Reporte Diario
             </button>
           </div>
         </div>
 
-        <!-- Tarjetas de resumen -->
+        <!-- Tarjetas de resumen con un solo botón "Más información" -->
         <div class="row mb-4">
           <ng-container *ngFor="let card of summaryCards; let i = index">
             <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
-              <div class="card border-3 border-start border-0 shadow-sm h-100 py-2" 
+              <div class="card border-3 border-start border-0 shadow-sm h-100 py-2 card-hover" 
                    [class.border-left-primary]="i === 0"
                    [class.border-left-success]="i === 1"
                    [class.border-left-info]="i === 2"
@@ -201,61 +190,21 @@
                           {{formatFcfa(card.total)}}
                         </ng-container>
                       </div>
-                      <div class="mt-2">
-                        <span *ngIf="card.disponibles !== undefined" class="badge" 
-                              [ngClass]="{'bg-primary': i === 0}">
-                          {{card.disponibles}} disponibles
-                        </span>
-                        <span *ngIf="card.precioMin !== undefined" class="badge bg-success">
-                          Desde {{formatFcfa(card.precioMin)}}
-                        </span>
-                        <span *ngIf="card.change !== undefined" class="badge" 
-                              [ngClass]="getChangeBadgeClass(card.change)">
-                          <i class="bi" [class]="'bi-' + getChangeIcon(card.change) + ' me-1'"></i> 
-                          {{card.change}}%
-                        </span>
-                        <span *ngIf="card.nuevosHoy !== undefined" class="badge bg-warning text-dark">
-                          {{card.nuevosHoy}} nuevos hoy
-                        </span>
-                        <span *ngIf="card.galerias !== undefined" class="badge bg-purple">
-                          {{card.galerias}} galerías
-                        </span>
-                      </div>
                     </div>
                     <div class="col-auto">
-                      <i class="bi fs-1 opacity-75"
-                         [class]="'bi-' + card.icon + ' text-' + card.color"></i>
+                      <div class="card-icon">
+                        <i class="bi fs-1 opacity-75"
+                           [class]="'bi-' + card.icon + ' text-' + card.color"></i>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
-                  <button class="btn btn-sm" 
+                <div class="card-footer bg-transparent border-0 py-3">
+                  <button class="btn btn-primary w-100" 
                           [class]="'btn-' + card.color"
-                          (click)="onAddClick(card)">
-                    <i class="bi bi-plus-circle me-1"></i>
-                    <ng-container *ngIf="card.title === 'Pagos del Hotel' || card.title === 'Clientes del Hotel'">
-                      Registrar
-                    </ng-container>
-                    <ng-container *ngIf="card.title === 'Fotos del Hotel'">
-                      Subir
-                    </ng-container>
-                    <ng-container *ngIf="card.title === 'Reservas del Hotel'">
-                      Nueva
-                    </ng-container>
-                    <ng-container *ngIf="!(card.title === 'Pagos del Hotel' || card.title === 'Clientes del Hotel' || card.title === 'Fotos del Hotel' || card.title === 'Reservas del Hotel')">
-                      Añadir
-                    </ng-container>
-                  </button>
-                  <button class="btn btn-sm" 
-                          [class]="'btn-outline-' + card.color"
-                          (click)="onListClick(card)">
-                    <i class="bi bi-list me-1"></i>
-                    <ng-container *ngIf="card.title === 'Fotos del Hotel'">
-                      Galerías
-                    </ng-container>
-                    <ng-container *ngIf="card.title !== 'Fotos del Hotel'">
-                      Ver {{card.title === 'Tipos de Habitación' ? 'Todos' : 'Todas'}}
-                    </ng-container>
+                          (click)="onMoreInfoClick(card)">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Más información
                   </button>
                 </div>
               </div>
@@ -263,11 +212,11 @@
           </ng-container>
         </div>
 
-        <!-- Estadísticas -->
+        <!-- Estadísticas mejoradas - Eliminados mensajes de ocupación -->
         <div class="row mb-4">
           <div class="col-lg-8 mb-4">
-            <div class="card shadow-sm">
-              <div class="card-header bg-white">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-white border-0">
                 <h6 class="mb-0 fw-bold">
                   <i class="bi bi-calendar-event me-2 text-primary"></i>
                   Reservas Recientes
@@ -276,22 +225,22 @@
               <div class="card-body p-0">
                 <div class="table-responsive">
                   <table class="table table-hover mb-0">
-                    <thead>
+                    <thead class="bg-light">
                       <tr>
-                        <th>Habitación</th>
-                        <th>Cliente</th>
-                        <th>Check-in</th>
-                        <th>Check-out</th>
-                        <th>Estado</th>
+                        <th class="border-0">Habitación</th>
+                        <th class="border-0">Cliente</th>
+                        <th class="border-0">Check-in</th>
+                        <th class="border-0">Check-out</th>
+                        <th class="border-0">Estado</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr *ngFor="let reserva of reservasRecientes">
-                        <td>{{reserva.habitacion}}</td>
-                        <td>{{reserva.cliente}}</td>
-                        <td>{{reserva.checkIn | date:'dd/MM'}}</td>
-                        <td>{{reserva.checkOut | date:'dd/MM'}}</td>
-                        <td>
+                        <td class="align-middle">{{reserva.habitacion}}</td>
+                        <td class="align-middle">{{reserva.cliente}}</td>
+                        <td class="align-middle">{{reserva.checkIn | date:'dd/MM'}}</td>
+                        <td class="align-middle">{{reserva.checkOut | date:'dd/MM'}}</td>
+                        <td class="align-middle">
                           <span class="badge" [ngClass]="getEstadoBadgeClass(reserva.estado)">
                             {{reserva.estado}}
                           </span>
@@ -301,7 +250,7 @@
                   </table>
                 </div>
               </div>
-              <div class="card-footer bg-white">
+              <div class="card-footer bg-white border-0">
                 <button class="btn btn-sm btn-outline-primary" (click)="verTodasReservas()">
                   Ver todas las reservas
                 </button>
@@ -309,50 +258,44 @@
             </div>
           </div>
 
-          <!-- Estadísticas rápidas -->
+          <!-- Estadísticas rápidas mejoradas - Eliminado mensaje de ocupación -->
           <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-header bg-white">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0">
                 <h6 class="mb-0 fw-bold">
                   <i class="bi bi-speedometer me-2 text-primary"></i>
                   Estadísticas Rápidas
                 </h6>
               </div>
               <div class="card-body">
-                <div class="row">
+                <div class="row g-2">
                   <div class="col-6 text-center mb-3">
-                    <div class="p-3 bg-light rounded-3">
-                      <div class="h4 fw-bold text-primary">{{estadisticas.ocupacion}}%</div>
-                      <small class="text-muted">Ocupación Actual</small>
-                    </div>
-                  </div>
-                  <div class="col-6 text-center mb-3">
-                    <div class="p-3 bg-light rounded-3">
-                      <div class="h4 fw-bold text-success">{{formatFcfa(estadisticas.ingresosHoy)}}</div>
+                    <div class="p-3 bg-light rounded-3 stat-card">
+                      <div class="h4 fw-bold text-success mb-1">{{formatFcfa(estadisticas.ingresosHoy)}}</div>
                       <small class="text-muted">Ingresos Hoy</small>
                     </div>
                   </div>
                   <div class="col-6 text-center mb-3">
-                    <div class="p-3 bg-light rounded-3">
-                      <div class="h4 fw-bold text-info">{{estadisticas.reservasPendientes}}</div>
+                    <div class="p-3 bg-light rounded-3 stat-card">
+                      <div class="h4 fw-bold text-info mb-1">{{estadisticas.reservasPendientes}}</div>
                       <small class="text-muted">Reservas Pendientes</small>
                     </div>
                   </div>
                   <div class="col-6 text-center mb-3">
-                    <div class="p-3 bg-light rounded-3">
-                      <div class="h4 fw-bold text-warning">{{estadisticas.clientesNuevos}}</div>
+                    <div class="p-3 bg-light rounded-3 stat-card">
+                      <div class="h4 fw-bold text-warning mb-1">{{estadisticas.clientesNuevos}}</div>
                       <small class="text-muted">Clientes Nuevos (Mes)</small>
                     </div>
                   </div>
                   <div class="col-6 text-center mb-3">
-                    <div class="p-3 bg-light rounded-3">
-                      <div class="h4 fw-bold text-danger">{{estadisticas.pagosPendientes}}</div>
+                    <div class="p-3 bg-light rounded-3 stat-card">
+                      <div class="h4 fw-bold text-danger mb-1">{{estadisticas.pagosPendientes}}</div>
                       <small class="text-muted">Pagos Pendientes</small>
                     </div>
                   </div>
                   <div class="col-6 text-center mb-3">
-                    <div class="p-3 bg-light rounded-3">
-                      <div class="h4 fw-bold text-purple">{{estadisticas.fotosSubidas}}</div>
+                    <div class="p-3 bg-light rounded-3 stat-card">
+                      <div class="h4 fw-bold text-purple mb-1">{{estadisticas.fotosSubidas}}</div>
                       <small class="text-muted">Fotos Subidas (Mes)</small>
                     </div>
                   </div>
@@ -362,50 +305,50 @@
           </div>
         </div>
 
-        <!-- Acciones rápidas -->
+        <!-- Acciones rápidas mejoradas -->
         <div class="row">
           <div class="col-12">
-            <div class="card shadow-sm">
-              <div class="card-header bg-white">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-white border-0">
                 <h6 class="mb-0 fw-bold">
                   <i class="bi bi-lightning me-2 text-primary"></i>
                   Acciones Rápidas
                 </h6>
               </div>
               <div class="card-body">
-                <div class="row">
-                  <div class="col-md-4 col-sm-6 mb-2">
-                    <button class="btn btn-outline-primary w-100 text-start" (click)="crearReservaRapida()">
+                <div class="row g-2">
+                  <div class="col-md-4 col-sm-6">
+                    <button class="btn btn-outline-primary w-100 text-start py-2" (click)="crearReservaRapida()">
                       <i class="bi bi-plus-circle me-2"></i>
                       Nueva Reserva
                     </button>
                   </div>
-                  <div class="col-md-4 col-sm-6 mb-2">
-                    <button class="btn btn-outline-success w-100 text-start" (click)="registrarPago()">
+                  <div class="col-md-4 col-sm-6">
+                    <button class="btn btn-outline-success w-100 text-start py-2" (click)="registrarPago()">
                       <i class="bi bi-cash-coin me-2"></i>
                       Registrar Pago
                     </button>
                   </div>
-                  <div class="col-md-4 col-sm-6 mb-2">
-                    <button class="btn btn-outline-info w-100 text-start" (click)="checkInRapido()">
+                  <div class="col-md-4 col-sm-6">
+                    <button class="btn btn-outline-info w-100 text-start py-2" (click)="checkInRapido()">
                       <i class="bi bi-box-arrow-in-right me-2"></i>
                       Check-in
                     </button>
                   </div>
-                  <div class="col-md-4 col-sm-6 mb-2">
-                    <button class="btn btn-outline-warning w-100 text-start" (click)="checkOutRapido()">
+                  <div class="col-md-4 col-sm-6">
+                    <button class="btn btn-outline-warning w-100 text-start py-2" (click)="checkOutRapido()">
                       <i class="bi bi-box-arrow-right me-2"></i>
                       Check-out
                     </button>
                   </div>
-                  <div class="col-md-4 col-sm-6 mb-2">
-                    <button class="btn btn-outline-purple w-100 text-start" (click)="subirFoto()">
+                  <div class="col-md-4 col-sm-6">
+                    <button class="btn btn-outline-purple w-100 text-start py-2" (click)="subirFoto()">
                       <i class="bi bi-camera me-2"></i>
                       Subir Foto
                     </button>
                   </div>
-                  <div class="col-md-4 col-sm-6 mb-2">
-                    <button class="btn btn-outline-secondary w-100 text-start" (click)="generarReporte()">
+                  <div class="col-md-4 col-sm-6">
+                    <button class="btn btn-outline-secondary w-100 text-start py-2" (click)="generarReporte()">
                       <i class="bi bi-printer me-2"></i>
                       Generar Reporte
                     </button>
@@ -420,17 +363,20 @@
   </div>
 </div>
 
-<!-- Modal de bienvenida -->
+<!-- Modal de bienvenida mejorado - Eliminado mensaje de ocupación -->
 <div class="modal fade" id="welcomeModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white border-0">
         <h5 class="modal-title">
           <i class="bi bi-house-door-fill me-2"></i>
           ¡Bienvenido a {{nombreHotel}}!
         </h5>
       </div>
       <div class="modal-body text-center p-5">
+        <div class="mb-4">
+          <img src="logo.jpeg" alt="Logo" width="80" height="80" style="object-fit: contain; border-radius: 16px;">
+        </div>
         <div class="mb-4">
           <i class="bi bi-check-circle-fill display-1 text-success"></i>
         </div>
@@ -441,12 +387,11 @@
         </p>
         <div class="alert alert-info mt-3">
           <i class="bi bi-info-circle me-2"></i>
-          <strong>Ocupación actual:</strong> {{estadisticas.ocupacion}}% | 
-          <strong>Reservas hoy:</strong> {{summaryCards[2]?.count || 0}}
+          <strong>Bienvenido al sistema de gestión hotelera</strong>
         </div>
       </div>
-      <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+      <div class="modal-footer justify-content-center border-0">
+        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
           <i class="bi bi-arrow-right me-1"></i> Comenzar a trabajar
         </button>
       </div>

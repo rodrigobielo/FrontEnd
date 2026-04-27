@@ -1,19 +1,19 @@
 <div class="dashboard-container">
-  <!-- Barra de navegación superior -->
+  <!-- Barra de navegización superior mejorada -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
     <div class="container-fluid">
       <!-- Logo y nombre de la aplicación -->
       <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/dashboard">
-        <i class="bi bi-geo-alt-fill me-2"></i>
+        <img src="logo.jpeg" alt="Logo" class="navbar-logo me-2" width="35" height="35" style="object-fit: contain; border-radius: 8px;">
         <span>Sistema Turístico</span>
       </a>
       
       <!-- Botón para colapsar sidebar en móviles -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
         <span class="navbar-toggler-icon"></span>
       </button>
       
-      <!-- Menú de usuario -->
+      <!-- Menú de usuario mejorado -->
       <div class="navbar-nav ms-auto align-items-center">
         <div class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
@@ -21,15 +21,16 @@
               <span class="small text-white-50 d-block">Bienvenido,</span>
               <strong class="text-white">{{currentUser?.nombre || 'Administrador'}}</strong>
             </div>
-            <i class="bi bi-person-circle fs-4"></i>
+            <div class="user-avatar">
+              <i class="bi bi-person-circle fs-4"></i>
+            </div>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Mi perfil</a></li>
-            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Configuración</a></li>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+            <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i> Mi perfil</a></li>
+            <li><a class="dropdown-item py-2" href="#"><i class="bi bi-gear me-2"></i> Configuración</a></li>
             <li><hr class="dropdown-divider"></li>
-            <!-- Botón de cerrar sesión -->
             <li>
-              <a class="dropdown-item text-danger" href="#" (click)="cerrarSesion($event)">
+              <a class="dropdown-item text-danger py-2" href="#" (click)="cerrarSesion($event)">
                 <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
               </a>
             </li>
@@ -42,93 +43,81 @@
   <!-- Contenedor principal -->
   <div class="container-fluid">
     <div class="row">
-      <!-- Sidebar -->
+      <!-- Sidebar mejorado -->
       <div class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
         <div class="position-sticky pt-3">
-          <!-- Perfil en sidebar -->
-          <div class="text-center mb-4 p-3 bg-light rounded-3 d-none d-md-block">
+          <!-- Logo y perfil en sidebar -->
+          <div class="text-center mb-4 p-3 bg-gradient-primary rounded-3 d-none d-md-block shadow-sm">
             <div class="mb-3">
-              <i class="bi bi-person-circle display-6 text-primary"></i>
+              <img src="logo.jpeg" alt="Logo" class="sidebar-logo" width="70" height="70" style="object-fit: contain; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             </div>
-            <h6 class="mb-1 fw-bold">{{currentUser?.nombre || 'Administrador'}}</h6>
-            <small class="text-muted">Super Administrador</small>
+            <h6 class="mb-1 fw-bold text-white">{{currentUser?.nombre || 'Administrador'}}</h6>
+            <small class="text-white-50">Super Administrador</small>
           </div>
           
-          <!-- Menú principal -->
+          <!-- Menú principal mejorado -->
           <h6 class="sidebar-heading px-3 mt-4 mb-2 text-muted text-uppercase small fw-bold">
             <i class="bi bi-menu-button-wide me-2"></i> Menú Principal
           </h6>
           <ul class="nav flex-column mb-4">
             <li class="nav-item">
-              <a class="nav-link active" routerLink="/dashboard" routerLinkActive="active">
+              <a class="nav-link active d-flex align-items-center" routerLink="/dashboard" routerLinkActive="active">
                 <i class="bi bi-speedometer2 me-2"></i>
-                Dashboard
+                <span>Dashboard</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/regiones" routerLinkActive="active">
+              <a class="nav-link d-flex align-items-center" routerLink="/regiones" routerLinkActive="active">
                 <i class="bi bi-globe-americas me-2"></i>
-                Regiones
+                <span>Regiones</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/provincias" routerLinkActive="active">
+              <a class="nav-link d-flex align-items-center" routerLink="/provincias" routerLinkActive="active">
                 <i class="bi bi-map me-2"></i>
-                Provincias
+                <span>Provincias</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/ciudades" routerLinkActive="active">
+              <a class="nav-link d-flex align-items-center" routerLink="/ciudades" routerLinkActive="active">
                 <i class="bi bi-building me-2"></i>
-                Ciudades
+                <span>Ciudades</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/hoteles" routerLinkActive="active">
+              <a class="nav-link d-flex align-items-center" routerLink="/hoteles" routerLinkActive="active">
                 <i class="bi bi-house-door me-2"></i>
-                Hoteles
+                <span>Hoteles</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/categorias" routerLinkActive="active">
+              <a class="nav-link d-flex align-items-center" routerLink="/categorias" routerLinkActive="active">
                 <i class="bi bi-tags me-2"></i>
-                Categorías
+                <span>Categorías</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/usuarios" routerLinkActive="active">
+              <a class="nav-link d-flex align-items-center" routerLink="/usuarios" routerLinkActive="active">
                 <i class="bi bi-people me-2"></i>
-                Usuarios
+                <span>Usuarios</span>
               </a>
             </li>
           </ul>
           
-          <!-- Reportes -->
+          <!-- Reportes - Eliminados ocupación y satisfacción -->
           <h6 class="sidebar-heading px-3 mt-4 mb-2 text-muted text-uppercase small fw-bold">
             <i class="bi bi-bar-chart me-2"></i> Reportes
           </h6>
           <ul class="nav flex-column mb-4">
             <li class="nav-item">
-              <a class="nav-link" href="#">
-                <i class="bi bi-graph-up me-2"></i>
-                Ocupación
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">
+              <a class="nav-link d-flex align-items-center" href="#">
                 <i class="bi bi-cash-coin me-2"></i>
-                Finanzas
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">
-                <i class="bi bi-star me-2"></i>
-                Satisfacción
+                <span>Finanzas</span>
               </a>
             </li>
           </ul>
           
-          <!-- Botón de cerrar sesión en sidebar -->
+          <!-- Botón de cerrar sesión en sidebar mejorado -->
           <div class="sidebar-footer p-3 mt-3 bg-light rounded-3 d-none d-md-block">
             <button class="btn btn-outline-danger w-100" (click)="cerrarSesion()">
               <i class="bi bi-box-arrow-right me-2"></i>
@@ -136,11 +125,11 @@
             </button>
           </div>
           
-          <!-- Información del sistema -->
+          <!-- Información del sistema mejorada -->
           <div class="sidebar-footer p-3 mt-3 bg-light rounded-3 d-none d-md-block">
             <div class="d-flex align-items-center">
-              <i class="bi bi-info-circle text-primary me-2"></i>
-              <div>
+              <img src="logo.jpeg" alt="Logo" width="30" height="30" style="object-fit: contain; border-radius: 6px;">
+              <div class="ms-2">
                 <small class="text-muted d-block">Sistema Turístico</small>
                 <small class="text-muted">Versión 2.1.0</small>
               </div>
@@ -149,11 +138,11 @@
         </div>
       </div>
 
-      <!-- Contenido principal -->
+      <!-- Contenido principal mejorado -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-        <!-- Header del contenido -->
+        <!-- Header del contenido mejorado -->
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
-          <h1 class="h2 fw-bold">
+          <h1 class="h2 fw-bold gradient-text">
             <i class="bi bi-speedometer2 me-2 text-primary"></i>
             Dashboard SuperAdmin
           </h1>
@@ -163,8 +152,8 @@
                 <i class="bi bi-calendar me-1"></i> Hoy: {{currentDate | date:'dd/MM/yyyy'}}
               </button>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="onListClick('Regiones')">
-              <i class="bi bi-list me-1"></i> Ver Todas las Regiones
+            <button type="button" class="btn btn-sm btn-primary shadow-sm" (click)="generarReporteDiario()">
+              <i class="bi bi-file-earmark-text me-1"></i> Reporte Diario
             </button>
           </div>
         </div>
@@ -184,11 +173,11 @@
           <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
         </div>
 
-        <!-- Tarjetas de resumen con botones funcionales (solo mostrar cuando no está cargando) -->
+        <!-- Tarjetas de resumen con un solo botón "Más información" -->
         <div *ngIf="!loading" class="row mb-4">
           <!-- Regiones -->
           <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary border-3 border-start border-0 shadow-sm h-100 py-2">
+            <div class="card border-left-primary border-3 border-start border-0 shadow-sm h-100 py-2 card-hover">
               <div class="card-body">
                 <div class="row no-gutters align-items-center">
                   <div class="col me-2">
@@ -196,25 +185,18 @@
                       Regiones
                     </div>
                     <div class="h5 mb-0 fw-bold text-gray-800">{{summaryCards[0]?.count || 0}}</div>
-                    <div class="mt-2">
-                      <span class="badge" [ngClass]="getChangeBadgeClass(summaryCards[0]?.change || 0)">
-                        <i class="bi" [class]="'bi-' + getChangeIcon(summaryCards[0]?.change || 0) + ' me-1'"></i> 
-                        {{summaryCards[0]?.change || 0}}%
-                      </span>
-                      <small class="text-muted ms-2">vs mes pasado</small>
-                    </div>
                   </div>
                   <div class="col-auto">
-                    <i class="bi bi-globe-americas fs-1 text-primary opacity-75"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-globe-americas fs-1 text-primary opacity-75"></i>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
-                <button class="btn btn-sm btn-primary" (click)="onAddClick('Regiones')">
-                  <i class="bi bi-plus-circle me-1"></i> Añadir
-                </button>
-                <button class="btn btn-sm btn-outline-primary" (click)="onListClick('Regiones')">
-                  <i class="bi bi-list me-1"></i> Lista
+              <div class="card-footer bg-transparent border-0 py-3">
+                <button class="btn btn-primary w-100" (click)="onMoreInfoClick('Regiones')">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Más información
                 </button>
               </div>
             </div>
@@ -222,7 +204,7 @@
 
           <!-- Provincias -->
           <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success border-3 border-start border-0 shadow-sm h-100 py-2">
+            <div class="card border-left-success border-3 border-start border-0 shadow-sm h-100 py-2 card-hover">
               <div class="card-body">
                 <div class="row no-gutters align-items-center">
                   <div class="col me-2">
@@ -230,25 +212,18 @@
                       Provincias
                     </div>
                     <div class="h5 mb-0 fw-bold text-gray-800">{{summaryCards[1]?.count || 0}}</div>
-                    <div class="mt-2">
-                      <span class="badge" [ngClass]="getChangeBadgeClass(summaryCards[1]?.change || 0)">
-                        <i class="bi" [class]="'bi-' + getChangeIcon(summaryCards[1]?.change || 0) + ' me-1'"></i> 
-                        {{summaryCards[1]?.change || 0}}%
-                      </span>
-                      <small class="text-muted ms-2">vs mes pasado</small>
-                    </div>
                   </div>
                   <div class="col-auto">
-                    <i class="bi bi-map fs-1 text-success opacity-75"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-map fs-1 text-success opacity-75"></i>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
-                <button class="btn btn-sm btn-success" (click)="onAddClick('Provincias')">
-                  <i class="bi bi-plus-circle me-1"></i> Añadir
-                </button>
-                <button class="btn btn-sm btn-outline-success" (click)="onListClick('Provincias')">
-                  <i class="bi bi-list me-1"></i> Lista
+              <div class="card-footer bg-transparent border-0 py-3">
+                <button class="btn btn-success w-100" (click)="onMoreInfoClick('Provincias')">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Más información
                 </button>
               </div>
             </div>
@@ -256,7 +231,7 @@
 
           <!-- Ciudades -->
           <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info border-3 border-start border-0 shadow-sm h-100 py-2">
+            <div class="card border-left-info border-3 border-start border-0 shadow-sm h-100 py-2 card-hover">
               <div class="card-body">
                 <div class="row no-gutters align-items-center">
                   <div class="col me-2">
@@ -264,25 +239,18 @@
                       Ciudades
                     </div>
                     <div class="h5 mb-0 fw-bold text-gray-800">{{summaryCards[2]?.count || 0}}</div>
-                    <div class="mt-2">
-                      <span class="badge" [ngClass]="getChangeBadgeClass(summaryCards[2]?.change || 0)">
-                        <i class="bi" [class]="'bi-' + getChangeIcon(summaryCards[2]?.change || 0) + ' me-1'"></i> 
-                        {{summaryCards[2]?.change || 0}}%
-                      </span>
-                      <small class="text-muted ms-2">vs mes pasado</small>
-                    </div>
                   </div>
                   <div class="col-auto">
-                    <i class="bi bi-building fs-1 text-info opacity-75"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-building fs-1 text-info opacity-75"></i>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
-                <button class="btn btn-sm btn-info" (click)="onAddClick('Ciudades')">
-                  <i class="bi bi-plus-circle me-1"></i> Añadir
-                </button>
-                <button class="btn btn-sm btn-outline-info" (click)="onListClick('Ciudades')">
-                  <i class="bi bi-list me-1"></i> Lista
+              <div class="card-footer bg-transparent border-0 py-3">
+                <button class="btn btn-info w-100" (click)="onMoreInfoClick('Ciudades')">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Más información
                 </button>
               </div>
             </div>
@@ -290,7 +258,7 @@
 
           <!-- Hoteles -->
           <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning border-3 border-start border-0 shadow-sm h-100 py-2">
+            <div class="card border-left-warning border-3 border-start border-0 shadow-sm h-100 py-2 card-hover">
               <div class="card-body">
                 <div class="row no-gutters align-items-center">
                   <div class="col me-2">
@@ -298,25 +266,18 @@
                       Hoteles
                     </div>
                     <div class="h5 mb-0 fw-bold text-gray-800">{{summaryCards[3]?.count || 0}}</div>
-                    <div class="mt-2">
-                      <span class="badge" [ngClass]="getChangeBadgeClass(summaryCards[3]?.change || 0)">
-                        <i class="bi" [class]="'bi-' + getChangeIcon(summaryCards[3]?.change || 0) + ' me-1'"></i> 
-                        {{summaryCards[3]?.change || 0}}%
-                      </span>
-                      <small class="text-muted ms-2">vs mes pasado</small>
-                    </div>
                   </div>
                   <div class="col-auto">
-                    <i class="bi bi-house-door fs-1 text-warning opacity-75"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-house-door fs-1 text-warning opacity-75"></i>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
-                <button class="btn btn-sm btn-warning" (click)="onAddClick('Hoteles')">
-                  <i class="bi bi-plus-circle me-1"></i> Añadir
-                </button>
-                <button class="btn btn-sm btn-outline-warning" (click)="onListClick('Hoteles')">
-                  <i class="bi bi-list me-1"></i> Lista
+              <div class="card-footer bg-transparent border-0 py-3">
+                <button class="btn btn-warning w-100" (click)="onMoreInfoClick('Hoteles')">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Más información
                 </button>
               </div>
             </div>
@@ -324,7 +285,7 @@
 
           <!-- Categorías -->
           <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger border-3 border-start border-0 shadow-sm h-100 py-2">
+            <div class="card border-left-danger border-3 border-start border-0 shadow-sm h-100 py-2 card-hover">
               <div class="card-body">
                 <div class="row no-gutters align-items-center">
                   <div class="col me-2">
@@ -332,25 +293,18 @@
                       Categorías
                     </div>
                     <div class="h5 mb-0 fw-bold text-gray-800">{{summaryCards[4]?.count || 0}}</div>
-                    <div class="mt-2">
-                      <span class="badge" [ngClass]="getChangeBadgeClass(summaryCards[4]?.change || 0)">
-                        <i class="bi" [class]="'bi-' + getChangeIcon(summaryCards[4]?.change || 0) + ' me-1'"></i> 
-                        {{summaryCards[4]?.change || 0}}%
-                      </span>
-                      <small class="text-muted ms-2">vs mes pasado</small>
-                    </div>
                   </div>
                   <div class="col-auto">
-                    <i class="bi bi-tags fs-1 text-danger opacity-75"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-tags fs-1 text-danger opacity-75"></i>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
-                <button class="btn btn-sm btn-danger" (click)="onAddClick('Categorías')">
-                  <i class="bi bi-plus-circle me-1"></i> Añadir
-                </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="onListClick('Categorías')">
-                  <i class="bi bi-list me-1"></i> Lista
+              <div class="card-footer bg-transparent border-0 py-3">
+                <button class="btn btn-danger w-100" (click)="onMoreInfoClick('Categorías')">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Más información
                 </button>
               </div>
             </div>
@@ -358,7 +312,7 @@
 
           <!-- Usuarios -->
           <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-secondary border-3 border-start border-0 shadow-sm h-100 py-2">
+            <div class="card border-left-secondary border-3 border-start border-0 shadow-sm h-100 py-2 card-hover">
               <div class="card-body">
                 <div class="row no-gutters align-items-center">
                   <div class="col me-2">
@@ -366,38 +320,31 @@
                       Usuarios
                     </div>
                     <div class="h5 mb-0 fw-bold text-gray-800">{{summaryCards[5]?.count || 0}}</div>
-                    <div class="mt-2">
-                      <span class="badge" [ngClass]="getChangeBadgeClass(summaryCards[5]?.change || 0)">
-                        <i class="bi" [class]="'bi-' + getChangeIcon(summaryCards[5]?.change || 0) + ' me-1'"></i> 
-                        {{summaryCards[5]?.change || 0}}%
-                      </span>
-                      <small class="text-muted ms-2">vs mes pasado</small>
-                    </div>
                   </div>
                   <div class="col-auto">
-                    <i class="bi bi-people fs-1 text-secondary opacity-75"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-people fs-1 text-secondary opacity-75"></i>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="card-footer bg-transparent border-0 py-2 d-flex justify-content-between">
-                <button class="btn btn-sm btn-secondary" (click)="onAddClick('Usuarios')">
-                  <i class="bi bi-plus-circle me-1"></i> Añadir
-                </button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="onListClick('Usuarios')">
-                  <i class="bi bi-list me-1"></i> Lista
+              <div class="card-footer bg-transparent border-0 py-3">
+                <button class="btn btn-secondary w-100" (click)="onMoreInfoClick('Usuarios')">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Más información
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Mensaje informativo -->
+        <!-- Mensaje informativo mejorado -->
         <div *ngIf="!loading" class="row">
           <div class="col-12">
             <div class="card shadow-sm border-0">
               <div class="card-body text-center p-5">
                 <div class="mb-4">
-                  <i class="bi bi-info-circle display-1 text-primary opacity-75"></i>
+                  <img src="logo.jpeg" alt="Logo" width="80" height="80" style="object-fit: contain; border-radius: 16px;">
                 </div>
                 <h4 class="mb-3">Panel de Administración</h4>
                 <p class="text-muted mb-4">
@@ -408,12 +355,8 @@
                   <div class="col-md-8">
                     <div class="d-grid gap-3">
                       <div class="d-flex align-items-center justify-content-center">
-                        <span class="badge bg-primary me-3">Añadir</span>
-                        <span class="text-muted">Para crear nuevos registros</span>
-                      </div>
-                      <div class="d-flex align-items-center justify-content-center">
-                        <span class="badge bg-outline-primary me-3">Lista</span>
-                        <span class="text-muted">Para ver y gestionar registros existentes</span>
+                        <span class="badge bg-primary me-3">Más información</span>
+                        <span class="text-muted">Para ver y gestionar registros</span>
                       </div>
                     </div>
                   </div>
@@ -427,17 +370,20 @@
   </div>
 </div>
 
-<!-- Modal de bienvenida -->
+<!-- Modal de bienvenida mejorado -->
 <div class="modal fade" id="welcomeModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white border-0">
         <h5 class="modal-title">
           <i class="bi bi-hand-thumbs-up-fill me-2"></i>
           ¡Bienvenido al Sistema!
         </h5>
       </div>
       <div class="modal-body text-center p-5">
+        <div class="mb-4">
+          <img src="logo.jpeg" alt="Logo" width="80" height="80" style="object-fit: contain; border-radius: 16px;">
+        </div>
         <div class="mb-4">
           <i class="bi bi-check-circle-fill display-1 text-success"></i>
         </div>
@@ -447,8 +393,8 @@
           Desde aquí puedes gestionar regiones, provincias, ciudades, hoteles, categorías y usuarios.
         </p>
       </div>
-      <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+      <div class="modal-footer justify-content-center border-0">
+        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
           <i class="bi bi-arrow-right me-1"></i> Comenzar a trabajar
         </button>
       </div>

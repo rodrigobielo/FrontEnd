@@ -38,6 +38,39 @@ export class Dashboard implements OnInit, AfterViewInit {
     console.log('DashboardComponent inicializado');
   }
 
+// Agregar este método al componente TypeScript
+onMoreInfoClick(cardType: string): void {
+  console.log(`Ver más información de ${cardType}`);
+  // Redirigir según el tipo
+  switch(cardType) {
+    case 'Regiones':
+      this.router.navigate(['/regiones']);
+      break;
+    case 'Provincias':
+      this.router.navigate(['/provincias']);
+      break;
+    case 'Ciudades':
+      this.router.navigate(['/ciudades']);
+      break;
+    case 'Hoteles':
+      this.router.navigate(['/hoteles']);
+      break;
+    case 'Categorías':
+      this.router.navigate(['/categorias']);
+      break;
+    case 'Usuarios':
+      this.router.navigate(['/usuarios']);
+      break;
+    default:
+      console.log(`Tipo no reconocido: ${cardType}`);
+  }
+}
+
+generarReporteDiario(): void {
+  console.log('Generando reporte diario del sistema');
+  // Aquí puedes implementar la lógica para generar el reporte
+}
+
   ngOnInit(): void {
     console.log('DashboardComponent.ngOnInit()');
     this.verifyAccess();

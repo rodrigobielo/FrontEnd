@@ -1,0 +1,111 @@
+/* provincias.css - Mismo estilo que regiones */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Formulario */
+.modern-form {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+/* Search box */
+.search-box {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 0.8rem;
+  z-index: 1;
+}
+
+.search-box input {
+  padding-left: 28px;
+}
+
+/* Tabla */
+.table-hover tbody tr {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Badges */
+.bg-success-subtle {
+  background-color: rgba(72, 187, 120, 0.1);
+}
+
+.text-success-emphasis {
+  color: #38a169;
+}
+
+/* Validación */
+.is-invalid {
+  border-color: #dc3545;
+}
+
+.text-danger {
+  font-size: 0.875rem;
+}
+
+/* Form text */
+.form-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+/* Alertas */
+.alert {
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .btn-group {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+  
+  .search-box input {
+    width: 100% !important;
+  }
+  
+  .dropdown {
+    width: 100%;
+  }
+  
+  .dropdown .btn {
+    width: 100%;
+  }
+}

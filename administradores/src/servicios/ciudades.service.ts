@@ -8,7 +8,7 @@ import { Ciudad, CiudadDTO } from '../modelos/ciudad.model';
   providedIn: 'root'
 })
 export class CiudadService {
-  private apiUrl = 'http://localhost:8765/Ciudades';
+  private apiUrl = 'http://localhost:3333/Ciudades';
 
   constructor(private http: HttpClient) { }
 

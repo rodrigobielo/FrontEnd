@@ -8,7 +8,7 @@ import { TipoHabitacion } from '../modelos/tipo-habitacion.model';
   providedIn: 'root'
 })
 export class TipoHabitacionService {
-  private baseUrl = 'http://localhost:8765/TiposHabitaciones';
+  private baseUrl = 'http://localhost:3333/TiposHabitaciones';
 
   private httpOptions = {
     headers: new HttpHeaders({

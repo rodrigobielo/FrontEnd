@@ -8,7 +8,7 @@ import { Region } from '../modelos/region.model';
   providedIn: 'root'
 })
 export class RegionService {
-  private apiUrl = 'http://localhost:8765/Regiones'; // URL del gateway
+  private apiUrl = 'http://localhost:3333/Regiones'; // URL del gateway
 
   private httpOptions = {
     headers: new HttpHeaders({

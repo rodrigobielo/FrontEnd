@@ -1,4 +1,4 @@
-<!-- CIUDADES.HTML COMPLETO -->
+<!-- ciudades.html - Componente de gestión de ciudades -->
 <div class="container-fluid py-4">
   <!-- Encabezado de la página -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -7,375 +7,307 @@
         <i class="bi bi-building-fill text-info me-2"></i>
         Gestión de Ciudades
       </h1>
-      <p class="text-body-secondary mb-0">Administra las ciudades de cada provincia</p>
+      <p class="text-muted mb-0">Administra las ciudades de cada provincia</p>
     </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary" routerLink="/dashboard">
+    <div>
+      <button class="btn btn-outline-secondary me-2" routerLink="/dashboard">
         <i class="bi bi-arrow-left me-1"></i> Volver
       </button>
-      <button class="btn btn-info" (click)="nuevoRegistro()">
-        <i class="bi bi-plus-circle me-1"></i> Nueva Ciudad
-      </button>
+      @if (!formularioVisible) {
+        <button class="btn btn-info" (click)="mostrarFormulario()">
+          <i class="bi bi-plus-circle me-1"></i> Nueva Ciudad
+        </button>
+      }
     </div>
   </div>
 
-  <!-- Tarjetas de información -->
-  <div class="row mb-4">
-    <div class="col-md-4 mb-3 mb-md-0">
-      <div class="card border-info-subtle border-2">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="flex-shrink-0">
-              <i class="bi bi-info-circle-fill text-info-emphasis fs-1"></i>
+  <!-- Formulario Moderno -->
+  @if (formularioVisible) {
+    <div class="form-overlay animate-slide-down">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+          <div class="card modern-form border-0 shadow-lg">
+            <div class="card-header bg-gradient-info text-white border-0 py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <i class="bi bi-stars fs-4 me-2"></i>
+                  <h5 class="mb-0 d-inline-block fw-bold">
+                    {{ modoEdicion ? 'Editar Ciudad' : 'Crear Nueva Ciudad' }}
+                  </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" (click)="cerrarFormulario()" aria-label="Cerrar"></button>
+              </div>
             </div>
-            <div class="flex-grow-1 ms-3">
-              <h5 class="card-title mb-1">Total de Ciudades</h5>
-              <p class="card-text display-6 fw-bold text-info">{{ totalCiudades }}</p>
-              <small class="text-body-tertiary">Registradas en el sistema</small>
+
+            <div class="card-body p-4">
+              <form [formGroup]="ciudadForm" (ngSubmit)="guardarCiudad()" novalidate>
+                <!-- Campo: Nombre -->
+                <div class="mb-3">
+                  <label for="nombre" class="form-label fw-bold">
+                    <i class="bi bi-tag me-1 text-info"></i>
+                    Nombre de la ciudad <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="nombre"
+                    formControlName="nombre"
+                    [ngClass]="{
+                      'is-invalid': ciudadForm.get('nombre')?.invalid && 
+                                   (ciudadForm.get('nombre')?.dirty || ciudadForm.get('nombre')?.touched)
+                    }"
+                    placeholder="Ej: San Salvador de Jujuy, Salta Capital, Mendoza"
+                  >
+                  @if (ciudadForm.get('nombre')?.hasError('required') && 
+                       (ciudadForm.get('nombre')?.dirty || ciudadForm.get('nombre')?.touched)) {
+                    <div class="text-danger small mt-1">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                      El nombre es obligatorio
+                    </div>
+                  }
+                  @if (ciudadForm.get('nombre')?.hasError('minlength')) {
+                    <div class="text-danger small mt-1">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                      Mínimo 3 caracteres
+                    </div>
+                  }
+                  @if (ciudadForm.get('nombre')?.hasError('pattern')) {
+                    <div class="text-danger small mt-1">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                      Solo letras, espacios, puntos y guiones
+                    </div>
+                  }
+                </div>
+
+                <!-- Campo: Descripción -->
+                <div class="mb-3">
+                  <label for="descripcion" class="form-label fw-bold">
+                    <i class="bi bi-card-text me-1 text-info"></i>
+                    Descripción <span class="text-danger">*</span>
+                  </label>
+                  <textarea 
+                    class="form-control" 
+                    id="descripcion"
+                    formControlName="descripcion"
+                    [ngClass]="{
+                      'is-invalid': ciudadForm.get('descripcion')?.invalid && 
+                                   (ciudadForm.get('descripcion')?.dirty || ciudadForm.get('descripcion')?.touched)
+                    }"
+                    rows="3"
+                    placeholder="Describe las características, ubicación y atractivos de la ciudad..."
+                  ></textarea>
+                  <div class="d-flex justify-content-between mt-1">
+                    <div>
+                      @if (ciudadForm.get('descripcion')?.hasError('required') && 
+                           (ciudadForm.get('descripcion')?.dirty || ciudadForm.get('descripcion')?.touched)) {
+                        <div class="text-danger small">
+                          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                          La descripción es obligatoria
+                        </div>
+                      }
+                    </div>
+                    <div class="text-muted small">
+                      <i class="bi bi-pencil me-1"></i>
+                      {{ ciudadForm.get('descripcion')?.value?.length || 0 }}/500 caracteres
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Campo: Provincia -->
+                <div class="mb-3">
+                  <label for="provinciaId" class="form-label fw-bold">
+                    <i class="bi bi-map-fill me-1 text-info"></i>
+                    Provincia <span class="text-danger">*</span>
+                  </label>
+                  @if (cargandoProvincias) {
+                    <div class="alert alert-info py-2">
+                      <i class="bi bi-hourglass-split me-2"></i>
+                      Cargando provincias...
+                    </div>
+                  } @else if (provincias.length === 0) {
+                    <div class="alert alert-warning py-2">
+                      <i class="bi bi-exclamation-triangle me-2"></i>
+                      No hay provincias disponibles. Debes crear provincias primero.
+                    </div>
+                  } @else {
+                    <select 
+                      class="form-select" 
+                      id="provinciaId"
+                      formControlName="provinciaId"
+                      [ngClass]="{
+                        'is-invalid': ciudadForm.get('provinciaId')?.invalid && 
+                                     (ciudadForm.get('provinciaId')?.dirty || ciudadForm.get('provinciaId')?.touched)
+                      }"
+                    >
+                      <option value="" disabled selected>Selecciona una provincia</option>
+                      @for (provincia of provincias; track provincia.id) {
+                        <option [value]="provincia.id">{{ provincia.nombre }}</option>
+                      }
+                    </select>
+                    @if (ciudadForm.get('provinciaId')?.hasError('required') && 
+                         (ciudadForm.get('provinciaId')?.dirty || ciudadForm.get('provinciaId')?.touched)) {
+                      <div class="text-danger small mt-1">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Debes seleccionar una provincia
+                      </div>
+                    }
+                  }
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Selecciona la provincia a la que pertenece la ciudad
+                  </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex gap-2 mt-4">
+                  <button 
+                    type="submit" 
+                    class="btn btn-info flex-fill"
+                    [disabled]="ciudadForm.invalid || guardando || provincias.length === 0"
+                  >
+                    @if (guardando) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Guardando...
+                    } @else {
+                      <i class="bi bi-save me-1"></i>
+                      {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                    }
+                  </button>
+                  
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="cerrarFormulario()"
+                  >
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <div class="col-md-8">
-      <div class="card border-light-subtle shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title mb-3">
-            <i class="bi bi-lightbulb-fill text-warning-emphasis me-2"></i>
-            Información importante
-          </h6>
-          <ul class="list-unstyled mb-0">
-            <li class="mb-2">
-              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
-              Las ciudades son localidades urbanas dentro de cada provincia.
-            </li>
-            <li class="mb-2">
-              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
-              Cada ciudad debe estar asociada a una provincia específica.
-            </li>
-            <li>
-              <i class="bi bi-check-circle-fill text-info-emphasis me-2"></i>
-              Las ciudades pueden contener múltiples barrios y localidades.
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+  }
 
-  <div class="row g-4">
-    <!-- Formulario de ciudades -->
-    <div class="col-lg-5">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white border-0 py-3">
-          <h5 class="mb-0">
-            <i class="bi bi-pencil-square text-info me-2"></i>
-            {{ modoEdicion ? 'Editar Ciudad' : 'Nueva Ciudad' }}
-          </h5>
-        </div>
-        <div class="card-body">
-          <form [formGroup]="ciudadForm" (ngSubmit)="guardarCiudad()" novalidate>
-            <!-- Campo: Nombre de la ciudad -->
-            <div class="mb-4">
-              <label for="nombre" class="form-label fw-semibold">
-                <i class="bi bi-tag-fill me-1 text-info-emphasis"></i>
-                Nombre de la ciudad <span class="text-danger">*</span>
-              </label>
-              <div class="input-group has-validation">
-                <span class="input-group-text">
-                  <i class="bi bi-building"></i>
-                </span>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="nombre"
-                  formControlName="nombre"
-                  [class.is-valid]="ciudadForm.get('nombre')?.valid && ciudadForm.get('nombre')?.touched"
-                  [class.is-invalid]="ciudadForm.get('nombre')?.invalid && ciudadForm.get('nombre')?.touched"
-                  placeholder="Ej: San Salvador de Jujuy, Salta Capital, Mendoza"
-                  maxlength="100"
-                >
-                <div class="valid-feedback">
-                  <i class="bi bi-check-circle-fill me-1"></i> Nombre válido
-                </div>
-                <div class="invalid-feedback">
-                  @if (ciudadForm.get('nombre')?.hasError('required')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> El nombre es obligatorio
-                  }
-                  @if (ciudadForm.get('nombre')?.hasError('minlength')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 3 caracteres
-                  }
-                  @if (ciudadForm.get('nombre')?.hasError('pattern')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Solo letras, espacios y caracteres especiales básicos
-                  }
-                </div>
-              </div>
-              <div class="form-text">
-                <i class="bi bi-info-circle me-1"></i> Usa el nombre oficial de la ciudad
-              </div>
-            </div>
-
-            <!-- Campo: Descripción -->
-            <div class="mb-4">
-              <label for="descripcion" class="form-label fw-semibold">
-                <i class="bi bi-card-text me-1 text-info-emphasis"></i>
-                Descripción <span class="text-danger">*</span>
-              </label>
-              <div class="input-group has-validation">
-                <span class="input-group-text align-items-start pt-2">
-                  <i class="bi bi-text-paragraph"></i>
-                </span>
-                <textarea 
-                  class="form-control" 
-                  id="descripcion"
-                  formControlName="descripcion"
-                  [class.is-valid]="ciudadForm.get('descripcion')?.valid && ciudadForm.get('descripcion')?.touched"
-                  [class.is-invalid]="ciudadForm.get('descripcion')?.invalid && ciudadForm.get('descripcion')?.touched"
-                  rows="3"
-                  placeholder="Describe las características, ubicación y atractivos de la ciudad..."
-                  maxlength="500"
-                ></textarea>
-                <div class="valid-feedback">
-                  <i class="bi bi-check-circle-fill me-1"></i> Descripción válida
-                </div>
-                <div class="invalid-feedback">
-                  @if (ciudadForm.get('descripcion')?.hasError('required')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> La descripción es obligatoria
-                  }
-                  @if (ciudadForm.get('descripcion')?.hasError('minlength')) {
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Mínimo 10 caracteres
-                  }
-                </div>
-              </div>
-              <div class="d-flex justify-content-between mt-1">
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i> Incluye información relevante para turistas
-                </div>
-                <small class="text-body-tertiary">
-                  {{ ciudadForm.get('descripcion')?.value?.length || 0 }}/500
-                </small>
-              </div>
-            </div>
-
-            <!-- Campo: Provincia (select) - VERSIÓN MEJORADA -->
-            <div class="mb-4">
-              <label for="provincia" class="form-label fw-semibold">
-                <i class="bi bi-map-fill me-1 text-info-emphasis"></i>
-                Provincia <span class="text-danger">*</span>
-              </label>
-              
-              @if (cargandoProvincias) {
-                <div class="alert alert-info">
-                  <i class="bi bi-hourglass-split me-2"></i>
-                  Cargando provincias...
-                </div>
-              } @else if (provincias.length === 0) {
-                <div class="alert alert-warning">
-                  <i class="bi bi-exclamation-triangle me-2"></i>
-                  No hay provincias disponibles. Debes crear provincias primero.
-                </div>
-              } @else {
-                <div class="input-group has-validation">
-                  <span class="input-group-text">
-                    <i class="bi bi-geo-alt-fill"></i>
-                  </span>
-                  <select 
-                    class="form-select" 
-                    id="provincia"
-                    formControlName="provinciaId"
-                    [class.is-valid]="ciudadForm.get('provinciaId')?.valid && ciudadForm.get('provinciaId')?.touched"
-                    [class.is-invalid]="ciudadForm.get('provinciaId')?.invalid && ciudadForm.get('provinciaId')?.touched"
-                  >
-                    <option value="" disabled selected>Selecciona una provincia</option>
-                    @for (provincia of provincias; track provincia.id) {
-                      <option [value]="provincia.id">{{ provincia.nombre }}</option>
-                    }
-                  </select>
-                  <div class="valid-feedback">
-                    <i class="bi bi-check-circle-fill me-1"></i> Provincia seleccionada
-                  </div>
-                  <div class="invalid-feedback">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Debes seleccionar una provincia
-                  </div>
-                </div>
-              }
-              <div class="form-text">
-                <i class="bi bi-info-circle me-1"></i> Selecciona la provincia a la que pertenece
-              </div>
-            </div>
-
-            <!-- Botones del formulario -->
-            <div class="d-flex gap-2 mt-4 pt-3 border-top">
-              <button 
-                type="submit" 
-                class="btn btn-info flex-fill"
-                [disabled]="ciudadForm.invalid || guardando"
-              >
-                @if (guardando) {
-                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Guardando...
-                } @else {
-                  <i class="bi bi-save me-1"></i>
-                  {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
-                }
-              </button>
-              
-              <button 
-                type="button" 
-                class="btn btn-outline-secondary"
-                (click)="cancelarEdicion()"
-                [disabled]="guardando"
-              >
-                <i class="bi bi-x-circle me-1"></i>
-                Cancelar
-              </button>
-            </div>
-            
-            <!-- Información de campos requeridos -->
-            <div class="mt-3 pt-2">
-              <small class="text-body-tertiary">
-                <i class="bi bi-asterisk text-danger me-1"></i>
-                Campos marcados con asterisco (*) son obligatorios
-              </small>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Lista de ciudades -->
-    <div class="col-lg-7">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white border-0 py-3">
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-            <h5 class="mb-0">
-              <i class="bi bi-list-ul text-info me-2"></i>
-              Ciudades Registradas
-            </h5>
+  <!-- Lista de ciudades -->
+  @if (!formularioVisible) {
+    <div class="ciudades-container">
+      <!-- Barra de búsqueda y acciones -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
-              <div class="input-group input-group-sm" style="min-width: 200px;">
-                <span class="input-group-text">
-                  <i class="bi bi-search"></i>
-                </span>
+              <i class="bi bi-list-ul fs-4 text-info"></i>
+              <h5 class="mb-0 fw-bold">Ciudades Registradas</h5>
+              @if (!cargando && totalCiudades > 0) {
+                <span class="badge bg-info rounded-pill">{{ totalCiudades }}</span>
+              }
+            </div>
+            <div class="d-flex gap-2">
+              <div class="search-box">
+                <i class="bi bi-search search-icon"></i>
                 <input 
                   type="text" 
-                  class="form-control" 
+                  class="form-control form-control-sm ps-4" 
                   placeholder="Buscar ciudad..."
                   (input)="filtrarCiudades($event)"
+                  style="width: 250px;"
                 >
               </div>
               <div class="dropdown">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                <button class="btn btn-sm btn-outline-info dropdown-toggle" type="button" 
                         data-bs-toggle="dropdown" aria-expanded="false">
                   <i class="bi bi-funnel-fill me-1"></i> Filtrar
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#" (click)="filtrarPorProvincia(0)">Todas las provincias</a></li>
+                  <li><a class="dropdown-item" href="#" (click)="filtrarPorProvincia(0); $event.preventDefault()">Todas las provincias</a></li>
                   <li><hr class="dropdown-divider"></li>
                   @for (provincia of provincias; track provincia.id) {
                     <li>
-                      <a class="dropdown-item" href="#" (click)="filtrarPorProvincia(provincia.id)">
+                      <a class="dropdown-item" href="#" (click)="filtrarPorProvincia(provincia.id); $event.preventDefault()">
                         <i class="bi bi-geo-alt-fill me-2"></i> {{ provincia.nombre }}
                       </a>
                     </li>
                   }
                 </ul>
               </div>
-              <button class="btn btn-sm btn-outline-info" (click)="cargarCiudades()" title="Recargar">
+              <button class="btn btn-sm btn-outline-info" (click)="cargarCiudades()" title="Actualizar">
                 <i class="bi bi-arrow-clockwise"></i>
               </button>
             </div>
           </div>
         </div>
-        
+      </div>
+
+      <!-- Tabla de ciudades -->
+      <div class="card shadow-sm border-0">
         <div class="card-body p-0">
           @if (cargando) {
-            <!-- Estado de carga -->
             <div class="text-center py-5">
-              <div class="spinner-border text-info mb-3" role="status">
+              <div class="spinner-border text-info" role="status">
                 <span class="visually-hidden">Cargando...</span>
               </div>
-              <p class="text-body-secondary">Cargando ciudades...</p>
+              <p class="text-muted mt-2 mb-0">Cargando ciudades...</p>
             </div>
           } @else if (ciudadesFiltradas.length === 0) {
-            <!-- Estado sin datos -->
             <div class="text-center py-5">
-              <i class="bi bi-building display-1 text-body-tertiary mb-3"></i>
-              <h5 class="text-body-secondary mb-2">No hay ciudades registradas</h5>
-              <p class="text-body-tertiary mb-0">Comienza agregando una nueva ciudad</p>
+              <i class="bi bi-building display-1 text-muted"></i>
+              @if (filtroProvincia > 0) {
+                <h5 class="text-muted mt-3 mb-2">No hay ciudades en esta provincia</h5>
+                <p class="text-muted mb-0">Intenta con otra provincia o agrega nuevas ciudades</p>
+              } @else {
+                <h5 class="text-muted mt-3 mb-2">No hay ciudades registradas</h5>
+                <p class="text-muted mb-0">Comienza agregando una nueva ciudad</p>
+              }
+              <button class="btn btn-info mt-3" (click)="mostrarFormulario()">
+                <i class="bi bi-plus-circle me-1"></i> Agregar Ciudad
+              </button>
             </div>
           } @else {
-            <!-- Tabla de ciudades -->
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-hover mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th scope="col" class="ps-3">
-                      <i class="bi bi-sort-alpha-down text-info-emphasis me-1"></i>
-                      Ciudad
-                    </th>
-                    <th scope="col">
-                      <i class="bi bi-map-fill text-info-emphasis me-1"></i>
-                      Provincia
-                    </th>
-                    <th scope="col" class="text-center pe-3">
-                      <i class="bi bi-gear-fill text-info-emphasis me-1"></i>
-                      Acciones
-                    </th>
+                    <th width="35%">Ciudad</th>
+                    <th width="35%">Provincia</th>
+                    <th width="30%" class="text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (ciudad of ciudadesFiltradas; track ciudad.id) {
-                    <tr [class.table-info-subtle]="ciudad.id === ciudadEditando?.id">
-                      <td class="ps-3">
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0">
-                            <i class="bi bi-building-fill text-info fs-5"></i>
-                          </div>
-                          <div class="flex-grow-1 ms-2">
-                            <strong class="d-block">{{ ciudad.nombre }}</strong>
-                            <small class="text-body-tertiary">{{ ciudad.descripcion | slice:0:50 }}{{ ciudad.descripcion.length > 50 ? '...' : '' }}</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0">
-                            <i class="bi bi-geo-alt-fill text-success"></i>
-                          </div>
-                          <div class="flex-grow-1 ms-2">
-                            <span class="badge text-bg-success-subtle text-success-emphasis">
-                              {{ obtenerNombreProvincia(ciudad.provinciaId) }}
-                            </span>
+                  @for (ciudad of ciudadesFiltradas | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track ciudad.id) {
+                    <tr [class.table-info]="ciudad.id === ciudadEditando?.id">
+                      <td class="align-middle">
+                        <div class="d-flex align-items-center gap-2">
+                          <i class="bi bi-building-fill text-info"></i>
+                          <div>
+                            <strong>{{ ciudad.nombre }}</strong>
+                            @if (ciudad.descripcion) {
+                              <br><small class="text-muted">{{ ciudad.descripcion | slice:0:50 }}{{ ciudad.descripcion.length > 50 ? '...' : '' }}</small>
+                            }
                           </div>
                         </div>
                       </td>
-                      <td class="text-center pe-3">
-                        <div class="btn-group btn-group-sm" role="group">
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-info"
-                            (click)="editarCiudad(ciudad)"
-                            title="Editar ciudad"
-                          >
-                            <i class="bi bi-pencil-fill"></i>
+                      <td class="align-middle">
+                        @if (ciudad.provinciaId) {
+                          <span class="badge bg-info-subtle text-info-emphasis px-3 py-2">
+                            <i class="bi bi-geo-alt-fill me-1"></i>
+                            {{ obtenerNombreProvincia(ciudad.provinciaId) }}
+                          </span>
+                        } @else {
+                          <span class="text-muted fst-italic">Sin provincia asignada</span>
+                        }
+                      </td>
+                      <td class="align-middle text-center">
+                        <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-info" (click)="editarCiudad(ciudad)" title="Editar">
+                            <i class="bi bi-pencil"></i>
                           </button>
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-primary"
-                            (click)="verDetalles(ciudad)"
-                            title="Ver detalles"
-                          >
-                            <i class="bi bi-eye-fill"></i>
+                          <button class="btn btn-outline-primary" (click)="verDetalles(ciudad)" title="Ver">
+                            <i class="bi bi-eye"></i>
                           </button>
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-danger"
-                            (click)="eliminarCiudad(ciudad)"
-                            title="Eliminar ciudad"
-                          >
-                            <i class="bi bi-trash-fill"></i>
+                          <button class="btn btn-outline-danger" (click)="eliminarCiudad(ciudad)" title="Eliminar">
+                            <i class="bi bi-trash"></i>
                           </button>
                         </div>
                       </td>
@@ -390,66 +322,57 @@
         <!-- Paginación -->
         @if (ciudadesFiltradas.length > 0 && !cargando) {
           <div class="card-footer bg-white border-0 py-3">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-              <small class="text-body-secondary">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
                 Mostrando {{ ciudadesFiltradas.length }} de {{ totalCiudades }} ciudades
                 @if (filtroProvincia > 0) {
-                  <span class="badge text-bg-success-subtle text-success-emphasis ms-2">
+                  <span class="badge bg-info-subtle text-info-emphasis ms-2">
                     <i class="bi bi-funnel-fill me-1"></i>
                     {{ obtenerNombreProvincia(filtroProvincia) }}
                   </span>
                 }
               </small>
+              <pagination-controls 
+                (pageChange)="paginaActual = $event"
+                [autoHide]="true"
+                [maxSize]="5">
+              </pagination-controls>
             </div>
           </div>
         }
       </div>
     </div>
-  </div>
+  }
 
   <!-- Modal de detalles -->
-  <div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" 
-       aria-hidden="true" data-bs-theme="light">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-0 bg-info text-white">
-          <h1 class="modal-title fs-5" id="detallesModalLabel">
+  <div class="modal fade" id="detallesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title">
             <i class="bi bi-info-circle-fill me-2"></i>
             Detalles de la Ciudad
-          </h1>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
-                  aria-label="Close"></button>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-4">
+        <div class="modal-body">
           @if (ciudadDetalles) {
-            <div class="row">
-              <div class="col-md-4 text-center mb-3 mb-md-0">
-                <div class="bg-info-subtle p-4 rounded-3">
-                  <i class="bi bi-building display-1 text-info"></i>
-                </div>
-              </div>
-              <div class="col-md-8">
-                <h3 class="text-info-emphasis mb-3">{{ ciudadDetalles.nombre }}</h3>
-                <div class="row g-3">
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Provincia:</strong>
-                    <span class="ms-2">
-                      <span class="badge text-bg-success-subtle text-success-emphasis">
-                        {{ obtenerNombreProvincia(ciudadDetalles.provinciaId) }}
-                      </span>
-                    </span>
-                  </div>
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Descripción:</strong>
-                    <p class="mt-1">{{ ciudadDetalles.descripcion }}</p>
-                  </div>
-                </div>
-              </div>
+            <div class="text-center mb-3">
+              <i class="bi bi-building-fill display-1 text-info"></i>
+            </div>
+            <h4 class="text-info mb-3">{{ ciudadDetalles.nombre }}</h4>
+            <div class="mb-2">
+              <strong><i class="bi bi-geo-alt-fill me-1"></i> Provincia:</strong>
+              <span class="ms-2">{{ obtenerNombreProvincia(ciudadDetalles.provinciaId) }}</span>
+            </div>
+            <div>
+              <strong><i class="bi bi-card-text me-1"></i> Descripción:</strong>
+              <p class="mt-2">{{ ciudadDetalles.descripcion }}</p>
             </div>
           }
         </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             <i class="bi bi-x-circle me-1"></i> Cerrar
           </button>
         </div>
@@ -457,56 +380,24 @@
     </div>
   </div>
 
-  <!-- Modal de confirmación para eliminar -->
-  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" 
-       aria-hidden="true" data-bs-theme="light">
+  <!-- Modal de confirmación -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-0 bg-danger text-white">
-          <h1 class="modal-title fs-5" id="confirmarEliminarModalLabel">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            Confirmar eliminación
-          </h1>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" 
-                  aria-label="Close"></button>
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirmar eliminación</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-4">
-          <div class="text-center mb-4">
-            <i class="bi bi-trash-fill text-danger display-4"></i>
+        <div class="modal-body">
+          <p>¿Estás seguro de eliminar la ciudad <strong>{{ ciudadAEliminar?.nombre }}</strong>?</p>
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Esta acción no se puede deshacer.
           </div>
-          <h5 class="text-center mb-3">¿Estás seguro de eliminar esta ciudad?</h5>
-          <div class="alert alert-warning border-warning-subtle bg-warning-subtle" role="alert">
-            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis me-2"></i>
-            <strong>Advertencia:</strong> Esta acción no se puede deshacer.
-          </div>
-          @if (ciudadAEliminar) {
-            <div class="card border-danger-subtle">
-              <div class="card-body">
-                <h6 class="card-title text-danger-emphasis mb-3">
-                  <i class="bi bi-trash-fill me-2"></i>
-                  Ciudad a eliminar
-                </h6>
-                <div class="row g-2">
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Nombre:</strong>
-                    <span class="ms-2">{{ ciudadAEliminar.nombre }}</span>
-                  </div>
-                  <div class="col-12">
-                    <strong class="text-body-emphasis">Provincia:</strong>
-                    <span class="ms-2">{{ obtenerNombreProvincia(ciudadAEliminar.provinciaId) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
         </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle me-1"></i> Cancelar
-          </button>
-          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
-            <i class="bi bi-trash-fill me-1"></i> Eliminar
-          </button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
         </div>
       </div>
     </div>

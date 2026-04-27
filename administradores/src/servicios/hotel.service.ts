@@ -8,7 +8,7 @@ import { Hotel } from '../modelos/hotel.model';
   providedIn: 'root'
 })
 export class HotelService {
-  private baseUrl = 'http://localhost:8765/Hoteles';
+  private baseUrl = 'http://localhost:3333/Hoteles';
 
   private httpOptions = {
     headers: new HttpHeaders({

@@ -8,7 +8,7 @@ import { Reserva } from '../modelos/reserva.model';
 })
 export class ReservaService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8765/Reservas'; // Usando el puerto del gateway
+  private apiUrl = 'http://localhost:3333/Reservas'; // Usando el puerto del gateway
 
   // Obtener todas las reservas
   getReservas(): Observable<Reserva[]> {

@@ -8,7 +8,7 @@ import { Imagen } from '../modelos/imagen.model';
   providedIn: 'root'
 })
 export class ImagenService {
-  private baseUrl = 'http://localhost:8765/Imagenes';
+  private baseUrl = 'http://localhost:3333/Imagenes';
 
   private httpOptions = {
     headers: new HttpHeaders({

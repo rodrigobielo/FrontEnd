@@ -134,7 +134,16 @@ export class DashboardHotel implements OnInit, AfterViewInit {
       fotosSubidas: 8
     };
   }
-
+// Agregar este método al componente TypeScript
+onMoreInfoClick(card: any): void {
+  if (!card.route || !this.currentHotel?.id) {
+    console.error('Ruta o ID del hotel no disponible');
+    return;
+  }
+  
+  // Navegar a la ruta correspondiente de la tarjeta
+  this.router.navigate(card.route);
+}
   ngAfterViewInit(): void {
     setTimeout(() => {
       const modalElement = document.getElementById('welcomeModal');
