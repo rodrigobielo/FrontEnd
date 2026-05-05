@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -20,10 +20,10 @@ import { Hotel } from '../../modelos/hotel.model';
   selector: 'app-hoteles',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, NgxPaginationModule],
-  templateUrl: './hoteles.html',  // ← CORREGIDO: antes decía ciudades.html
+  templateUrl: './hoteles.html',
   styleUrls: ['./hoteles.css']
 })
-export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 's')
+export class Hoteles implements OnInit, OnDestroy {
   
   hotelForm: FormGroup;
   modoEdicion: boolean = false;
@@ -34,8 +34,16 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
   cargandoAdministradores: boolean = false;
   formularioVisible: boolean = false;
   filtroCategoria: number | null = null;
-  filtroTexto: string = '';
   
+  // Mensajes con toasts
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  mensajeInfo: string = '';
+  mostrarMensajeExito: boolean = false;
+  mostrarMensajeError: boolean = false;
+  mostrarMensajeInfo: boolean = false;
+  
+  // Datos
   ciudades: Ciudad[] = [];
   categorias: Categoria[] = [];
   administradores: Usuario[] = [];
@@ -45,9 +53,21 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
   hotelDetalles: Hotel | null = null;
   hotelAEliminar: Hotel | null = null;
   
+  // Estadísticas
   totalHoteles: number = 0;
+  
+  // Paginación
   paginaActual: number = 1;
   elementosPorPagina: number = 10;
+  
+  // Temporizadores
+  private timeoutExito: any;
+  private timeoutError: any;
+  private timeoutInfo: any;
+  
+  // Modales
+  private detallesModalInstance: any;
+  private confirmarModalInstance: any;
 
   constructor(
     private fb: FormBuilder,
@@ -72,6 +92,73 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
     this.cargarCategorias();
     this.cargarAdministradores();
     this.cargarHoteles();
+    this.initModales();
+  }
+
+  ngOnDestroy(): void {
+    this.limpiarTemporizadores();
+    this.destroyModales();
+  }
+
+  private limpiarTemporizadores(): void {
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+  }
+
+  private mostrarExito(mensaje: string): void {
+    this.mostrarMensajeExito = true;
+    this.mensajeExito = mensaje;
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    this.timeoutExito = setTimeout(() => {
+      this.mostrarMensajeExito = false;
+      this.mensajeExito = '';
+    }, 4000);
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.mostrarMensajeError = true;
+    this.mensajeError = mensaje;
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    this.timeoutError = setTimeout(() => {
+      this.mostrarMensajeError = false;
+      this.mensajeError = '';
+    }, 5000);
+  }
+
+  private mostrarInfo(mensaje: string): void {
+    this.mostrarMensajeInfo = true;
+    this.mensajeInfo = mensaje;
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+    this.timeoutInfo = setTimeout(() => {
+      this.mostrarMensajeInfo = false;
+      this.mensajeInfo = '';
+    }, 3000);
+  }
+
+  private initModales(): void {
+    if (typeof window !== 'undefined' && (window as any).bootstrap) {
+      const detallesElement = document.getElementById('detallesModal');
+      const confirmarElement = document.getElementById('confirmarEliminarModal');
+      
+      if (detallesElement) {
+        this.detallesModalInstance = new (window as any).bootstrap.Modal(detallesElement);
+      }
+      if (confirmarElement) {
+        this.confirmarModalInstance = new (window as any).bootstrap.Modal(confirmarElement);
+      }
+    }
+  }
+
+  private destroyModales(): void {
+    if (this.detallesModalInstance) {
+      this.detallesModalInstance.dispose();
+      this.detallesModalInstance = null;
+    }
+    if (this.confirmarModalInstance) {
+      this.confirmarModalInstance.dispose();
+      this.confirmarModalInstance = null;
+    }
   }
 
   mostrarFormulario(): void {
@@ -87,6 +174,17 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
       categoriaId: '',
       administradorId: ''
     });
+    this.hotelForm.markAsPristine();
+    this.hotelForm.markAsUntouched();
+    this.limpiarTemporizadores();
+    
+    // Scroll suave al formulario
+    setTimeout(() => {
+      const formulario = document.querySelector('.modern-form');
+      if (formulario) {
+        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   cerrarFormulario(): void {
@@ -94,6 +192,7 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
     this.modoEdicion = false;
     this.hotelEditando = null;
     this.hotelForm.reset();
+    this.limpiarTemporizadores();
   }
 
   cargarCiudades(): void {
@@ -102,10 +201,15 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
       next: (ciudades: Ciudad[]) => {
         this.ciudades = ciudades || [];
         this.cargandoCiudades = false;
+        
+        if (this.ciudades.length === 0) {
+          this.mostrarInfo('No hay ciudades disponibles. Debes crear ciudades primero.');
+        }
       },
       error: (error: any) => {
         console.error('Error cargando ciudades:', error);
         this.cargandoCiudades = false;
+        this.mostrarError('Error al cargar las ciudades');
         this.ciudades = [];
       }
     });
@@ -117,10 +221,15 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
       next: (categorias: Categoria[]) => {
         this.categorias = categorias || [];
         this.cargandoCategorias = false;
+        
+        if (this.categorias.length === 0) {
+          this.mostrarInfo('No hay categorías disponibles. Debes crear categorías primero.');
+        }
       },
       error: (error: any) => {
         console.error('Error cargando categorías:', error);
         this.cargandoCategorias = false;
+        this.mostrarError('Error al cargar las categorías');
         this.categorias = [];
       }
     });
@@ -135,10 +244,15 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
           usuario.roles?.nombre?.toLowerCase().includes('administrador')
         );
         this.cargandoAdministradores = false;
+        
+        if (this.administradores.length === 0) {
+          this.mostrarInfo('No hay administradores disponibles.');
+        }
       },
       error: (error: any) => {
         console.error('Error cargando administradores:', error);
         this.cargandoAdministradores = false;
+        this.mostrarError('Error al cargar los administradores');
         this.administradores = [];
       }
     });
@@ -146,6 +260,8 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
 
   cargarHoteles(): void {
     this.cargando = true;
+    this.limpiarTemporizadores();
+    
     this.hotelService.getHoteles().subscribe({
       next: (hoteles: Hotel[]) => {
         this.hoteles = hoteles || [];
@@ -153,10 +269,15 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
         this.totalHoteles = this.hoteles.length;
         this.cargando = false;
         this.paginaActual = 1;
+        
+        if (this.hoteles.length === 0) {
+          this.mostrarInfo('No se encontraron hoteles registrados');
+        }
       },
       error: (error: any) => {
         console.error('Error cargando hoteles:', error);
         this.cargando = false;
+        this.mostrarError(error.message || 'Error al cargar los hoteles');
         this.hoteles = [];
         this.hotelesFiltrados = [];
       }
@@ -176,26 +297,55 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
     
     if (categoria.numeroEstrellas) {
       switch (categoria.numeroEstrellas) {
-        case 1: return 'badge bg-secondary';
-        case 2: return 'badge bg-primary';
-        case 3: return 'badge bg-info text-dark';
-        case 4: return 'badge bg-success';
-        case 5: return 'badge bg-warning text-dark';
-        default: return 'badge bg-secondary';
+        case 1: return 'badge bg-secondary px-3 py-2';
+        case 2: return 'badge bg-primary px-3 py-2';
+        case 3: return 'badge bg-info text-dark px-3 py-2';
+        case 4: return 'badge bg-success px-3 py-2';
+        case 5: return 'badge bg-warning text-dark px-3 py-2';
+        default: return 'badge bg-secondary px-3 py-2';
       }
     }
-    return 'badge bg-secondary';
+    return 'badge bg-secondary px-3 py-2';
   }
 
   filtrarHoteles(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.filtroTexto = input.value.toLowerCase().trim();
-    this.aplicarFiltros();
+    const filtro = input.value.toLowerCase().trim();
+    
+    let resultado = [...this.hoteles];
+    
+    if (this.filtroCategoria) {
+      resultado = resultado.filter(h => h.categorias?.id === this.filtroCategoria);
+    }
+    
+    if (filtro) {
+      resultado = resultado.filter(hotel =>
+        hotel.nombre.toLowerCase().includes(filtro) ||
+        hotel.descripcion.toLowerCase().includes(filtro) ||
+        hotel.contactos.toLowerCase().includes(filtro) ||
+        hotel.ciudades?.nombre.toLowerCase().includes(filtro) ||
+        hotel.categorias?.nombre.toLowerCase().includes(filtro)
+      );
+      
+      if (resultado.length === 0) {
+        this.mostrarInfo(`No se encontraron hoteles con "${filtro}"`);
+      }
+    }
+    
+    this.hotelesFiltrados = resultado;
     this.paginaActual = 1;
   }
 
   filtrarPorCategoria(categoriaId: number): void {
     this.filtroCategoria = categoriaId === 0 ? null : categoriaId;
+    
+    if (this.filtroCategoria) {
+      const nombreCategoria = this.obtenerNombreCategoria(this.filtroCategoria);
+      this.mostrarExito(`Mostrando hoteles de categoría "${nombreCategoria}"`);
+    } else {
+      this.mostrarInfo('Mostrando todos los hoteles');
+    }
+    
     this.aplicarFiltros();
     this.paginaActual = 1;
   }
@@ -207,16 +357,6 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
       resultado = resultado.filter(h => h.categorias?.id === this.filtroCategoria);
     }
     
-    if (this.filtroTexto) {
-      resultado = resultado.filter(hotel =>
-        hotel.nombre.toLowerCase().includes(this.filtroTexto) ||
-        hotel.descripcion.toLowerCase().includes(this.filtroTexto) ||
-        hotel.contactos.toLowerCase().includes(this.filtroTexto) ||
-        hotel.ciudades?.nombre.toLowerCase().includes(this.filtroTexto) ||
-        hotel.categorias?.nombre.toLowerCase().includes(this.filtroTexto)
-      );
-    }
-    
     this.hotelesFiltrados = resultado;
   }
 
@@ -224,6 +364,7 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
     this.modoEdicion = true;
     this.hotelEditando = hotel;
     this.formularioVisible = true;
+    this.limpiarTemporizadores();
     
     this.hotelForm.patchValue({
       nombre: hotel.nombre,
@@ -234,6 +375,19 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
       categoriaId: hotel.categorias?.id || '',
       administradorId: hotel.usuarios?.id || ''
     });
+    
+    this.hotelForm.markAsPristine();
+    Object.keys(this.hotelForm.controls).forEach(key => {
+      this.hotelForm.get(key)?.markAsUntouched();
+    });
+    
+    // Scroll suave al formulario
+    setTimeout(() => {
+      const formulario = document.querySelector('.modern-form');
+      if (formulario) {
+        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   guardarHotel(): void {
@@ -242,11 +396,13 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
     });
 
     if (this.hotelForm.invalid) {
+      this.mostrarError('Complete todos los campos obligatorios correctamente');
       return;
     }
 
     this.guardando = true;
     const hotelData = this.hotelForm.value;
+    const nombreHotel = hotelData.nombre;
     
     const hotelParaEnviar = {
       nombre: hotelData.nombre,
@@ -265,10 +421,12 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
           this.cargarHoteles();
           this.guardando = false;
           this.cerrarFormulario();
+          this.mostrarExito(`✅ Hotel "${nombreHotel}" actualizado correctamente`);
         },
         error: (error: any) => {
           console.error('Error actualizando hotel:', error);
           this.guardando = false;
+          this.mostrarError(error.message || 'Error al actualizar el hotel');
         }
       });
     } else {
@@ -277,10 +435,13 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
           this.cargarHoteles();
           this.guardando = false;
           this.cerrarFormulario();
+          this.mostrarExito(`✅ Hotel "${nombreHotel}" creado correctamente`);
+          this.paginaActual = 1;
         },
         error: (error: any) => {
           console.error('Error creando hotel:', error);
           this.guardando = false;
+          this.mostrarError(error.message || 'Error al crear el hotel');
         }
       });
     }
@@ -288,36 +449,40 @@ export class Hoteles implements OnInit {  // ← La clase se llama Hoteles (con 
 
   verDetalles(hotel: Hotel): void {
     this.hotelDetalles = hotel;
-    const modalElement = document.getElementById('detallesModal');
-    if (modalElement) {
-      const modal = new (window as any).bootstrap.Modal(modalElement);
-      modal.show();
+    if (this.detallesModalInstance) {
+      this.detallesModalInstance.show();
     }
   }
 
   eliminarHotel(hotel: Hotel): void {
     this.hotelAEliminar = hotel;
-    const modalElement = document.getElementById('confirmarEliminarModal');
-    if (modalElement) {
-      const modal = new (window as any).bootstrap.Modal(modalElement);
-      modal.show();
+    if (this.confirmarModalInstance) {
+      this.confirmarModalInstance.show();
     }
   }
 
   confirmarEliminar(): void {
     if (this.hotelAEliminar?.id) {
+      const nombreHotel = this.hotelAEliminar.nombre;
+      
       this.hotelService.deleteHotel(this.hotelAEliminar.id).subscribe({
         next: () => {
           this.cargarHoteles();
-          const modalElement = document.getElementById('confirmarEliminarModal');
-          if (modalElement) {
-            const modal = (window as any).bootstrap.Modal.getInstance(modalElement);
-            modal?.hide();
+          
+          if (this.confirmarModalInstance) {
+            this.confirmarModalInstance.hide();
           }
+          
+          if (this.hotelEditando?.id === this.hotelAEliminar?.id) {
+            this.cerrarFormulario();
+          }
+          
+          this.mostrarExito(`🗑️ Hotel "${nombreHotel}" eliminado correctamente`);
           this.hotelAEliminar = null;
         },
         error: (error: any) => {
           console.error('Error eliminando hotel:', error);
+          this.mostrarError(error.message || 'Error al eliminar el hotel');
         }
       });
     }

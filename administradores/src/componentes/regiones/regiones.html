@@ -1,4 +1,4 @@
-<!-- regiones.html - Componente de gestión de regiones -->
+<!-- regiones.html -->
 <div class="container-fluid py-4">
   <!-- Encabezado de la página -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -21,6 +21,49 @@
     </div>
   </div>
 
+  <!-- Toast de mensajes -->
+  <!-- Mensaje de Éxito -->
+  @if (mostrarMensajeExito) {
+    <div class="toast-message toast-success animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-check-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Éxito!</strong>
+          <p>{{ mensajeExito }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeExito = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  <!-- Mensaje de Error -->
+  @if (mostrarMensajeError) {
+    <div class="toast-message toast-error animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-x-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Error!</strong>
+          <p>{{ mensajeError }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeError = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  <!-- Mensaje de Información -->
+  @if (mostrarMensajeInfo) {
+    <div class="toast-message toast-info animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-info-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>Información</strong>
+          <p>{{ mensajeInfo }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeInfo = false">&times;</button>
+      </div>
+    </div>
+  }
+
   <!-- Formulario -->
   @if (formularioVisible) {
     <div class="form-overlay animate-slide-down">
@@ -32,7 +75,7 @@
                 <div>
                   <i class="bi bi-stars fs-4 me-2"></i>
                   <h5 class="mb-0 d-inline-block fw-bold">
-                    {{ modoEdicion ? 'Editar Región' : 'Crear Nueva Región' }}
+                    {{ modoEdicion ? '✏️ Editar Región' : '➕ Crear Nueva Región' }}
                   </h5>
                 </div>
                 <button type="button" class="btn-close btn-close-white" (click)="cerrarFormulario()" aria-label="Cerrar"></button>
@@ -49,7 +92,7 @@
                   </label>
                   <input 
                     type="text" 
-                    class="form-control" 
+                    class="form-control form-control-lg" 
                     id="nombre"
                     formControlName="nombre"
                     [ngClass]="{
@@ -57,6 +100,7 @@
                                    (regionForm.get('nombre')?.dirty || regionForm.get('nombre')?.touched)
                     }"
                     placeholder="Ej: Costa Norte, Región Andina"
+                    autocomplete="off"
                   >
                   @if (regionForm.get('nombre')?.hasError('required') && 
                        (regionForm.get('nombre')?.dirty || regionForm.get('nombre')?.touched)) {
@@ -91,203 +135,241 @@
                     placeholder="Describe las características de la región..."
                   ></textarea>
                   <div class="text-muted small mt-1">
-                                    <i class="bi bi-pencil me-1"></i>
-                                    {{ regionForm.get('descripcion')?.value?.length || 0 }}/500 caracteres
-                                  </div>
-                                </div>
-
-                                <!-- Campo: Código -->
-                                <div class="mb-3">
-                                  <label for="codigo" class="form-label fw-bold">
-                                    <i class="bi bi-hash me-1 text-secondary"></i>
-                                    Código <span class="text-muted small">(opcional)</span>
-                                  </label>
-                                  <input 
-                                    type="text" 
-                                    class="form-control" 
-                                    id="codigo"
-                                    formControlName="codigo"
-                                    placeholder="Ej: REG-001, AND-01"
-                                  >
-                                  <div class="text-muted small mt-1">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Código único para identificar la región
-                                  </div>
-                                </div>
-
-                                <!-- Botones -->
-                                <div class="d-flex gap-2 mt-4">
-                                  <button 
-                                    type="submit" 
-                                    class="btn btn-primary flex-fill"
-                                    [disabled]="regionForm.invalid || guardando"
-                                  >
-                                    @if (guardando) {
-                                      <span class="spinner-border spinner-border-sm me-2"></span>
-                                      Guardando...
-                                    } @else {
-                                      <i class="bi bi-save me-1"></i>
-                                      {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
-                                    }
-                                  </button>
-                                  
-                                  <button 
-                                    type="button" 
-                                    class="btn btn-outline-secondary"
-                                    (click)="cerrarFormulario()"
-                                  >
-                                    <i class="bi bi-x-circle me-1"></i> Cancelar
-                                  </button>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  }
-
-                  <!-- Lista de regiones -->
-                  @if (!formularioVisible) {
-                    <div class="regions-container">
-                      <!-- Barra de búsqueda -->
-                      <div class="card shadow-sm border-0 mb-4">
-                        <div class="card-body py-3">
-                          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <div class="d-flex align-items-center gap-2">
-                              <i class="bi bi-list-ul fs-4 text-primary"></i>
-                              <h5 class="mb-0 fw-bold">Regiones Registradas</h5>
-                              @if (!cargando && totalRegiones > 0) {
-                                <span class="badge bg-primary rounded-pill">{{ totalRegiones }}</span>
-                              }
-                            </div>
-                            <div class="d-flex gap-2">
-                              <div class="search-box">
-                                <i class="bi bi-search search-icon"></i>
-                                <input 
-                                  type="text" 
-                                  class="form-control form-control-sm ps-4" 
-                                  placeholder="Buscar región..."
-                                  (input)="filtrarRegiones($event)"
-                                  style="width: 250px;"
-                                >
-                              </div>
-                              <button class="btn btn-sm btn-outline-primary" (click)="cargarRegiones()" title="Actualizar">
-                                <i class="bi bi-arrow-clockwise"></i>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Tabla de regiones -->
-                      <div class="card shadow-sm border-0">
-                        <div class="card-body p-0">
-                          @if (cargando) {
-                            <div class="text-center py-5">
-                              <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                              </div>
-                              <p class="text-muted mt-2 mb-0">Cargando regiones...</p>
-                            </div>
-                          } @else if (regionesFiltradas.length === 0) {
-                            <div class="text-center py-5">
-                              <i class="bi bi-globe display-1 text-muted"></i>
-                              <h5 class="text-muted mt-3 mb-2">No hay regiones registradas</h5>
-                              <p class="text-muted mb-0">Comienza agregando una nueva región</p>
-                              <button class="btn btn-primary mt-3" (click)="mostrarFormulario()">
-                                <i class="bi bi-plus-circle me-1"></i> Agregar Región
-                              </button>
-                            </div>
-                          } @else {
-                            <div class="table-responsive">
-                              <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                  <tr>
-                                    <th width="35%">Nombre</th>
-                                    <th width="45%">Descripción</th>
-                                    <th width="20%" class="text-center">Acciones</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  @for (region of regionesFiltradas | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track region.id) {
-                                    <tr>
-                                      <td class="align-middle">
-                                        <div class="d-flex align-items-center gap-2">
-                                          <i class="bi bi-globe-americas text-primary"></i>
-                                          <div>
-                                            <strong>{{ region.nombre }}</strong>
-                                            @if (region.codigo) {
-                                              <br><small class="text-muted">Código: {{ region.codigo }}</small>
-                                            }
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td class="align-middle">
-                                        <div class="text-truncate" style="max-width: 300px;" [title]="region.descripcion">
-                                          {{ region.descripcion }}
-                                        </div>
-                                       </td>
-                                      <td class="align-middle text-center">
-                                        <div class="btn-group btn-group-sm">
-                                          <button class="btn btn-outline-primary" (click)="editarRegion(region)" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                          </button>
-                                          <button class="btn btn-outline-success" (click)="verDetalles(region)" title="Ver">
-                                            <i class="bi bi-eye"></i>
-                                          </button>
-                                          <button class="btn btn-outline-danger" (click)="eliminarRegion(region)" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                          </button>
-                                        </div>
-                                       </td>
-                                     </tr>
-                                  }
-                                </tbody>
-                              </table>
-                            </div>
-                          }
-                        </div>
-                        
-                        <!-- Paginación -->
-                        @if (regionesFiltradas.length > 0 && !cargando) {
-                          <div class="card-footer bg-white border-0 py-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                              <small class="text-muted">
-                                Mostrando {{ regionesFiltradas.length }} de {{ totalRegiones }} regiones
-                              </small>
-                              <pagination-controls 
-                                (pageChange)="paginaActual = $event"
-                                [autoHide]="true"
-                                [maxSize]="5">
-                              </pagination-controls>
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
-
-                  <!-- Modal de confirmación -->
-                  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                      <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                          <h5 class="modal-title">Confirmar eliminación</h5>
-                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                          <p>¿Estás seguro de eliminar la región <strong>{{ regionAEliminar?.nombre }}</strong>?</p>
-                          <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            Esta acción no se puede deshacer.
-                          </div>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
-                        </div>
-                      </div>
-                    </div>
+                    <i class="bi bi-pencil me-1"></i>
+                    {{ regionForm.get('descripcion')?.value?.length || 0 }}/500 caracteres
                   </div>
                 </div>
+
+                <!-- Campo: Código -->
+                <div class="mb-3">
+                  <label for="codigo" class="form-label fw-bold">
+                    <i class="bi bi-hash me-1 text-secondary"></i>
+                    Código <span class="text-muted small">(opcional)</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="codigo"
+                    formControlName="codigo"
+                    placeholder="Ej: REG-001, AND-01"
+                  >
+                  <div class="text-muted small mt-1">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Código único para identificar la región
+                  </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex gap-2 mt-4">
+                  <button 
+                    type="submit" 
+                    class="btn btn-primary flex-fill py-2"
+                    [disabled]="regionForm.invalid || guardando"
+                  >
+                    @if (guardando) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Guardando...
+                    } @else {
+                      <i class="bi bi-save me-1"></i>
+                      {{ modoEdicion ? 'Actualizar Región' : 'Guardar Región' }}
+                    }
+                  </button>
+                  
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary px-4"
+                    (click)="cerrarFormulario()"
+                  >
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lista de regiones -->
+  @if (!formularioVisible) {
+    <div class="regions-container">
+      <!-- Barra de búsqueda -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-list-ul fs-4 text-primary"></i>
+              <h5 class="mb-0 fw-bold">Regiones Registradas</h5>
+              @if (!cargando && totalRegiones > 0) {
+                <span class="badge bg-primary rounded-pill">{{ totalRegiones }}</span>
+              }
+            </div>
+            <div class="d-flex gap-2">
+              <div class="search-box">
+                <i class="bi bi-search search-icon"></i>
+                <input 
+                  type="text" 
+                  class="form-control form-control-sm ps-4" 
+                  placeholder="Buscar región..."
+                  (input)="filtrarRegiones($event)"
+                  style="width: 250px;"
+                >
+              </div>
+              <button class="btn btn-sm btn-outline-primary" (click)="cargarRegiones()" title="Actualizar">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de regiones -->
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+          @if (cargando) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-muted mt-2 mb-0">Cargando regiones...</p>
+            </div>
+          } @else {
+            <!-- Mostrar mensaje cuando NO hay regiones -->
+            @if (regiones.length === 0) {
+              <div class="text-center py-5">
+                <i class="bi bi-globe display-1 text-muted"></i>
+                <h5 class="text-muted mt-3 mb-2">📭 No hay regiones registradas</h5>
+                <p class="text-muted mb-0">Comienza agregando una nueva región</p>
+                <button class="btn btn-primary mt-3" (click)="mostrarFormulario()">
+                  <i class="bi bi-plus-circle me-1"></i> Agregar Región
+                </button>
+              </div>
+            } 
+            <!-- Mostrar mensaje cuando hay regiones pero el filtro no encuentra resultados -->
+            @else if (regiones.length > 0 && regionesFiltradas.length === 0) {
+              <div class="text-center py-5">
+                <i class="bi bi-search display-1 text-muted"></i>
+                <h5 class="text-muted mt-3 mb-2">🔍 No se encontraron resultados</h5>
+                <p class="text-muted mb-0">No hay regiones que coincidan con tu búsqueda</p>
+                <button class="btn btn-outline-primary mt-3" (click)="cargarRegiones()">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Limpiar búsqueda
+                </button>
+              </div>
+            }
+            <!-- Mostrar tabla cuando hay regiones filtradas -->
+            @else if (regionesFiltradas.length > 0) {
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="35%">
+                        <i class="bi bi-tag me-1"></i> Nombre
+                      </th>
+                      <th width="45%">
+                        <i class="bi bi-card-text me-1"></i> Descripción
+                      </th>
+                      <th width="20%" class="text-center">
+                        <i class="bi bi-tools"></i> Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (region of regionesFiltradas | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track region.id) {
+                      <tr class="animate-fade-in">
+                        <td class="align-middle">
+                          <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-globe-americas text-primary fs-5"></i>
+                            <div>
+                              <strong>{{ region.nombre }}</strong>
+                              @if (region.codigo) {
+                                <br><small class="text-muted">🔑 Código: {{ region.codigo }}</small>
+                              }
+                            </div>
+                          </div>
+                        </td>
+                        <td class="align-middle">
+                          <div class="text-truncate" style="max-width: 300px;" [title]="region.descripcion">
+                            {{ region.descripcion }}
+                          </div>
+                        </td>
+                        <td class="align-middle text-center">
+                          <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" (click)="editarRegion(region)" title="Editar región">
+                              <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-success" (click)="verDetalles(region)" title="Ver detalles">
+                              <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" (click)="eliminarRegion(region)" title="Eliminar región">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+        </div>
+        
+        <!-- Paginación -->
+        @if (regionesFiltradas.length > 0 && !cargando) {
+          <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Mostrando {{ regionesFiltradas.length }} de {{ totalRegiones }} regiones
+              </small>
+              <pagination-controls 
+                (pageChange)="paginaActual = $event"
+                [autoHide]="true"
+                [maxSize]="5"
+                previousLabel="Anterior"
+                nextLabel="Siguiente">
+              </pagination-controls>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Modal de confirmación mejorado -->
+  <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-3">
+            <i class="bi bi-trash3-fill text-danger" style="font-size: 3rem;"></i>
+          </div>
+          <p class="text-center mb-3">
+            ¿Estás seguro de eliminar la región 
+            <strong class="text-danger">{{ regionAEliminar?.nombre }}</strong>?
+          </p>
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Esta acción no se puede deshacer y eliminará todas las provincias asociadas.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

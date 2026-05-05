@@ -21,6 +21,46 @@
     </div>
   </div>
 
+  <!-- Toast de mensajes -->
+  @if (mostrarMensajeExito) {
+    <div class="toast-message toast-success animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-check-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Éxito!</strong>
+          <p>{{ mensajeExito }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeExito = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  @if (mostrarMensajeError) {
+    <div class="toast-message toast-error animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-x-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Error!</strong>
+          <p>{{ mensajeError }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeError = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  @if (mostrarMensajeInfo) {
+    <div class="toast-message toast-info animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-info-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>Información</strong>
+          <p>{{ mensajeInfo }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeInfo = false">&times;</button>
+      </div>
+    </div>
+  }
+
   <!-- Formulario Moderno -->
   @if (formularioVisible) {
     <div class="form-overlay animate-slide-down">
@@ -32,7 +72,7 @@
                 <div>
                   <i class="bi bi-stars fs-4 me-2"></i>
                   <h5 class="mb-0 d-inline-block fw-bold">
-                    {{ modoEdicion ? 'Editar Hotel' : 'Crear Nuevo Hotel' }}
+                    {{ modoEdicion ? '✏️ Editar Hotel' : '➕ Crear Nuevo Hotel' }}
                   </h5>
                 </div>
                 <button type="button" class="btn-close btn-close-white" (click)="cerrarFormulario()" aria-label="Cerrar"></button>
@@ -49,7 +89,7 @@
                   </label>
                   <input 
                     type="text" 
-                    class="form-control" 
+                    class="form-control form-control-lg" 
                     id="nombre"
                     formControlName="nombre"
                     [ngClass]="{
@@ -57,6 +97,7 @@
                                    (hotelForm.get('nombre')?.dirty || hotelForm.get('nombre')?.touched)
                     }"
                     placeholder="Ej: Hotel Paraíso, Gran Hotel Mendoza"
+                    autocomplete="off"
                   >
                   @if (hotelForm.get('nombre')?.hasError('required') && 
                        (hotelForm.get('nombre')?.dirty || hotelForm.get('nombre')?.touched)) {
@@ -91,14 +132,16 @@
                     placeholder="Describe las instalaciones, servicios y características del hotel..."
                   ></textarea>
                   <div class="d-flex justify-content-between mt-1">
-                    @if (hotelForm.get('descripcion')?.hasError('required') && 
-                         (hotelForm.get('descripcion')?.dirty || hotelForm.get('descripcion')?.touched)) {
-                      <div class="text-danger small">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                        La descripción es obligatoria
-                      </div>
-                    }
-                    <div class="text-muted small ms-auto">
+                    <div>
+                      @if (hotelForm.get('descripcion')?.hasError('required') && 
+                           (hotelForm.get('descripcion')?.dirty || hotelForm.get('descripcion')?.touched)) {
+                        <div class="text-danger small">
+                          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                          La descripción es obligatoria
+                        </div>
+                      }
+                    </div>
+                    <div class="text-muted small">
                       <i class="bi bi-pencil me-1"></i>
                       {{ hotelForm.get('descripcion')?.value?.length || 0 }}/500 caracteres
                     </div>
@@ -185,17 +228,19 @@
                     </label>
                     @if (cargandoCiudades) {
                       <div class="alert alert-info py-2">
-                        <i class="bi bi-hourglass-split me-2"></i>
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                          <span class="visually-hidden">Cargando...</span>
+                        </div>
                         Cargando ciudades...
                       </div>
                     } @else if (ciudades.length === 0) {
                       <div class="alert alert-warning py-2">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        No hay ciudades disponibles
+                        No hay ciudades disponibles. Debes crear ciudades primero.
                       </div>
                     } @else {
                       <select 
-                        class="form-select" 
+                        class="form-select form-select-lg" 
                         id="ciudadId"
                         formControlName="ciudadId"
                         [ngClass]="{
@@ -203,9 +248,9 @@
                                        (hotelForm.get('ciudadId')?.dirty || hotelForm.get('ciudadId')?.touched)
                         }"
                       >
-                        <option value="" disabled selected>Selecciona una ciudad</option>
+                        <option value="" disabled selected>📌 Selecciona una ciudad</option>
                         @for (ciudad of ciudades; track ciudad.id) {
-                          <option [value]="ciudad.id">{{ ciudad.nombre }}</option>
+                          <option [value]="ciudad.id">🏙️ {{ ciudad.nombre }}</option>
                         }
                       </select>
                       @if (hotelForm.get('ciudadId')?.hasError('required') && 
@@ -226,17 +271,19 @@
                     </label>
                     @if (cargandoCategorias) {
                       <div class="alert alert-info py-2">
-                        <i class="bi bi-hourglass-split me-2"></i>
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                          <span class="visually-hidden">Cargando...</span>
+                        </div>
                         Cargando categorías...
                       </div>
                     } @else if (categorias.length === 0) {
                       <div class="alert alert-warning py-2">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        No hay categorías disponibles
+                        No hay categorías disponibles. Debes crear categorías primero.
                       </div>
                     } @else {
                       <select 
-                        class="form-select" 
+                        class="form-select form-select-lg" 
                         id="categoriaId"
                         formControlName="categoriaId"
                         [ngClass]="{
@@ -244,9 +291,14 @@
                                        (hotelForm.get('categoriaId')?.dirty || hotelForm.get('categoriaId')?.touched)
                         }"
                       >
-                        <option value="" disabled selected>Selecciona una categoría</option>
+                        <option value="" disabled selected>⭐ Selecciona una categoría</option>
                         @for (categoria of categorias; track categoria.id) {
-                          <option [value]="categoria.id">{{ categoria.nombre }}</option>
+                          <option [value]="categoria.id">
+                            {{ categoria.nombre }} 
+                            @if (categoria.numeroEstrellas) {
+                              ({{ '⭐'.repeat(categoria.numeroEstrellas) }})
+                            }
+                          </option>
                         }
                       </select>
                       @if (hotelForm.get('categoriaId')?.hasError('required') && 
@@ -267,17 +319,19 @@
                     </label>
                     @if (cargandoAdministradores) {
                       <div class="alert alert-info py-2">
-                        <i class="bi bi-hourglass-split me-2"></i>
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                          <span class="visually-hidden">Cargando...</span>
+                        </div>
                         Cargando administradores...
                       </div>
                     } @else if (administradores.length === 0) {
                       <div class="alert alert-warning py-2">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        No hay administradores disponibles
+                        No hay administradores disponibles.
                       </div>
                     } @else {
                       <select 
-                        class="form-select" 
+                        class="form-select form-select-lg" 
                         id="administradorId"
                         formControlName="administradorId"
                         [ngClass]="{
@@ -285,7 +339,7 @@
                                        (hotelForm.get('administradorId')?.dirty || hotelForm.get('administradorId')?.touched)
                         }"
                       >
-                        <option value="" disabled selected>Selecciona un administrador</option>
+                        <option value="" disabled selected>👤 Selecciona un administrador</option>
                         @for (admin of administradores; track admin.id) {
                           <option [value]="admin.id">{{ admin.nombre }} {{ admin.apellidos }}</option>
                         }
@@ -305,7 +359,7 @@
                 <div class="d-flex gap-2 mt-4">
                   <button 
                     type="submit" 
-                    class="btn btn-warning flex-fill"
+                    class="btn btn-warning flex-fill py-2"
                     [disabled]="hotelForm.invalid || guardando || ciudades.length === 0 || categorias.length === 0 || administradores.length === 0"
                   >
                     @if (guardando) {
@@ -313,13 +367,13 @@
                       Guardando...
                     } @else {
                       <i class="bi bi-save me-1"></i>
-                      {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                      {{ modoEdicion ? 'Actualizar Hotel' : 'Guardar Hotel' }}
                     }
                   </button>
                   
                   <button 
                     type="button" 
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-secondary px-4"
                     (click)="cerrarFormulario()"
                   >
                     <i class="bi bi-x-circle me-1"></i> Cancelar
@@ -364,7 +418,9 @@
                   <i class="bi bi-funnel-fill me-1"></i> Filtrar
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#" (click)="filtrarPorCategoria(0); $event.preventDefault()">Todas las categorías</a></li>
+                  <li><a class="dropdown-item" href="#" (click)="filtrarPorCategoria(0); $event.preventDefault()">
+                    <i class="bi bi-globe2 me-2"></i> Todas las categorías
+                  </a></li>
                   <li><hr class="dropdown-divider"></li>
                   @for (categoria of categorias; track categoria.id) {
                     <li>
@@ -393,80 +449,96 @@
               </div>
               <p class="text-muted mt-2 mb-0">Cargando hoteles...</p>
             </div>
-          } @else if (hotelesFiltrados.length === 0) {
-            <div class="text-center py-5">
-              <i class="bi bi-house display-1 text-muted"></i>
-              @if (filtroCategoria) {
-                <h5 class="text-muted mt-3 mb-2">No hay hoteles en esta categoría</h5>
-                <p class="text-muted mb-0">Intenta con otra categoría o agrega nuevos hoteles</p>
-              } @else {
-                <h5 class="text-muted mt-3 mb-2">No hay hoteles registrados</h5>
-                <p class="text-muted mb-0">Comienza agregando un nuevo hotel</p>
-              }
-              <button class="btn btn-warning mt-3" (click)="mostrarFormulario()">
-                <i class="bi bi-plus-circle me-1"></i> Agregar Hotel
-              </button>
-            </div>
           } @else {
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th width="25%">Hotel</th>
-                    <th width="20%">Ciudad</th>
-                    <th width="15%">Categoría</th>
-                    <th width="15%">Precio</th>
-                    <th width="25%" class="text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (hotel of hotelesFiltrados | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track hotel.id) {
-                    <tr [class.table-warning]="hotel.id === hotelEditando?.id">
-                      <td class="align-middle">
-                        <div class="d-flex align-items-center gap-2">
-                          <i class="bi bi-house-fill text-warning"></i>
-                          <div>
-                            <strong>{{ hotel.nombre }}</strong>
-                            @if (hotel.descripcion) {
-                              <br><small class="text-muted">{{ hotel.descripcion | slice:0:40 }}{{ hotel.descripcion.length > 40 ? '...' : '' }}</small>
-                            }
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <span class="badge bg-info-subtle text-info-emphasis px-3 py-2">
-                          <i class="bi bi-building-fill me-1"></i>
-                          {{ hotel.ciudades?.nombre || 'Sin ciudad' }}
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <span [class]="getCategoriaBadgeClass(hotel.categorias?.id)">
-                          <i class="bi bi-star-fill me-1"></i>
-                          {{ hotel.categorias?.nombre || 'Sin categoría' }}
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="fw-bold text-warning">${{ hotel.precio | number:'1.2-2' }}</span>
-                        <small class="text-muted d-block">USD/noche</small>
-                      </td>
-                      <td class="align-middle text-center">
-                        <div class="btn-group btn-group-sm">
-                          <button class="btn btn-outline-warning" (click)="editarHotel(hotel)" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button class="btn btn-outline-primary" (click)="verDetalles(hotel)" title="Ver">
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button class="btn btn-outline-danger" (click)="eliminarHotel(hotel)" title="Eliminar">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
+            @if (hoteles.length === 0) {
+              <div class="text-center py-5">
+                <i class="bi bi-house display-1 text-muted"></i>
+                <h5 class="text-muted mt-3 mb-2">📭 No hay hoteles registrados</h5>
+                <p class="text-muted mb-0">Comienza agregando un nuevo hotel</p>
+                <button class="btn btn-warning mt-3" (click)="mostrarFormulario()">
+                  <i class="bi bi-plus-circle me-1"></i> Agregar Hotel
+                </button>
+              </div>
+            } @else if (hoteles.length > 0 && hotelesFiltrados.length === 0) {
+              <div class="text-center py-5">
+                <i class="bi bi-search display-1 text-muted"></i>
+                <h5 class="text-muted mt-3 mb-2">🔍 No se encontraron resultados</h5>
+                <p class="text-muted mb-0">No hay hoteles que coincidan con tu búsqueda</p>
+                <button class="btn btn-outline-warning mt-3" (click)="cargarHoteles()">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Limpiar búsqueda
+                </button>
+              </div>
+            } @else if (hotelesFiltrados.length > 0) {
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="25%">
+                        <i class="bi bi-house-fill me-1"></i> Hotel
+                      </th>
+                      <th width="20%">
+                        <i class="bi bi-building-fill me-1"></i> Ciudad
+                      </th>
+                      <th width="15%">
+                        <i class="bi bi-star-fill me-1"></i> Categoría
+                      </th>
+                      <th width="15%">
+                        <i class="bi bi-currency-dollar me-1"></i> Precio
+                      </th>
+                      <th width="25%" class="text-center">
+                        <i class="bi bi-tools"></i> Acciones
+                      </th>
                     </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    @for (hotel of hotelesFiltrados | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track hotel.id) {
+                      <tr class="animate-fade-in" [class.table-warning]="hotel.id === hotelEditando?.id">
+                        <td class="align-middle">
+                          <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-house-fill text-warning fs-5"></i>
+                            <div>
+                              <strong>{{ hotel.nombre }}</strong>
+                              @if (hotel.descripcion) {
+                                <br><small class="text-muted">{{ hotel.descripcion | slice:0:40 }}{{ hotel.descripcion.length > 40 ? '...' : '' }}</small>
+                              }
+                            </div>
+                          </div>
+                        </td>
+                        <td class="align-middle">
+                          <span class="badge bg-info-subtle text-info-emphasis px-3 py-2">
+                            <i class="bi bi-building-fill me-1"></i>
+                            {{ hotel.ciudades?.nombre || 'Sin ciudad' }}
+                          </span>
+                        </td>
+                        <td class="align-middle">
+                          <span [ngClass]="getCategoriaBadgeClass(hotel.categorias?.id)">
+                            <i class="bi bi-star-fill me-1"></i>
+                            {{ hotel.categorias?.nombre || 'Sin categoría' }}
+                          </span>
+                        </td>
+                        <td class="align-middle">
+                          <span class="fw-bold text-warning">${{ hotel.precio | number:'1.2-2' }}</span>
+                          <small class="text-muted d-block">USD/noche</small>
+                        </td>
+                        <td class="align-middle text-center">
+                          <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-warning" (click)="editarHotel(hotel)" title="Editar hotel">
+                              <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-primary" (click)="verDetalles(hotel)" title="Ver detalles">
+                              <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" (click)="eliminarHotel(hotel)" title="Eliminar hotel">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
           }
         </div>
         
@@ -475,6 +547,7 @@
           <div class="card-footer bg-white border-0 py-3">
             <div class="d-flex justify-content-between align-items-center">
               <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
                 Mostrando {{ hotelesFiltrados.length }} de {{ totalHoteles }} hoteles
                 @if (filtroCategoria) {
                   <span class="badge bg-warning-subtle text-warning-emphasis ms-2">
@@ -486,7 +559,9 @@
               <pagination-controls 
                 (pageChange)="paginaActual = $event"
                 [autoHide]="true"
-                [maxSize]="5">
+                [maxSize]="5"
+                previousLabel="Anterior"
+                nextLabel="Siguiente">
               </pagination-controls>
             </div>
           </div>
@@ -495,7 +570,7 @@
     </div>
   }
 
-  <!-- Modal de detalles -->
+  <!-- Modal de detalles mejorado -->
   <div class="modal fade" id="detallesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -511,26 +586,26 @@
             <div class="text-center mb-3">
               <i class="bi bi-house-fill display-1 text-warning"></i>
             </div>
-            <h4 class="text-warning mb-3">{{ hotelDetalles.nombre }}</h4>
-            <div class="mb-2">
-              <strong><i class="bi bi-building-fill me-1"></i> Ciudad:</strong>
+            <h4 class="text-warning mb-3 text-center">{{ hotelDetalles.nombre }}</h4>
+            <div class="mb-2 p-2 bg-light rounded">
+              <strong><i class="bi bi-building-fill me-1 text-warning"></i> Ciudad:</strong>
               <span class="ms-2">{{ hotelDetalles.ciudades?.nombre || 'Sin ciudad' }}</span>
             </div>
-            <div class="mb-2">
-              <strong><i class="bi bi-star-fill me-1"></i> Categoría:</strong>
+            <div class="mb-2 p-2 bg-light rounded">
+              <strong><i class="bi bi-star-fill me-1 text-warning"></i> Categoría:</strong>
               <span class="ms-2">{{ hotelDetalles.categorias?.nombre || 'Sin categoría' }}</span>
             </div>
-            <div class="mb-2">
-              <strong><i class="bi bi-currency-dollar me-1"></i> Precio:</strong>
+            <div class="mb-2 p-2 bg-light rounded">
+              <strong><i class="bi bi-currency-dollar me-1 text-warning"></i> Precio:</strong>
               <span class="ms-2 fw-bold">${{ hotelDetalles.precio | number:'1.2-2' }} USD/noche</span>
             </div>
-            <div class="mb-2">
-              <strong><i class="bi bi-telephone-fill me-1"></i> Contactos:</strong>
-              <pre class="mt-2 bg-light p-2 rounded small">{{ hotelDetalles.contactos }}</pre>
+            <div class="mb-2 p-2 bg-light rounded">
+              <strong><i class="bi bi-telephone-fill me-1 text-warning"></i> Contactos:</strong>
+              <pre class="mt-2 bg-white p-2 rounded small mb-0">{{ hotelDetalles.contactos }}</pre>
             </div>
-            <div>
-              <strong><i class="bi bi-card-text me-1"></i> Descripción:</strong>
-              <p class="mt-2">{{ hotelDetalles.descripcion }}</p>
+            <div class="p-2 bg-light rounded">
+              <strong><i class="bi bi-card-text me-1 text-warning"></i> Descripción:</strong>
+              <p class="mt-2 mb-0">{{ hotelDetalles.descripcion }}</p>
             </div>
           }
         </div>
@@ -543,24 +618,37 @@
     </div>
   </div>
 
-  <!-- Modal de confirmación -->
+  <!-- Modal de confirmación mejorado -->
   <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Confirmar eliminación</h5>
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>¿Estás seguro de eliminar el hotel <strong>{{ hotelAEliminar?.nombre }}</strong>?</p>
+          <div class="text-center mb-3">
+            <i class="bi bi-trash3-fill text-danger" style="font-size: 3rem;"></i>
+          </div>
+          <p class="text-center mb-3">
+            ¿Estás seguro de eliminar el hotel 
+            <strong class="text-danger">{{ hotelAEliminar?.nombre }}</strong>?
+          </p>
           <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-2"></i>
-            Esta acción no se puede deshacer.
+            Esta acción no se puede deshacer y eliminará todas las habitaciones asociadas.
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash me-1"></i> Eliminar
+          </button>
         </div>
       </div>
     </div>

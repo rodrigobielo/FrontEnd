@@ -25,6 +25,14 @@ export class Provincias implements OnInit, OnDestroy {
   formularioVisible: boolean = false;
   filtroRegion: number = 0;
   
+  // Mensajes
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  mensajeInfo: string = '';
+  mostrarMensajeExito: boolean = false;
+  mostrarMensajeError: boolean = false;
+  mostrarMensajeInfo: boolean = false;
+  
   // Datos
   regiones: Region[] = [];
   provincias: Provincia[] = [];
@@ -38,6 +46,11 @@ export class Provincias implements OnInit, OnDestroy {
   // Paginación
   paginaActual: number = 1;
   elementosPorPagina: number = 10;
+  
+  // Temporizadores para mensajes
+  private timeoutExito: any;
+  private timeoutError: any;
+  private timeoutInfo: any;
 
   constructor(
     private fb: FormBuilder,
@@ -55,7 +68,45 @@ export class Provincias implements OnInit, OnDestroy {
     this.cargarProvincias();
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.limpiarTemporizadores();
+  }
+
+  private limpiarTemporizadores(): void {
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+  }
+
+  private mostrarExito(mensaje: string): void {
+    this.mostrarMensajeExito = true;
+    this.mensajeExito = mensaje;
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    this.timeoutExito = setTimeout(() => {
+      this.mostrarMensajeExito = false;
+      this.mensajeExito = '';
+    }, 4000);
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.mostrarMensajeError = true;
+    this.mensajeError = mensaje;
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    this.timeoutError = setTimeout(() => {
+      this.mostrarMensajeError = false;
+      this.mensajeError = '';
+    }, 5000);
+  }
+
+  private mostrarInfo(mensaje: string): void {
+    this.mostrarMensajeInfo = true;
+    this.mensajeInfo = mensaje;
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+    this.timeoutInfo = setTimeout(() => {
+      this.mostrarMensajeInfo = false;
+      this.mensajeInfo = '';
+    }, 3000);
+  }
 
   /**
    * Cargar regiones para el select
@@ -66,11 +117,14 @@ export class Provincias implements OnInit, OnDestroy {
       next: (regiones: Region[]) => {
         this.regiones = regiones;
         this.cargandoRegiones = false;
+        if (regiones.length === 0) {
+          this.mostrarInfo('No hay regiones disponibles. Debes crear regiones primero.');
+        }
       },
       error: (error: Error) => {
         console.error('Error al cargar regiones:', error);
         this.cargandoRegiones = false;
-        this.mostrarMensajeError(error.message || 'Error al cargar las regiones');
+        this.mostrarError(error.message || 'Error al cargar las regiones');
       }
     });
   }
@@ -87,11 +141,15 @@ export class Provincias implements OnInit, OnDestroy {
         this.totalProvincias = provincias.length;
         this.cargando = false;
         this.paginaActual = 1;
+        
+        if (provincias.length === 0) {
+          this.mostrarInfo('No se encontraron provincias registradas');
+        }
       },
       error: (error: Error) => {
         console.error('Error al cargar provincias:', error);
         this.cargando = false;
-        this.mostrarMensajeError(error.message || 'Error al cargar las provincias');
+        this.mostrarError(error.message || 'Error al cargar las provincias');
       }
     });
   }
@@ -129,6 +187,14 @@ export class Provincias implements OnInit, OnDestroy {
     });
     this.provinciaForm.markAsPristine();
     this.provinciaForm.markAsUntouched();
+    
+    // Scroll suave al formulario
+    setTimeout(() => {
+      const formulario = document.querySelector('.modern-form');
+      if (formulario) {
+        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   /**
@@ -153,6 +219,9 @@ export class Provincias implements OnInit, OnDestroy {
         provincia.nombre.toLowerCase().includes(filtro) ||
         this.obtenerNombreRegion(provincia).toLowerCase().includes(filtro)
       );
+      if (this.provinciasFiltradas.length === 0) {
+        this.mostrarInfo(`No se encontraron provincias con "${filtro}"`);
+      }
     } else {
       this.provinciasFiltradas = [...this.provincias];
     }
@@ -168,8 +237,15 @@ export class Provincias implements OnInit, OnDestroy {
       this.provinciasFiltradas = this.provincias.filter(provincia =>
         provincia.regiones?.id === regionId
       );
+      const nombreRegion = this.obtenerNombreRegionPorId(regionId);
+      if (this.provinciasFiltradas.length === 0) {
+        this.mostrarInfo(`No hay provincias en la región "${nombreRegion}"`);
+      } else {
+        this.mostrarExito(`Mostrando ${this.provinciasFiltradas.length} provincia(s) de "${nombreRegion}"`);
+      }
     } else {
       this.provinciasFiltradas = [...this.provincias];
+      this.mostrarInfo('Mostrando todas las provincias');
     }
     this.paginaActual = 1;
   }
@@ -193,6 +269,14 @@ export class Provincias implements OnInit, OnDestroy {
     Object.keys(this.provinciaForm.controls).forEach(key => {
       this.provinciaForm.get(key)?.markAsUntouched();
     });
+    
+    // Scroll suave al formulario
+    setTimeout(() => {
+      const formulario = document.querySelector('.modern-form');
+      if (formulario) {
+        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   /**
@@ -204,7 +288,7 @@ export class Provincias implements OnInit, OnDestroy {
         const control = this.provinciaForm.get(key);
         control?.markAsTouched();
       });
-      this.mostrarMensajeError('Complete todos los campos obligatorios');
+      this.mostrarError('Complete todos los campos obligatorios');
       return;
     }
 
@@ -225,13 +309,18 @@ export class Provincias implements OnInit, OnDestroy {
           this.provinciasFiltradas = [...this.provincias];
           this.totalProvincias = this.provincias.length;
           this.guardando = false;
-          this.cerrarFormulario();
-          this.mostrarMensajeExito('Provincia actualizada exitosamente');
+          this.cerrarFormulario(); // Cerrar formulario automáticamente
+          this.mostrarExito(`✅ Provincia "${nombre}" actualizada correctamente`);
+          
+          // Mantener el filtro si estaba activo
+          if (this.filtroRegion > 0) {
+            this.filtrarPorRegion(this.filtroRegion);
+          }
         },
         error: (error: Error) => {
           console.error('Error al actualizar provincia:', error);
           this.guardando = false;
-          this.mostrarMensajeError(error.message || 'Error al actualizar la provincia');
+          this.mostrarError(error.message || 'Error al actualizar la provincia');
         }
       });
     } else {
@@ -239,15 +328,25 @@ export class Provincias implements OnInit, OnDestroy {
         next: (nuevaProvincia: Provincia) => {
           this.provincias.unshift(nuevaProvincia);
           this.totalProvincias = this.provincias.length;
-          this.provinciasFiltradas = [...this.provincias];
+          
+          // Aplicar filtro si estaba activo
+          if (this.filtroRegion > 0 && nuevaProvincia.regiones?.id === this.filtroRegion) {
+            this.provinciasFiltradas.unshift(nuevaProvincia);
+          } else if (this.filtroRegion === 0) {
+            this.provinciasFiltradas = [...this.provincias];
+          }
+          
           this.guardando = false;
-          this.cerrarFormulario();
-          this.mostrarMensajeExito('Provincia creada exitosamente');
+          this.cerrarFormulario(); // Cerrar formulario automáticamente
+          this.mostrarExito(`✅ Provincia "${nombre}" creada correctamente`);
+          
+          // Resetear página a la primera para ver la nueva provincia
+          this.paginaActual = 1;
         },
         error: (error: Error) => {
           console.error('Error al crear provincia:', error);
           this.guardando = false;
-          this.mostrarMensajeError(error.message || 'Error al crear la provincia');
+          this.mostrarError(error.message || 'Error al crear la provincia');
         }
       });
     }
@@ -278,6 +377,8 @@ export class Provincias implements OnInit, OnDestroy {
    */
   confirmarEliminar(): void {
     if (this.provinciaAEliminar && this.provinciaAEliminar.id) {
+      const nombreProvincia = this.provinciaAEliminar.nombre;
+      
       this.provinciaService.eliminarProvincia(this.provinciaAEliminar.id).subscribe({
         next: () => {
           const index = this.provincias.findIndex(p => p.id === this.provinciaAEliminar!.id);
@@ -297,11 +398,16 @@ export class Provincias implements OnInit, OnDestroy {
             this.cerrarFormulario();
           }
           
-          this.mostrarMensajeExito('Provincia eliminada exitosamente');
+          this.mostrarExito(`🗑️ Provincia "${nombreProvincia}" eliminada correctamente`);
+          
+          // Si no quedan provincias, mostrar mensaje
+          if (this.provincias.length === 0) {
+            this.mostrarInfo('No hay provincias registradas');
+          }
         },
         error: (error: Error) => {
           console.error('Error al eliminar provincia:', error);
-          this.mostrarMensajeError(error.message || 'Error al eliminar la provincia');
+          this.mostrarError(error.message || 'Error al eliminar la provincia');
           
           const modalElement = document.getElementById('confirmarEliminarModal');
           if (modalElement) {
@@ -312,13 +418,5 @@ export class Provincias implements OnInit, OnDestroy {
       });
     }
     this.provinciaAEliminar = null;
-  }
-
-  private mostrarMensajeExito(mensaje: string): void {
-    alert('✅ ' + mensaje);
-  }
-
-  private mostrarMensajeError(mensaje: string): void {
-    alert('❌ ' + mensaje);
   }
 }

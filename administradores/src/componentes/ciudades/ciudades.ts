@@ -25,6 +25,14 @@ export class Ciudades implements OnInit, OnDestroy {
   formularioVisible: boolean = false;
   filtroProvincia: number = 0;
   
+  // Mensajes con toasts
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  mensajeInfo: string = '';
+  mostrarMensajeExito: boolean = false;
+  mostrarMensajeError: boolean = false;
+  mostrarMensajeInfo: boolean = false;
+  
   // Datos
   provincias: ProvinciaSimple[] = [];
   ciudades: Ciudad[] = [];
@@ -39,7 +47,13 @@ export class Ciudades implements OnInit, OnDestroy {
   // Paginación
   paginaActual: number = 1;
   elementosPorPagina: number = 10;
-
+  
+  // Temporizadores
+  private timeoutExito: any;
+  private timeoutError: any;
+  private timeoutInfo: any;
+  
+  // Modales
   private detallesModalInstance: any;
   private confirmarModalInstance: any;
 
@@ -71,7 +85,44 @@ export class Ciudades implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.limpiarTemporizadores();
     this.destroyModales();
+  }
+
+  private limpiarTemporizadores(): void {
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+  }
+
+  private mostrarExito(mensaje: string): void {
+    this.mostrarMensajeExito = true;
+    this.mensajeExito = mensaje;
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    this.timeoutExito = setTimeout(() => {
+      this.mostrarMensajeExito = false;
+      this.mensajeExito = '';
+    }, 4000);
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.mostrarMensajeError = true;
+    this.mensajeError = mensaje;
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    this.timeoutError = setTimeout(() => {
+      this.mostrarMensajeError = false;
+      this.mensajeError = '';
+    }, 5000);
+  }
+
+  private mostrarInfo(mensaje: string): void {
+    this.mostrarMensajeInfo = true;
+    this.mensajeInfo = mensaje;
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+    this.timeoutInfo = setTimeout(() => {
+      this.mostrarMensajeInfo = false;
+      this.mensajeInfo = '';
+    }, 3000);
   }
 
   private initModales(): void {
@@ -108,11 +159,15 @@ export class Ciudades implements OnInit, OnDestroy {
       next: (data: ProvinciaSimple[]) => {
         this.provincias = data;
         this.cargandoProvincias = false;
+        
+        if (data.length === 0) {
+          this.mostrarInfo('No hay provincias disponibles. Debes crear provincias primero.');
+        }
       },
       error: (error: any) => {
         console.error('Error al cargar provincias:', error);
         this.cargandoProvincias = false;
-        this.mostrarMensajeError('Error al cargar las provincias');
+        this.mostrarError('Error al cargar las provincias');
         this.provincias = [];
       }
     });
@@ -123,6 +178,8 @@ export class Ciudades implements OnInit, OnDestroy {
    */
   cargarCiudades(): void {
     this.cargando = true;
+    this.limpiarTemporizadores();
+    
     this.ciudadService.getAll().subscribe({
       next: (data: Ciudad[]) => {
         this.ciudades = data;
@@ -130,11 +187,15 @@ export class Ciudades implements OnInit, OnDestroy {
         this.totalCiudades = this.ciudades.length;
         this.cargando = false;
         this.paginaActual = 1;
+        
+        if (data.length === 0) {
+          this.mostrarInfo('No se encontraron ciudades registradas');
+        }
       },
       error: (error: any) => {
         console.error('Error al cargar ciudades:', error);
         this.cargando = false;
-        this.mostrarMensajeError('Error al cargar las ciudades');
+        this.mostrarError(error.message || 'Error al cargar las ciudades');
         this.ciudades = [];
         this.ciudadesFiltradas = [];
         this.totalCiudades = 0;
@@ -165,6 +226,15 @@ export class Ciudades implements OnInit, OnDestroy {
     });
     this.ciudadForm.markAsPristine();
     this.ciudadForm.markAsUntouched();
+    this.limpiarTemporizadores();
+    
+    // Scroll suave al formulario
+    setTimeout(() => {
+      const formulario = document.querySelector('.modern-form');
+      if (formulario) {
+        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   /**
@@ -175,6 +245,7 @@ export class Ciudades implements OnInit, OnDestroy {
     this.modoEdicion = false;
     this.ciudadEditando = null;
     this.ciudadForm.reset();
+    this.limpiarTemporizadores();
   }
 
   /**
@@ -185,14 +256,23 @@ export class Ciudades implements OnInit, OnDestroy {
     
     if (this.filtroProvincia > 0) {
       resultado = resultado.filter(c => c.provinciaId === this.filtroProvincia);
+      const nombreProvincia = this.obtenerNombreProvincia(this.filtroProvincia);
+      if (resultado.length === 0 && this.ciudades.length > 0) {
+        this.mostrarInfo(`No hay ciudades en la provincia "${nombreProvincia}"`);
+      }
     }
     
-    if (filtroTexto) {
+    if (filtroTexto && filtroTexto.trim()) {
+      const filtro = filtroTexto.toLowerCase().trim();
       resultado = resultado.filter(ciudad =>
-        ciudad.nombre.toLowerCase().includes(filtroTexto) ||
-        ciudad.descripcion.toLowerCase().includes(filtroTexto) ||
-        this.obtenerNombreProvincia(ciudad.provinciaId).toLowerCase().includes(filtroTexto)
+        ciudad.nombre.toLowerCase().includes(filtro) ||
+        ciudad.descripcion.toLowerCase().includes(filtro) ||
+        this.obtenerNombreProvincia(ciudad.provinciaId).toLowerCase().includes(filtro)
       );
+      
+      if (resultado.length === 0) {
+        this.mostrarInfo(`No se encontraron ciudades con "${filtro}"`);
+      }
     }
     
     this.ciudadesFiltradas = resultado;
@@ -204,7 +284,7 @@ export class Ciudades implements OnInit, OnDestroy {
    */
   filtrarCiudades(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const filtro = input.value.toLowerCase().trim();
+    const filtro = input.value;
     this.aplicarFiltros(filtro);
   }
 
@@ -213,6 +293,14 @@ export class Ciudades implements OnInit, OnDestroy {
    */
   filtrarPorProvincia(provinciaId: number): void {
     this.filtroProvincia = provinciaId;
+    
+    if (provinciaId > 0) {
+      const nombreProvincia = this.obtenerNombreProvincia(provinciaId);
+      this.mostrarExito(`Mostrando ciudades de "${nombreProvincia}"`);
+    } else {
+      this.mostrarInfo('Mostrando todas las ciudades');
+    }
+    
     this.aplicarFiltros('');
   }
 
@@ -223,6 +311,7 @@ export class Ciudades implements OnInit, OnDestroy {
     this.modoEdicion = true;
     this.ciudadEditando = ciudad;
     this.formularioVisible = true;
+    this.limpiarTemporizadores();
     
     this.ciudadForm.patchValue({
       nombre: ciudad.nombre,
@@ -234,6 +323,14 @@ export class Ciudades implements OnInit, OnDestroy {
     Object.keys(this.ciudadForm.controls).forEach(key => {
       this.ciudadForm.get(key)?.markAsUntouched();
     });
+    
+    // Scroll suave al formulario
+    setTimeout(() => {
+      const formulario = document.querySelector('.modern-form');
+      if (formulario) {
+        formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   /**
@@ -245,12 +342,13 @@ export class Ciudades implements OnInit, OnDestroy {
         const control = this.ciudadForm.get(key);
         control?.markAsTouched();
       });
-      this.mostrarMensajeError('Complete todos los campos obligatorios');
+      this.mostrarError('Complete todos los campos obligatorios correctamente');
       return;
     }
 
     this.guardando = true;
     const ciudadData: CiudadDTO = this.ciudadForm.value;
+    const nombreCiudad = ciudadData.nombre;
     
     if (this.modoEdicion && this.ciudadEditando) {
       this.ciudadService.update(this.ciudadEditando.id, ciudadData).subscribe({
@@ -262,12 +360,12 @@ export class Ciudades implements OnInit, OnDestroy {
           this.aplicarFiltros('');
           this.guardando = false;
           this.cerrarFormulario();
-          this.mostrarMensajeExito(`Ciudad "${ciudadData.nombre}" actualizada`);
+          this.mostrarExito(`✅ Ciudad "${nombreCiudad}" actualizada correctamente`);
         },
         error: (error: any) => {
           console.error('Error al actualizar ciudad:', error);
           this.guardando = false;
-          this.mostrarMensajeError('Error al actualizar la ciudad');
+          this.mostrarError(error.message || 'Error al actualizar la ciudad');
         }
       });
     } else {
@@ -275,15 +373,21 @@ export class Ciudades implements OnInit, OnDestroy {
         next: (nuevaCiudad: Ciudad) => {
           this.ciudades.unshift(nuevaCiudad);
           this.totalCiudades = this.ciudades.length;
-          this.aplicarFiltros('');
+          
+          // Aplicar filtro si estaba activo
+          if (this.filtroProvincia === 0 || nuevaCiudad.provinciaId === this.filtroProvincia) {
+            this.ciudadesFiltradas.unshift(nuevaCiudad);
+          }
+          
           this.guardando = false;
           this.cerrarFormulario();
-          this.mostrarMensajeExito(`Ciudad "${ciudadData.nombre}" creada`);
+          this.mostrarExito(`✅ Ciudad "${nombreCiudad}" creada correctamente`);
+          this.paginaActual = 1;
         },
         error: (error: any) => {
           console.error('Error al crear ciudad:', error);
           this.guardando = false;
-          this.mostrarMensajeError('Error al crear la ciudad');
+          this.mostrarError(error.message || 'Error al crear la ciudad');
         }
       });
     }
@@ -316,6 +420,8 @@ export class Ciudades implements OnInit, OnDestroy {
     if (!this.ciudadAEliminar) return;
     
     const ciudadAEliminar = this.ciudadAEliminar;
+    const nombreCiudad = ciudadAEliminar.nombre;
+    
     this.ciudadService.delete(ciudadAEliminar.id).subscribe({
       next: () => {
         const index = this.ciudades.findIndex(c => c.id === ciudadAEliminar.id);
@@ -332,22 +438,19 @@ export class Ciudades implements OnInit, OnDestroy {
             this.cerrarFormulario();
           }
           
-          this.mostrarMensajeExito(`Ciudad "${ciudadAEliminar.nombre}" eliminada`);
+          this.mostrarExito(`🗑️ Ciudad "${nombreCiudad}" eliminada correctamente`);
+          
+          if (this.ciudades.length === 0) {
+            this.mostrarInfo('No hay ciudades registradas');
+          }
         }
         this.ciudadAEliminar = null;
       },
       error: (error: any) => {
         console.error('Error al eliminar ciudad:', error);
-        this.mostrarMensajeError('Error al eliminar la ciudad');
+        this.mostrarError(error.message || 'Error al eliminar la ciudad');
+        this.ciudadAEliminar = null;
       }
     });
-  }
-
-  private mostrarMensajeExito(mensaje: string): void {
-    alert('✅ ' + mensaje);
-  }
-
-  private mostrarMensajeError(mensaje: string): void {
-    alert('❌ ' + mensaje);
   }
 }

@@ -1,12 +1,13 @@
+// src/modelos/region.model.ts
 export interface Region {
-  id: number;  // Cambiar a obligatorio
-  nombre: string;
-  descripcion: string;
-  codigo?: string;  // Solo para frontend
-  fechaCreacion?: Date;
+  id: number;        // Long en Java -> number en TS
+  nombre: string;    // nombreRegion en Java
+  descripcion: string; // descrpcionRegion en Java
+  codigo?: string;
+  fechaCreacion?: string; // String en Java -> string en TS
 }
 
-// O si prefieres mantenerlo opcional para nuevos registros:
+// Para formularios (creación/edición)
 export interface RegionForm {
   id?: number;
   nombre: string;

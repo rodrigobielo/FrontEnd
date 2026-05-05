@@ -21,6 +21,46 @@
     </div>
   </div>
 
+  <!-- Toast de mensajes -->
+  @if (mostrarMensajeExito) {
+    <div class="toast-message toast-success animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-check-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Éxito!</strong>
+          <p>{{ mensajeExito }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeExito = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  @if (mostrarMensajeError) {
+    <div class="toast-message toast-error animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-x-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Error!</strong>
+          <p>{{ mensajeError }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeError = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  @if (mostrarMensajeInfo) {
+    <div class="toast-message toast-info animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-info-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>Información</strong>
+          <p>{{ mensajeInfo }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeInfo = false">&times;</button>
+      </div>
+    </div>
+  }
+
   <!-- Formulario Moderno -->
   @if (formularioVisible) {
     <div class="form-overlay animate-slide-down">
@@ -32,7 +72,7 @@
                 <div>
                   <i class="bi bi-stars fs-4 me-2"></i>
                   <h5 class="mb-0 d-inline-block fw-bold">
-                    {{ modoEdicion ? 'Editar Ciudad' : 'Crear Nueva Ciudad' }}
+                    {{ modoEdicion ? '✏️ Editar Ciudad' : '➕ Crear Nueva Ciudad' }}
                   </h5>
                 </div>
                 <button type="button" class="btn-close btn-close-white" (click)="cerrarFormulario()" aria-label="Cerrar"></button>
@@ -49,7 +89,7 @@
                   </label>
                   <input 
                     type="text" 
-                    class="form-control" 
+                    class="form-control form-control-lg" 
                     id="nombre"
                     formControlName="nombre"
                     [ngClass]="{
@@ -57,6 +97,7 @@
                                    (ciudadForm.get('nombre')?.dirty || ciudadForm.get('nombre')?.touched)
                     }"
                     placeholder="Ej: San Salvador de Jujuy, Salta Capital, Mendoza"
+                    autocomplete="off"
                   >
                   @if (ciudadForm.get('nombre')?.hasError('required') && 
                        (ciudadForm.get('nombre')?.dirty || ciudadForm.get('nombre')?.touched)) {
@@ -65,13 +106,15 @@
                       El nombre es obligatorio
                     </div>
                   }
-                  @if (ciudadForm.get('nombre')?.hasError('minlength')) {
+                  @if (ciudadForm.get('nombre')?.hasError('minlength') && 
+                       (ciudadForm.get('nombre')?.dirty || ciudadForm.get('nombre')?.touched)) {
                     <div class="text-danger small mt-1">
                       <i class="bi bi-exclamation-triangle-fill me-1"></i>
                       Mínimo 3 caracteres
                     </div>
                   }
-                  @if (ciudadForm.get('nombre')?.hasError('pattern')) {
+                  @if (ciudadForm.get('nombre')?.hasError('pattern') && 
+                       (ciudadForm.get('nombre')?.dirty || ciudadForm.get('nombre')?.touched)) {
                     <div class="text-danger small mt-1">
                       <i class="bi bi-exclamation-triangle-fill me-1"></i>
                       Solo letras, espacios, puntos y guiones
@@ -121,7 +164,9 @@
                   </label>
                   @if (cargandoProvincias) {
                     <div class="alert alert-info py-2">
-                      <i class="bi bi-hourglass-split me-2"></i>
+                      <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                      </div>
                       Cargando provincias...
                     </div>
                   } @else if (provincias.length === 0) {
@@ -131,7 +176,7 @@
                     </div>
                   } @else {
                     <select 
-                      class="form-select" 
+                      class="form-select form-select-lg" 
                       id="provinciaId"
                       formControlName="provinciaId"
                       [ngClass]="{
@@ -139,9 +184,9 @@
                                      (ciudadForm.get('provinciaId')?.dirty || ciudadForm.get('provinciaId')?.touched)
                       }"
                     >
-                      <option value="" disabled selected>Selecciona una provincia</option>
+                      <option value="" disabled selected>📌 Selecciona una provincia</option>
                       @for (provincia of provincias; track provincia.id) {
-                        <option [value]="provincia.id">{{ provincia.nombre }}</option>
+                        <option [value]="provincia.id">🗺️ {{ provincia.nombre }}</option>
                       }
                     </select>
                     @if (ciudadForm.get('provinciaId')?.hasError('required') && 
@@ -162,7 +207,7 @@
                 <div class="d-flex gap-2 mt-4">
                   <button 
                     type="submit" 
-                    class="btn btn-info flex-fill"
+                    class="btn btn-info flex-fill py-2"
                     [disabled]="ciudadForm.invalid || guardando || provincias.length === 0"
                   >
                     @if (guardando) {
@@ -170,13 +215,13 @@
                       Guardando...
                     } @else {
                       <i class="bi bi-save me-1"></i>
-                      {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                      {{ modoEdicion ? 'Actualizar Ciudad' : 'Guardar Ciudad' }}
                     }
                   </button>
                   
                   <button 
                     type="button" 
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-secondary px-4"
                     (click)="cerrarFormulario()"
                   >
                     <i class="bi bi-x-circle me-1"></i> Cancelar
@@ -221,7 +266,9 @@
                   <i class="bi bi-funnel-fill me-1"></i> Filtrar
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#" (click)="filtrarPorProvincia(0); $event.preventDefault()">Todas las provincias</a></li>
+                  <li><a class="dropdown-item" href="#" (click)="filtrarPorProvincia(0); $event.preventDefault()">
+                    <i class="bi bi-globe2 me-2"></i> Todas las provincias
+                  </a></li>
                   <li><hr class="dropdown-divider"></li>
                   @for (provincia of provincias; track provincia.id) {
                     <li>
@@ -250,72 +297,87 @@
               </div>
               <p class="text-muted mt-2 mb-0">Cargando ciudades...</p>
             </div>
-          } @else if (ciudadesFiltradas.length === 0) {
-            <div class="text-center py-5">
-              <i class="bi bi-building display-1 text-muted"></i>
-              @if (filtroProvincia > 0) {
-                <h5 class="text-muted mt-3 mb-2">No hay ciudades en esta provincia</h5>
-                <p class="text-muted mb-0">Intenta con otra provincia o agrega nuevas ciudades</p>
-              } @else {
-                <h5 class="text-muted mt-3 mb-2">No hay ciudades registradas</h5>
-                <p class="text-muted mb-0">Comienza agregando una nueva ciudad</p>
-              }
-              <button class="btn btn-info mt-3" (click)="mostrarFormulario()">
-                <i class="bi bi-plus-circle me-1"></i> Agregar Ciudad
-              </button>
-            </div>
           } @else {
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th width="35%">Ciudad</th>
-                    <th width="35%">Provincia</th>
-                    <th width="30%" class="text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (ciudad of ciudadesFiltradas | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track ciudad.id) {
-                    <tr [class.table-info]="ciudad.id === ciudadEditando?.id">
-                      <td class="align-middle">
-                        <div class="d-flex align-items-center gap-2">
-                          <i class="bi bi-building-fill text-info"></i>
-                          <div>
-                            <strong>{{ ciudad.nombre }}</strong>
-                            @if (ciudad.descripcion) {
-                              <br><small class="text-muted">{{ ciudad.descripcion | slice:0:50 }}{{ ciudad.descripcion.length > 50 ? '...' : '' }}</small>
-                            }
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        @if (ciudad.provinciaId) {
-                          <span class="badge bg-info-subtle text-info-emphasis px-3 py-2">
-                            <i class="bi bi-geo-alt-fill me-1"></i>
-                            {{ obtenerNombreProvincia(ciudad.provinciaId) }}
-                          </span>
-                        } @else {
-                          <span class="text-muted fst-italic">Sin provincia asignada</span>
-                        }
-                      </td>
-                      <td class="align-middle text-center">
-                        <div class="btn-group btn-group-sm">
-                          <button class="btn btn-outline-info" (click)="editarCiudad(ciudad)" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button class="btn btn-outline-primary" (click)="verDetalles(ciudad)" title="Ver">
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button class="btn btn-outline-danger" (click)="eliminarCiudad(ciudad)" title="Eliminar">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
+            @if (ciudades.length === 0) {
+              <div class="text-center py-5">
+                <i class="bi bi-building display-1 text-muted"></i>
+                <h5 class="text-muted mt-3 mb-2">📭 No hay ciudades registradas</h5>
+                <p class="text-muted mb-0">Comienza agregando una nueva ciudad</p>
+                <button class="btn btn-info mt-3" (click)="mostrarFormulario()">
+                  <i class="bi bi-plus-circle me-1"></i> Agregar Ciudad
+                </button>
+              </div>
+            } @else if (ciudades.length > 0 && ciudadesFiltradas.length === 0) {
+              <div class="text-center py-5">
+                <i class="bi bi-search display-1 text-muted"></i>
+                <h5 class="text-muted mt-3 mb-2">🔍 No se encontraron resultados</h5>
+                <p class="text-muted mb-0">No hay ciudades que coincidan con tu búsqueda</p>
+                <button class="btn btn-outline-info mt-3" (click)="cargarCiudades()">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Limpiar búsqueda
+                </button>
+              </div>
+            } @else if (ciudadesFiltradas.length > 0) {
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="35%">
+                        <i class="bi bi-building-fill me-1"></i> Ciudad
+                      </th>
+                      <th width="35%">
+                        <i class="bi bi-geo-alt-fill me-1"></i> Provincia
+                      </th>
+                      <th width="30%" class="text-center">
+                        <i class="bi bi-tools"></i> Acciones
+                      </th>
                     </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    @for (ciudad of ciudadesFiltradas | paginate: { itemsPerPage: elementosPorPagina, currentPage: paginaActual }; track ciudad.id) {
+                      <tr class="animate-fade-in" [class.table-info]="ciudad.id === ciudadEditando?.id">
+                        <td class="align-middle">
+                          <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-building-fill text-info fs-5"></i>
+                            <div>
+                              <strong>{{ ciudad.nombre }}</strong>
+                              @if (ciudad.descripcion) {
+                                <br><small class="text-muted">{{ ciudad.descripcion | slice:0:50 }}{{ ciudad.descripcion.length > 50 ? '...' : '' }}</small>
+                              }
+                            </div>
+                          </div>
+                        </td>
+                        <td class="align-middle">
+                          @if (ciudad.provinciaId) {
+                            <span class="badge bg-info-subtle text-info-emphasis px-3 py-2">
+                              <i class="bi bi-geo-alt-fill me-1"></i>
+                              {{ obtenerNombreProvincia(ciudad.provinciaId) }}
+                            </span>
+                          } @else {
+                            <span class="text-muted fst-italic">
+                              <i class="bi bi-question-circle me-1"></i>
+                              Sin provincia asignada
+                            </span>
+                          }
+                        </td>
+                        <td class="align-middle text-center">
+                          <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-info" (click)="editarCiudad(ciudad)" title="Editar ciudad">
+                              <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-primary" (click)="verDetalles(ciudad)" title="Ver detalles">
+                              <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" (click)="eliminarCiudad(ciudad)" title="Eliminar ciudad">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
           }
         </div>
         
@@ -324,6 +386,7 @@
           <div class="card-footer bg-white border-0 py-3">
             <div class="d-flex justify-content-between align-items-center">
               <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
                 Mostrando {{ ciudadesFiltradas.length }} de {{ totalCiudades }} ciudades
                 @if (filtroProvincia > 0) {
                   <span class="badge bg-info-subtle text-info-emphasis ms-2">
@@ -335,7 +398,9 @@
               <pagination-controls 
                 (pageChange)="paginaActual = $event"
                 [autoHide]="true"
-                [maxSize]="5">
+                [maxSize]="5"
+                previousLabel="Anterior"
+                nextLabel="Siguiente">
               </pagination-controls>
             </div>
           </div>
@@ -344,7 +409,7 @@
     </div>
   }
 
-  <!-- Modal de detalles -->
+  <!-- Modal de detalles mejorado -->
   <div class="modal fade" id="detallesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -360,14 +425,14 @@
             <div class="text-center mb-3">
               <i class="bi bi-building-fill display-1 text-info"></i>
             </div>
-            <h4 class="text-info mb-3">{{ ciudadDetalles.nombre }}</h4>
-            <div class="mb-2">
-              <strong><i class="bi bi-geo-alt-fill me-1"></i> Provincia:</strong>
+            <h4 class="text-info mb-3 text-center">{{ ciudadDetalles.nombre }}</h4>
+            <div class="mb-2 p-2 bg-light rounded">
+              <strong><i class="bi bi-geo-alt-fill me-1 text-info"></i> Provincia:</strong>
               <span class="ms-2">{{ obtenerNombreProvincia(ciudadDetalles.provinciaId) }}</span>
             </div>
-            <div>
-              <strong><i class="bi bi-card-text me-1"></i> Descripción:</strong>
-              <p class="mt-2">{{ ciudadDetalles.descripcion }}</p>
+            <div class="p-2 bg-light rounded">
+              <strong><i class="bi bi-card-text me-1 text-info"></i> Descripción:</strong>
+              <p class="mt-2 mb-0">{{ ciudadDetalles.descripcion }}</p>
             </div>
           }
         </div>
@@ -380,24 +445,37 @@
     </div>
   </div>
 
-  <!-- Modal de confirmación -->
+  <!-- Modal de confirmación mejorado -->
   <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Confirmar eliminación</h5>
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirmar eliminación
+          </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>¿Estás seguro de eliminar la ciudad <strong>{{ ciudadAEliminar?.nombre }}</strong>?</p>
+          <div class="text-center mb-3">
+            <i class="bi bi-trash3-fill text-danger" style="font-size: 3rem;"></i>
+          </div>
+          <p class="text-center mb-3">
+            ¿Estás seguro de eliminar la ciudad 
+            <strong class="text-danger">{{ ciudadAEliminar?.nombre }}</strong>?
+          </p>
           <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-2"></i>
             Esta acción no se puede deshacer.
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+            <i class="bi bi-trash me-1"></i> Eliminar
+          </button>
         </div>
       </div>
     </div>

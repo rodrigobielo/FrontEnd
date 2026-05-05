@@ -1,4 +1,162 @@
 /* Animaciones */
+/* Animaciones y Toasts */
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toast Messages */
+.toast-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1050;
+  min-width: 300px;
+  max-width: 450px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+.toast-text {
+  flex: 1;
+}
+
+.toast-text strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.toast-text p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.toast-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+}
+
+/* Mejoras a formulario */
+.form-overlay {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.modern-form {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.form-control-lg, .form-select-lg {
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+}
+
+.form-control-lg:focus, .form-select-lg:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Tabla mejorada */
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.table-hover tbody tr {
+  transition: background-color 0.2s;
+}
+
+/* Badges y mejoras visuales */
+.badge {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toast-message {
+    left: 20px;
+    right: 20px;
+    min-width: auto;
+  }
+  
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+
 @keyframes slideDown {
   from {
     opacity: 0;

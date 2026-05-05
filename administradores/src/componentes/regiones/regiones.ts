@@ -1,3 +1,4 @@
+// regiones.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -33,6 +34,19 @@ export class Regiones implements OnInit, OnDestroy {
   // Propiedades para paginación
   paginaActual: number = 1;
   elementosPorPagina: number = 10;
+  
+  // Mensajes con toasts
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  mensajeInfo: string = '';
+  mostrarMensajeExito: boolean = false;
+  mostrarMensajeError: boolean = false;
+  mostrarMensajeInfo: boolean = false;
+  
+  // Temporizadores para mensajes
+  private timeoutExito: any;
+  private timeoutError: any;
+  private timeoutInfo: any;
 
   constructor(
     private fb: FormBuilder,
@@ -51,7 +65,43 @@ export class Regiones implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Limpieza de recursos
+    this.limpiarTemporizadores();
+  }
+
+  private limpiarTemporizadores(): void {
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+  }
+
+  private mostrarExito(mensaje: string): void {
+    this.mostrarMensajeExito = true;
+    this.mensajeExito = mensaje;
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    this.timeoutExito = setTimeout(() => {
+      this.mostrarMensajeExito = false;
+      this.mensajeExito = '';
+    }, 4000);
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.mostrarMensajeError = true;
+    this.mensajeError = mensaje;
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    this.timeoutError = setTimeout(() => {
+      this.mostrarMensajeError = false;
+      this.mensajeError = '';
+    }, 5000);
+  }
+
+  private mostrarInfo(mensaje: string): void {
+    this.mostrarMensajeInfo = true;
+    this.mensajeInfo = mensaje;
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+    this.timeoutInfo = setTimeout(() => {
+      this.mostrarMensajeInfo = false;
+      this.mensajeInfo = '';
+    }, 3000);
   }
 
   /**
@@ -59,6 +109,8 @@ export class Regiones implements OnInit, OnDestroy {
    */
   cargarRegiones(): void {
     this.cargando = true;
+    this.limpiarTemporizadores();
+    
     this.regionService.obtenerRegiones().subscribe({
       next: (regiones: Region[]) => {
         this.regiones = regiones;
@@ -66,11 +118,15 @@ export class Regiones implements OnInit, OnDestroy {
         this.totalRegiones = this.regiones.length;
         this.cargando = false;
         this.paginaActual = 1;
+        
+        if (regiones.length === 0) {
+          this.mostrarInfo('No se encontraron regiones registradas');
+        }
       },
       error: (error: Error) => {
         console.error('Error al cargar regiones', error);
         this.cargando = false;
-        this.mostrarMensajeError(error.message || 'Error al cargar las regiones');
+        this.mostrarError(error.message || 'Error al cargar las regiones');
       }
     });
   }
@@ -85,6 +141,7 @@ export class Regiones implements OnInit, OnDestroy {
     this.regionForm.reset();
     this.regionForm.markAsPristine();
     this.regionForm.markAsUntouched();
+    this.limpiarTemporizadores();
     
     // Scroll suave al formulario
     setTimeout(() => {
@@ -103,18 +160,7 @@ export class Regiones implements OnInit, OnDestroy {
     this.modoEdicion = false;
     this.regionEditando = null;
     this.regionForm.reset();
-  }
-
-  /**
-   * Limpiar búsqueda
-   */
-  limpiarBusqueda(): void {
-    const searchInput = document.querySelector('.search-input') as HTMLInputElement;
-    if (searchInput) {
-      searchInput.value = '';
-      this.regionesFiltradas = [...this.regiones];
-      this.paginaActual = 1;
-    }
+    this.limpiarTemporizadores();
   }
 
   /**
@@ -130,6 +176,10 @@ export class Regiones implements OnInit, OnDestroy {
         region.descripcion.toLowerCase().includes(filtro) ||
         (region.codigo && region.codigo.toLowerCase().includes(filtro))
       );
+      
+      if (this.regionesFiltradas.length === 0) {
+        this.mostrarInfo(`No se encontraron regiones con "${filtro}"`);
+      }
     } else {
       this.regionesFiltradas = [...this.regiones];
     }
@@ -144,6 +194,7 @@ export class Regiones implements OnInit, OnDestroy {
     this.modoEdicion = true;
     this.regionEditando = region;
     this.formularioVisible = true;
+    this.limpiarTemporizadores();
     
     // Cargar datos de la región en el formulario
     this.regionForm.patchValue({
@@ -178,19 +229,20 @@ export class Regiones implements OnInit, OnDestroy {
         const control = this.regionForm.get(key);
         control?.markAsTouched();
       });
-      this.mostrarMensajeError('Por favor, complete correctamente todos los campos obligatorios.');
+      this.mostrarError('Por favor, complete correctamente todos los campos obligatorios.');
       return;
     }
 
     this.guardando = true;
     const regionData = this.regionForm.value;
+    const nombreRegion = regionData.nombre;
 
     if (this.modoEdicion && this.regionEditando) {
       // Validar que exista el ID para actualizar
       if (!this.regionEditando.id) {
         console.error('No se puede actualizar: ID no definido');
         this.guardando = false;
-        this.mostrarMensajeError('Error: No se pudo identificar la región a actualizar');
+        this.mostrarError('Error: No se pudo identificar la región a actualizar');
         return;
       }
 
@@ -204,13 +256,13 @@ export class Regiones implements OnInit, OnDestroy {
           this.regionesFiltradas = [...this.regiones];
           this.totalRegiones = this.regiones.length;
           this.guardando = false;
-          this.cerrarFormulario();
-          this.mostrarMensajeExito('Región actualizada exitosamente');
+          this.cerrarFormulario(); // Cerrar formulario automáticamente
+          this.mostrarExito(`✅ Región "${nombreRegion}" actualizada correctamente`);
         },
         error: (error: Error) => {
           console.error('Error al actualizar región', error);
           this.guardando = false;
-          this.mostrarMensajeError(error.message || 'Error al actualizar la región');
+          this.mostrarError(error.message || 'Error al actualizar la región');
         }
       });
     } else {
@@ -221,13 +273,16 @@ export class Regiones implements OnInit, OnDestroy {
           this.totalRegiones = this.regiones.length;
           this.regionesFiltradas = [...this.regiones];
           this.guardando = false;
-          this.cerrarFormulario();
-          this.mostrarMensajeExito('Región creada exitosamente');
+          this.cerrarFormulario(); // Cerrar formulario automáticamente
+          this.mostrarExito(`✅ Región "${nombreRegion}" creada correctamente`);
+          
+          // Resetear página a la primera para ver la nueva región
+          this.paginaActual = 1;
         },
         error: (error: Error) => {
           console.error('Error al crear región', error);
           this.guardando = false;
-          this.mostrarMensajeError(error.message || 'Error al crear la región');
+          this.mostrarError(error.message || 'Error al crear la región');
         }
       });
     }
@@ -237,7 +292,7 @@ export class Regiones implements OnInit, OnDestroy {
    * Ver detalles de una región
    */
   verDetalles(region: Region): void {
-    const mensaje = `📍 REGIÓN: ${region.nombre}\n\n${region.codigo ? `🔑 Código: ${region.codigo}\n\n` : ''}📝 Descripción:\n${region.descripcion}\n\n📅 ID: ${region.id}`;
+    const mensaje = `📍 REGIÓN: ${region.nombre}\n\n${region.codigo ? `🔑 Código: ${region.codigo}\n\n` : ''}📝 Descripción:\n${region.descripcion}\n\n📅 ID: ${region.id}${region.fechaCreacion ? `\n📆 Creada: ${new Date(region.fechaCreacion).toLocaleDateString()}` : ''}`;
     alert(mensaje);
   }
 
@@ -258,6 +313,8 @@ export class Regiones implements OnInit, OnDestroy {
    */
   confirmarEliminar(): void {
     if (this.regionAEliminar && this.regionAEliminar.id) {
+      const nombreRegion = this.regionAEliminar.nombre;
+      
       this.regionService.eliminarRegion(this.regionAEliminar.id).subscribe({
         next: () => {
           const index = this.regiones.findIndex(r => r.id === this.regionAEliminar!.id);
@@ -279,11 +336,16 @@ export class Regiones implements OnInit, OnDestroy {
             this.cerrarFormulario();
           }
           
-          this.mostrarMensajeExito('Región eliminada exitosamente');
+          this.mostrarExito(`🗑️ Región "${nombreRegion}" eliminada correctamente`);
+          
+          // Si no quedan regiones, mostrar mensaje
+          if (this.regiones.length === 0) {
+            this.mostrarInfo('No hay regiones registradas');
+          }
         },
         error: (error: Error) => {
           console.error('Error al eliminar región', error);
-          this.mostrarMensajeError(error.message || 'Error al eliminar la región');
+          this.mostrarError(error.message || 'Error al eliminar la región');
           
           // Cerrar modal en caso de error
           const modalElement = document.getElementById('confirmarEliminarModal');
@@ -295,7 +357,7 @@ export class Regiones implements OnInit, OnDestroy {
       });
     } else {
       console.error('No se puede eliminar: región o ID no definido');
-      this.mostrarMensajeError('Error: No se pudo identificar la región a eliminar');
+      this.mostrarError('Error: No se pudo identificar la región a eliminar');
       
       // Cerrar modal
       const modalElement = document.getElementById('confirmarEliminarModal');
@@ -305,21 +367,5 @@ export class Regiones implements OnInit, OnDestroy {
       }
     }
     this.regionAEliminar = null;
-  }
-
-  /**
-   * Mostrar mensaje de éxito
-   */
-  private mostrarMensajeExito(mensaje: string): void {
-    console.log('✅ Éxito:', mensaje);
-    alert(mensaje);
-  }
-
-  /**
-   * Mostrar mensaje de error
-   */
-  private mostrarMensajeError(mensaje: string): void {
-    console.error('❌ Error:', mensaje);
-    alert(mensaje);
   }
 }
