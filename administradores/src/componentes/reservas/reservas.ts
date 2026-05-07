@@ -38,6 +38,14 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
   filtroTexto: string = '';
   filtroEstado: string = '';
   
+  // Mensajes tipo toast
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  mensajeInfo: string = '';
+  mostrarMensajeExito: boolean = false;
+  mostrarMensajeError: boolean = false;
+  mostrarMensajeInfo: boolean = false;
+  
   // Datos
   reservas: Reserva[] = [];
   reservasFiltradas: Reserva[] = [];
@@ -50,12 +58,6 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
   habitacionesDisponibles: Habitacion[] = [];
   habitacionSeleccionada: number | null = null;
   habitacionSeleccionadaObj: Habitacion | null = null;
-  
-  // Clasificaciones
-  reservasRecientes: Reserva[] = [];
-  reservasConfirmadas: Reserva[] = [];
-  reservasPagadas: Reserva[] = [];
-  reservasRechazadas: Reserva[] = [];
   
   // Estadísticas
   totalReservas: number = 0;
@@ -94,7 +96,6 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.cargarReservas();
-    this.calcularEstadisticas();
   }
 
   ngAfterViewInit(): void {
@@ -103,6 +104,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     this.destroyModales();
+    this.limpiarTemporizadores();
   }
 
   private initModales(): void {
@@ -137,48 +139,60 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private limpiarTemporizadores(): void {
+    // Los temporizadores se manejan en los métodos de mensajes
+  }
+
+  private mostrarExito(mensaje: string): void {
+    this.mostrarMensajeExito = true;
+    this.mensajeExito = mensaje;
+    setTimeout(() => {
+      this.mostrarMensajeExito = false;
+      this.mensajeExito = '';
+    }, 4000);
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.mostrarMensajeError = true;
+    this.mensajeError = mensaje;
+    setTimeout(() => {
+      this.mostrarMensajeError = false;
+      this.mensajeError = '';
+    }, 5000);
+  }
+
+  private mostrarInfo(mensaje: string): void {
+    this.mostrarMensajeInfo = true;
+    this.mensajeInfo = mensaje;
+    setTimeout(() => {
+      this.mostrarMensajeInfo = false;
+      this.mensajeInfo = '';
+    }, 3000);
+  }
+
   // Cargar reservas
   cargarReservas(): void {
     this.cargando = true;
     this.reservaService.getReservas().subscribe({
       next: (reservas: Reserva[]) => {
         this.reservas = reservas || [];
-        this.clasificarReservas();
+        this.calcularEstadisticas();
         this.aplicarFiltros();
         this.totalReservas = this.reservas.length;
         this.cargando = false;
+        
+        if (reservas.length === 0) {
+          this.mostrarInfo('No se encontraron reservas registradas');
+        }
       },
       error: (error: any) => {
         console.error('Error cargando reservas:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las reservas');
+        this.mostrarError('No se pudieron cargar las reservas');
         this.cargando = false;
         this.reservas = [];
         this.reservasFiltradas = [];
       }
     });
-  }
-
-  // Clasificar reservas en categorías
-  clasificarReservas(): void {
-    const hoy = new Date();
-    const sieteDiasAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    this.reservasRecientes = this.reservas.filter(reserva => {
-      const fechaReserva = new Date(reserva.fechaReserva);
-      return fechaReserva >= sieteDiasAtras;
-    });
-
-    this.reservasConfirmadas = this.reservas.filter(reserva => 
-      reserva.estadoReserva === ESTADOS_RESERVA.CONFIRMADA
-    );
-
-    this.reservasPagadas = this.reservas.filter(reserva => 
-      reserva.estadoReserva === ESTADOS_RESERVA.PAGADA
-    );
-
-    this.reservasRechazadas = this.reservas.filter(reserva => 
-      reserva.estadoReserva === ESTADOS_RESERVA.RECHAZADA
-    );
   }
 
   // Calcular estadísticas
@@ -235,6 +249,10 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
         reserva.habitacion?.numero?.toLowerCase().includes(this.filtroTexto) ||
         reserva.estadoReserva.toLowerCase().includes(this.filtroTexto)
       );
+      
+      if (this.filtroTexto && resultado.length === 0 && this.reservas.length > 0) {
+        this.mostrarInfo(`No se encontraron reservas con "${this.filtroTexto}"`);
+      }
     }
     
     this.reservasFiltradas = resultado;
@@ -274,10 +292,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     if (this.estadoForm.invalid) {
-      this.mostrarNotificacion('error', 
-        'Formulario inválido', 
-        'Completa todos los campos requeridos correctamente.'
-      );
+      this.mostrarError('Completa todos los campos requeridos correctamente.');
       return;
     }
 
@@ -304,7 +319,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
   // Cargar habitaciones disponibles para confirmación
   cargarHabitacionesDisponibles(): void {
     if (!this.reservaConfirmar || !this.reservaConfirmar.habitacion?.hotel?.id) {
-      this.mostrarNotificacion('error', 'Error', 'No se puede determinar el hotel de la reserva.');
+      this.mostrarError('No se puede determinar el hotel de la reserva.');
       return;
     }
 
@@ -320,10 +335,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
         this.cargandoHabitaciones = false;
         
         if (habitaciones.length === 0) {
-          this.mostrarNotificacion('warning', 
-            'No hay habitaciones disponibles', 
-            'No hay habitaciones disponibles para este tipo en el hotel seleccionado.'
-          );
+          this.mostrarError('No hay habitaciones disponibles para este tipo en el hotel seleccionado.');
         } else {
           // Cerrar modal de estado y abrir modal de habitación
           if (this.estadoModalInstance) {
@@ -337,10 +349,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (error: any) => {
         console.error('Error cargando habitaciones:', error);
         this.cargandoHabitaciones = false;
-        this.mostrarNotificacion('error', 
-          'Error', 
-          'No se pudieron cargar las habitaciones disponibles.'
-        );
+        this.mostrarError('No se pudieron cargar las habitaciones disponibles.');
       }
     });
   }
@@ -359,7 +368,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
   // Confirmar reserva con habitación seleccionada
   confirmarConHabitacion(): void {
     if (!this.reservaConfirmar || !this.reservaConfirmar.id || !this.habitacionSeleccionada) {
-      this.mostrarNotificacion('error', 'Error', 'Datos incompletos para confirmar la reserva.');
+      this.mostrarError('Datos incompletos para confirmar la reserva.');
       return;
     }
 
@@ -373,10 +382,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
     ).subscribe({
       next: () => {
         this.guardando = false;
-        this.mostrarNotificacion('success', 
-          'Reserva confirmada',
-          `La reserva ha sido confirmada y se ha asignado la habitación.`
-        );
+        this.mostrarExito('La reserva ha sido confirmada y se ha asignado la habitación.');
         this.cargarReservas();
         
         // Cerrar modales
@@ -391,10 +397,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (error: any) => {
         console.error('Error confirmando reserva:', error);
         this.guardando = false;
-        this.mostrarNotificacion('error', 
-          'Error', 
-          'No se pudo confirmar la reserva. Intenta nuevamente.'
-        );
+        this.mostrarError('No se pudo confirmar la reserva. Intenta nuevamente.');
       }
     });
   }
@@ -410,10 +413,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
       next: () => {
         this.cargarReservas();
         this.guardando = false;
-        this.mostrarNotificacion('success', 
-          'Estado actualizado',
-          `El estado de la reserva ha sido actualizado a ${this.getLabelEstado(estado)}.`
-        );
+        this.mostrarExito(`El estado de la reserva ha sido actualizado a ${this.getLabelEstado(estado)}.`);
         
         if (this.estadoModalInstance) {
           this.estadoModalInstance.hide();
@@ -422,10 +422,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (error: any) => {
         console.error('Error actualizando estado:', error);
         this.guardando = false;
-        this.mostrarNotificacion('error', 
-          'Error', 
-          'No se pudo actualizar el estado. Intenta nuevamente.'
-        );
+        this.mostrarError('No se pudo actualizar el estado. Intenta nuevamente.');
       }
     });
   }
@@ -449,7 +446,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
   // Confirmar eliminación
   confirmarEliminar(): void {
     if (!this.reservaAEliminar || this.reservaAEliminar.id === undefined) {
-      this.mostrarNotificacion('error', 'Error', 'No se puede eliminar la reserva porque no tiene un ID válido.');
+      this.mostrarError('No se puede eliminar la reserva porque no tiene un ID válido.');
       return;
     }
 
@@ -458,10 +455,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
     this.reservaService.deleteReserva(this.reservaAEliminar.id!).subscribe({
       next: () => {
         this.guardando = false;
-        this.mostrarNotificacion('success', 
-          'Reserva eliminada', 
-          `La reserva ha sido eliminada correctamente.`
-        );
+        this.mostrarExito('La reserva ha sido eliminada correctamente.');
         this.cargarReservas();
         
         if (this.confirmarModalInstance) {
@@ -472,10 +466,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (error: any) => {
         console.error('Error eliminando reserva:', error);
         this.guardando = false;
-        this.mostrarNotificacion('error', 
-          'Error', 
-          'No se pudo eliminar la reserva. Intenta nuevamente.'
-        );
+        this.mostrarError('No se pudo eliminar la reserva. Intenta nuevamente.');
       }
     });
   }
@@ -483,7 +474,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
   // Obtener clase CSS para el estado
   getClaseEstado(estado: string): string {
     const estadoObj = this.estados.find(e => e.valor === estado);
-    return estadoObj ? `text-bg-${estadoObj.clase}-subtle text-${estadoObj.clase}-emphasis` : 'text-bg-secondary';
+    return estadoObj ? `bg-${estadoObj.clase}-subtle text-${estadoObj.clase}-emphasis` : 'bg-secondary-subtle text-secondary-emphasis';
   }
 
   // Obtener icono para el estado
@@ -498,49 +489,6 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
     return estadoObj ? estadoObj.label : estado;
   }
 
-  // Mostrar notificación
-  private mostrarNotificacion(tipo: 'success' | 'info' | 'warning' | 'error', titulo: string, mensaje: string): void {
-    const toastId = 'notification-' + Date.now();
-    const toast = document.createElement('div');
-    toast.id = toastId;
-    toast.className = `toast align-items-center text-bg-${tipo === 'error' ? 'danger' : tipo} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    
-    const iconos = {
-      success: 'bi-check-circle-fill',
-      info: 'bi-info-circle-fill',
-      warning: 'bi-exclamation-triangle-fill',
-      error: 'bi-x-circle-fill'
-    };
-    
-    toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">
-          <i class="bi ${iconos[tipo]} me-2"></i>
-          <strong>${titulo}</strong><br>
-          <small>${mensaje}</small>
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-    
-    const container = document.querySelector('.toast-container') || (() => {
-      const newContainer = document.createElement('div');
-      newContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-      newContainer.style.zIndex = '1055';
-      document.body.appendChild(newContainer);
-      return newContainer;
-    })();
-    
-    container.appendChild(toast);
-    const bsToast = new (window as any).bootstrap.Toast(toast);
-    bsToast.show();
-    
-    toast.addEventListener('hidden.bs.toast', () => toast.remove());
-  }
-
   // Calcular número de noches
   calcularNoches(fechaEntrada: Date, fechaSalida: Date): number {
     const entrada = new Date(fechaEntrada);
@@ -551,6 +499,7 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Formatear fecha para mostrar
   formatearFecha(fecha: Date | string): string {
+    if (!fecha) return '';
     return new Date(fecha).toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
@@ -561,10 +510,10 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
   // Copiar código al portapapeles
   copiarCodigo(codigo: string): void {
     navigator.clipboard.writeText(codigo).then(() => {
-      this.mostrarNotificacion('success', 'Código copiado', 'El código se ha copiado al portapapeles.');
+      this.mostrarExito('El código se ha copiado al portapapeles.');
     }).catch(err => {
       console.error('Error al copiar:', err);
-      this.mostrarNotificacion('error', 'Error', 'No se pudo copiar el código.');
+      this.mostrarError('No se pudo copiar el código.');
     });
   }
 }

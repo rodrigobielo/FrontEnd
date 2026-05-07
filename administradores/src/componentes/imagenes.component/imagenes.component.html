@@ -1,0 +1,61 @@
+<div class="container">
+  <h2>Gestión de Imágenes de Hoteles</h2>
+
+  <!-- Formulario para agregar/editar imágenes -->
+  <div class="formulario">
+    <h3>{{ modoEdicion ? 'Editar Imagen' : 'Nueva Imagen' }}</h3>
+    
+    <div class="form-group">
+      <label for="url">URL de la imagen:</label>
+      <input 
+        type="text" 
+        id="url" 
+        [(ngModel)]="nuevaImagen.url" 
+        placeholder="https://ejemplo.com/imagen.jpg"
+        required>
+    </div>
+
+    <div class="form-group">
+      <label for="hotel">Hotel:</label>
+      <select id="hotel" [(ngModel)]="nuevaImagen.hotelId" required>
+        <option [value]="0">Seleccione un hotel</option>
+        <option *ngFor="let hotel of hoteles" [value]="hotel.id">
+          {{ hotel.nombre }}
+        </option>
+      </select>
+    </div>
+
+    <div class="botones">
+      <button (click)="guardarImagen()" [disabled]="!nuevaImagen.url || nuevaImagen.hotelId === 0">
+        {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+      </button>
+      <button *ngIf="modoEdicion" (click)="cancelarEdicion()" class="cancelar">
+        Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de imágenes -->
+  <div class="lista-imagenes">
+    <h3>Lista de Imágenes</h3>
+    
+    <div *ngIf="imagenes.length === 0" class="sin-datos">
+      No hay imágenes registradas
+    </div>
+
+    <div *ngFor="let imagen of imagenes" class="imagen-item">
+      <div class="imagen-info">
+        <img [src]="imagen.url" [alt]="imagen.hotelNombre" class="vista-previa">
+        <div class="detalles">
+          <p><strong>ID:</strong> {{ imagen.id }}</p>
+          <p><strong>URL:</strong> {{ imagen.url }}</p>
+          <p><strong>Hotel:</strong> {{ imagen.hotelNombre }}</p>
+        </div>
+      </div>
+      <div class="acciones">
+        <button (click)="editarImagen(imagen)" class="editar">Editar</button>
+        <button (click)="eliminarImagen(imagen.id)" class="eliminar">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -21,15 +21,15 @@ export class HotelService {
   getHoteles(): Observable<Hotel[]> {
     return this.http.get<Hotel[]>(`${this.baseUrl}/Listar`).pipe(
       map(hoteles => {
-        // Asegurar que siempre retornamos un array
         const hotelesArray = hoteles || [];
         return hotelesArray.map(hotel => ({
           ...hotel,
-          // Asegurar que las propiedades anidadas existan
           ciudades: hotel.ciudades || null,
           categorias: hotel.categorias || null,
-          usuarios: hotel.usuarios || null,
-          habitaciones: hotel.habitaciones || []
+          habitaciones: hotel.habitaciones || [],
+          correo: hotel.correo || '',
+          telefono: hotel.telefono || '',
+          contactos: hotel.contactos || ''
         }));
       }),
       catchError(this.handleError)
@@ -42,23 +42,25 @@ export class HotelService {
         ...hotel,
         ciudades: hotel.ciudades || null,
         categorias: hotel.categorias || null,
-        usuarios: hotel.usuarios || null,
-        habitaciones: hotel.habitaciones || []
+        habitaciones: hotel.habitaciones || [],
+        correo: hotel.correo || '',
+        telefono: hotel.telefono || '',
+        contactos: hotel.contactos || ''
       })),
       catchError(this.handleError)
     );
   }
 
   createHotel(hotel: any): Observable<Hotel> {
-    // Asegurar que el objeto tenga la estructura correcta
     const hotelData = {
       nombre: hotel.nombre,
       descripcion: hotel.descripcion,
-      contactos: hotel.contactos,
+      correo: hotel.correo,
+      telefono: hotel.telefono,
+      contactos: hotel.contactos || '',
       precio: hotel.precio,
       ciudades: { id: hotel.ciudades?.id || hotel.ciudadId },
       categorias: { id: hotel.categorias?.id || hotel.categoriaId },
-      usuarios: { id: hotel.usuarios?.id || hotel.administradorId },
       habitaciones: hotel.habitaciones || []
     };
     
@@ -70,15 +72,15 @@ export class HotelService {
   }
 
   updateHotel(id: number, hotel: any): Observable<Hotel> {
-    // Asegurar que el objeto tenga la estructura correcta
     const hotelData = {
       nombre: hotel.nombre,
       descripcion: hotel.descripcion,
-      contactos: hotel.contactos,
+      correo: hotel.correo,
+      telefono: hotel.telefono,
+      contactos: hotel.contactos || '',
       precio: hotel.precio,
       ciudades: { id: hotel.ciudades?.id || hotel.ciudadId },
       categorias: { id: hotel.categorias?.id || hotel.categoriaId },
-      usuarios: { id: hotel.usuarios?.id || hotel.administradorId },
       habitaciones: hotel.habitaciones || []
     };
     
@@ -100,10 +102,8 @@ export class HotelService {
     
     let errorMessage = 'Error en el servicio de hoteles';
     if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Error del lado del servidor
       errorMessage = `Código: ${error.status}\nMensaje: ${error.message}`;
     }
     

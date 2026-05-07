@@ -1,1 +1,564 @@
-<p>clientes works!</p>
+<!-- componentes/clientes/clientes.html -->
+
+<div class="container-fluid py-4">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h2 fw-bold mb-0">
+        <i class="bi bi-people-fill text-primary me-2"></i>
+        Gestión de Clientes
+      </h1>
+      <p class="text-muted mb-0">Administra los clientes del hotel y sus reservas</p>
+    </div>
+    <div>
+      <button class="btn btn-outline-primary me-2" (click)="exportarClientes()">
+        <i class="bi bi-download me-1"></i> Exportar
+      </button>
+      <button class="btn btn-outline-secondary" (click)="refrescar()">
+        <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast de mensajes -->
+  @if (mostrarMensajeExito) {
+    <div class="toast-message toast-success animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-check-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Éxito!</strong>
+          <p>{{ mensajeExito }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeExito = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  @if (mostrarMensajeError) {
+    <div class="toast-message toast-error animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-x-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>¡Error!</strong>
+          <p>{{ mensajeError }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeError = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  @if (mostrarMensajeInfo) {
+    <div class="toast-message toast-info animate-slide-down">
+      <div class="toast-content">
+        <i class="bi bi-info-circle-fill fs-4"></i>
+        <div class="toast-text">
+          <strong>Información</strong>
+          <p>{{ mensajeInfo }}</p>
+        </div>
+        <button class="toast-close" (click)="mostrarMensajeInfo = false">&times;</button>
+      </div>
+    </div>
+  }
+
+  <!-- Tarjetas de estadísticas -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card border-primary border-2 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-people text-primary fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Total Clientes</h5>
+              <p class="card-text display-6 fw-bold text-primary mb-0">{{ totalClientes }}</p>
+              <small class="text-muted">Registrados en el sistema</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-success border-2 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-activity text-success fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Clientes Activos</h5>
+              <p class="card-text display-6 fw-bold text-success mb-0">{{ clientesActivos }}</p>
+              <small class="text-muted">Con estancia en curso</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-warning border-2 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-calendar-check text-warning fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Llegadas Hoy</h5>
+              <p class="card-text display-6 fw-bold text-warning mb-0">{{ clientesHoy }}</p>
+              <small class="text-muted">Check-in programado</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+      <div class="card border-info border-2 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="bi bi-calendar-week text-info fs-1"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h5 class="card-title mb-1">Próximas Llegadas</h5>
+              <p class="card-text display-6 fw-bold text-info mb-0">{{ clientesProximos }}</p>
+              <small class="text-muted">Reservas futuras</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros y búsqueda -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-4">
+          <div class="search-box">
+            <i class="bi bi-search search-icon"></i>
+            <input 
+              type="text" 
+              class="form-control ps-4" 
+              placeholder="Buscar por nombre, email, documento o teléfono..."
+              [value]="filtroTexto"
+              (input)="filtrarPorTexto($event)"
+            >
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+            @for (estado of estados; track estado.valor) {
+              <option [value]="estado.valor">{{ estado.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control" placeholder="Desde" [(ngModel)]="filtroFechaInicio" (change)="aplicarFiltros()">
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control" placeholder="Hasta" [(ngModel)]="filtroFechaFin" (change)="aplicarFiltros()">
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltros()" title="Limpiar filtros">
+            <i class="bi bi-eraser"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de clientes -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      @if (cargando) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="text-muted mt-2 mb-0">Cargando clientes...</p>
+        </div>
+      } @else {
+        @if (clientesFiltrados.length === 0) {
+          <div class="text-center py-5">
+            <i class="bi bi-people display-1 text-muted"></i>
+            <h5 class="text-muted mt-3 mb-2">👥 No hay clientes registrados</h5>
+            <p class="text-muted mb-0">No se encontraron clientes en el sistema</p>
+          </div>
+        } @else if (clientesPaginados.length > 0) {
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th width="20%">
+                    <i class="bi bi-person me-1"></i> Cliente
+                  </th>
+                  <th width="15%">
+                    <i class="bi bi-telephone me-1"></i> Contacto
+                  </th>
+                  <th width="20%">
+                    <i class="bi bi-door-closed me-1"></i> Habitación Actual
+                  </th>
+                  <th width="20%">
+                    <i class="bi bi-calendar-range me-1"></i> Fechas
+                  </th>
+                  <th width="10%">
+                    <i class="bi bi-cash me-1"></i> Total Gastado
+                  </th>
+                  <th width="10%">
+                    <i class="bi bi-tags me-1"></i> Estado
+                  </th>
+                  <th width="5%" class="text-center">
+                    <i class="bi bi-gear-fill me-1"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cliente of clientesPaginados; track cliente.id) {
+                  @let reservaActual = getReservaActual(cliente);
+                  <tr>
+                    <td class="align-middle">
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="avatar-circle bg-primary">
+                          <span>{{ cliente.nombre.charAt(0) }}{{ cliente.apellidos.charAt(0) || '' }}</span>
+                        </div>
+                        <div>
+                          <strong>{{ cliente.nombreCompleto }}</strong>
+                          <br><small class="text-muted">{{ cliente.numPasaporte }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="align-middle">
+                      <div class="d-flex flex-column">
+                        <small><i class="bi bi-envelope me-1"></i> {{ cliente.email }}</small>
+                        <small><i class="bi bi-phone me-1"></i> {{ cliente.telefono }}</small>
+                      </div>
+                    </td>
+                    <td class="align-middle">
+                      <!-- CORREGIDO: Sin optional chaining porque habitacion siempre existe -->
+                      <div>
+                        <strong>Hab. {{ reservaActual?.habitacion?.numero || 'N/A' }}</strong>
+                        <br><small class="text-muted">{{ reservaActual?.habitacion?.tipo || 'N/A' }}</small>
+                      </div>
+                    </td>
+                    <td class="align-middle">
+                      @if (reservaActual) {
+                        <div class="d-flex flex-column">
+                          <small>
+                            <i class="bi bi-calendar-plus me-1 text-success"></i>
+                            Check-in: {{ formatearFecha(reservaActual.fechaEntrada) }}
+                          </small>
+                          <small>
+                            <i class="bi bi-calendar-minus me-1 text-danger"></i>
+                            Check-out: {{ formatearFecha(reservaActual.fechaSalida) }}
+                          </small>
+                          <small class="text-muted">
+                            <i class="bi bi-moon-stars me-1"></i>
+                            {{ calcularNoches(reservaActual.fechaEntrada, reservaActual.fechaSalida) }} noche(s)
+                          </small>
+                        </div>
+                      } @else {
+                        <span class="text-muted">Sin reservas activas</span>
+                      }
+                    </td>
+                    <td class="align-middle">
+                      <strong class="text-success">{{ formatearMoneda(cliente.totalGastado) }}</strong>
+                      <br><small class="text-muted">{{ cliente.totalReservas }} reserva(s)</small>
+                    </td>
+                    <td class="align-middle">
+                      <span class="badge" [ngClass]="getClaseEstado(cliente.estado)">
+                        <i class="bi {{ getIconoEstado(cliente.estado) }} me-1"></i>
+                        {{ getLabelEstado(cliente.estado) }}
+                      </span>
+                      @if (reservaActual) {
+                        <br>
+                        <small class="badge mt-1" [ngClass]="getClaseReservaEstado(reservaActual.estadoReserva)">
+                          {{ getLabelReservaEstado(reservaActual.estadoReserva) }}
+                        </small>
+                      }
+                    </td>
+                    <td class="text-center align-middle">
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info" (click)="verDetalles(cliente)" title="Ver detalles">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-primary" (click)="editarCliente(cliente)" title="Editar cliente">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" (click)="prepararEliminar(cliente)" title="Eliminar cliente">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Paginación -->
+    @if (clientesFiltrados.length > 0 && !cargando) {
+      <div class="card-footer bg-white border-0 py-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Mostrando {{ clientesPaginados.length }} de {{ clientesFiltrados.length }} clientes
+          </small>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="paginaActual === 1">
+                <a class="page-link" (click)="cambiarPagina(paginaActual - 1)" href="javascript:void(0)">Anterior</a>
+              </li>
+              @for (pagina of paginas; track pagina) {
+                <li class="page-item" [class.active]="paginaActual === pagina">
+                  <a class="page-link" (click)="cambiarPagina(pagina)" href="javascript:void(0)">{{ pagina }}</a>
+                </li>
+              }
+              <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                <a class="page-link" (click)="cambiarPagina(paginaActual + 1)" href="javascript:void(0)">Siguiente</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal de Detalles del Cliente -->
+<div class="modal fade" id="detallesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-person-badge-fill me-2"></i>
+          Detalles del Cliente
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        @if (clienteSeleccionado) {
+          <div class="text-center mb-4">
+            <div class="avatar-circle-large bg-primary mx-auto mb-3">
+              <span class="display-6">{{ clienteSeleccionado.nombre.charAt(0) }}{{ clienteSeleccionado.apellidos.charAt(0) || '' }}</span>
+            </div>
+            <h4>{{ clienteSeleccionado.nombreCompleto }}</h4>
+            <span class="badge fs-6" [ngClass]="getClaseEstado(clienteSeleccionado.estado)">
+              <i class="bi {{ getIconoEstado(clienteSeleccionado.estado) }} me-1"></i>
+              {{ getLabelEstado(clienteSeleccionado.estado) }}
+            </span>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="fw-bold text-muted">Documento</label>
+              <p class="mb-0">{{ clienteSeleccionado.numPasaporte }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="fw-bold text-muted">Email</label>
+              <p class="mb-0">{{ clienteSeleccionado.email }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="fw-bold text-muted">Teléfono</label>
+              <p class="mb-0">{{ clienteSeleccionado.telefono }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="fw-bold text-muted">Nacionalidad</label>
+              <p class="mb-0">{{ clienteSeleccionado.nacionalidad || 'No especificada' }}</p>
+            </div>
+            
+            <div class="col-12 mb-3">
+              <label class="fw-bold text-muted">Dirección</label>
+              <p class="mb-0">{{ clienteSeleccionado.direccion || 'No especificada' }}</p>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label class="fw-bold text-muted">Total Reservas</label>
+              <p class="mb-0">{{ clienteSeleccionado.totalReservas }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="fw-bold text-muted">Total Gastado</label>
+              <p class="mb-0 text-success fw-bold">{{ formatearMoneda(clienteSeleccionado.totalGastado) }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="fw-bold text-muted">Última Reserva</label>
+              <p class="mb-0">{{ formatearFecha(clienteSeleccionado.ultimaReserva) }}</p>
+            </div>
+          </div>
+          
+          <!-- Historial de Reservas -->
+          <hr>
+          <h6 class="fw-bold mb-3">
+            <i class="bi bi-calendar-check me-2 text-primary"></i>
+            Historial de Reservas
+          </h6>
+          
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>Código</th>
+                  <th>Habitación</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (reserva of clienteSeleccionado.reservas; track reserva.id) {
+                  <tr>
+                    <td class="font-monospace">{{ reserva.codigo }}</td>
+                    <td>
+                      <!-- CORREGIDO: Sin optional chaining porque habitacion siempre existe -->
+                      {{ reserva.habitacion.numero || 'N/A' }} - {{ reserva.habitacion.tipo || 'N/A' }}
+                    </td>
+                    <td>{{ formatearFecha(reserva.fechaEntrada) }}</td>
+                    <td>{{ formatearFecha(reserva.fechaSalida) }}</td>
+                    <td>{{ formatearMoneda(reserva.precioTotal) }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getClaseReservaEstado(reserva.estadoReserva)">
+                        {{ getLabelReservaEstado(reserva.estadoReserva) }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Edición de Cliente -->
+<div class="modal fade" id="editarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square me-2"></i>
+          Editar Cliente
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="clienteForm">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre">
+            @if (clienteForm.get('nombre')?.invalid && clienteForm.get('nombre')?.touched) {
+              <small class="text-danger">El nombre es requerido (mínimo 3 caracteres)</small>
+            }
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Apellidos <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="apellidos" placeholder="Apellidos">
+            @if (clienteForm.get('apellidos')?.invalid && clienteForm.get('apellidos')?.touched) {
+              <small class="text-danger">Los apellidos son requeridos (mínimo 3 caracteres)</small>
+            }
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" formControlName="email" placeholder="correo@ejemplo.com">
+            @if (clienteForm.get('email')?.invalid && clienteForm.get('email')?.touched) {
+              <small class="text-danger">Ingresa un email válido</small>
+            }
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Teléfono <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" formControlName="telefono" placeholder="+1234567890">
+            @if (clienteForm.get('telefono')?.invalid && clienteForm.get('telefono')?.touched) {
+              <small class="text-danger">Ingresa un teléfono válido (8-15 dígitos)</small>
+            }
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Documento <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="numPasaporte" placeholder="DNI, Pasaporte, etc.">
+            @if (clienteForm.get('numPasaporte')?.invalid && clienteForm.get('numPasaporte')?.touched) {
+              <small class="text-danger">El documento es requerido</small>
+            }
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Nacionalidad</label>
+            <input type="text" class="form-control" formControlName="nacionalidad" placeholder="Nacionalidad">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Dirección</label>
+            <textarea class="form-control" formControlName="direccion" rows="2" placeholder="Dirección completa"></textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Notas Adicionales</label>
+            <textarea class="form-control" formControlName="notas" rows="3" placeholder="Preferencias, observaciones, etc."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarCliente()" [disabled]="guardando">
+          @if (guardando) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Guardando...
+          } @else {
+            <i class="bi bi-save me-1"></i> Guardar Cambios
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Confirmar Eliminación
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-3">
+          <i class="bi bi-person-x-fill text-danger" style="font-size: 3rem;"></i>
+        </div>
+        <p class="text-center mb-3">
+          ¿Estás seguro de eliminar al cliente 
+          <strong class="text-danger">{{ clienteAEliminar?.nombreCompleto }}</strong>?
+        </p>
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Esta acción no se puede deshacer. Se eliminará toda la información del cliente.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmarEliminar()">
+          <i class="bi bi-trash me-1"></i> Eliminar Cliente
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,94 +1,120 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
+import { NgxPaginationModule } from 'ngx-pagination';
 
 // Servicios
 import { UsuarioService } from '../../servicios/usuario.service';
 import { RolService } from '../../servicios/rol.service';
+import { HotelService } from '../../servicios/hotel.service';
 
 // Modelos
-import { Usuario, UsuarioFormData } from '../../modelos/usuario.model';
+import { Usuario, createEmptyUsuarioForm, createEmptyEmpleadoForm } from '../../modelos/usuario.model';
 import { Roles } from '../../modelos/roles.model';
+import { Hotel } from '../../modelos/hotel.model';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, NgxPaginationModule],
   templateUrl: './usuarios.html',
   styleUrls: ['./usuarios.css']
 })
-export class Usuarios implements OnInit, OnDestroy, AfterViewInit {
-  // Inyección de servicios
-  private usuarioService = inject(UsuarioService);
-  private rolService = inject(RolService);
-  private fb = inject(FormBuilder);
-  
-  // Formulario
+export class Usuarios implements OnInit, OnDestroy {
+  // Propiedades del formulario
   usuarioForm: FormGroup;
-  
-  // Variables de estado
+  empleadoForm: FormGroup;
   modoEdicion: boolean = false;
+  esUsuarioEmpleado: boolean = false;
   guardando: boolean = false;
   cargando: boolean = false;
   cargandoRoles: boolean = false;
-  filtroRol: number | null = null;
-  filtroTexto: string = '';
+  cargandoHoteles: boolean = false;
+  formularioVisible: boolean = false;
   
-  // Datos
+  // Datos de usuarios
   usuarios: Usuario[] = [];
   usuariosFiltrados: Usuario[] = [];
-  roles: Roles[] = [];
   usuarioEditando: Usuario | null = null;
-  usuarioDetalles: Usuario | null = null;
   usuarioAEliminar: Usuario | null = null;
+  usuarioDetalles: Usuario | null = null;
+  
+  // Roles y Hoteles
+  roles: Roles[] = [];
+  hoteles: Hotel[] = [];
   
   // Estadísticas
   totalUsuarios: number = 0;
+  
+  // Propiedades para paginación
+  paginaActual: number = 1;
+  elementosPorPagina: number = 10;
+  
+  // Mensajes con toasts
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  mensajeInfo: string = '';
+  mostrarMensajeExito: boolean = false;
+  mostrarMensajeError: boolean = false;
+  mostrarMensajeInfo: boolean = false;
+  
+  // Temporizadores para mensajes
+  private timeoutExito: any;
+  private timeoutError: any;
+  private timeoutInfo: any;
 
-  // Variables para modales
+  // Modales
   private detallesModalInstance: any;
   private confirmarModalInstance: any;
 
-  @ViewChild('detallesModal') detallesModalRef!: ElementRef;
-  @ViewChild('confirmarEliminarModal') confirmarModalRef!: ElementRef;
-
-  constructor() {
-    // Formulario de usuario con valores por defecto
+  constructor(
+    private fb: FormBuilder,
+    private usuarioService: UsuarioService,
+    private rolService: RolService,
+    private hotelService: HotelService
+  ) {
+    // Inicializar formulario de usuario con validaciones
     this.usuarioForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(2)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2)]],
-      telefono: ['', [Validators.required]],
-      nacionalidad: ['', [Validators.required]],
-      numPasaporte: ['', [Validators.required]],
-      contrasena: ['', [Validators.required, Validators.minLength(6)]],
-      usuario: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      telefono: ['', [Validators.required, Validators.pattern(/^[+\d\s-]{8,20}$/)]],
+      nacionalidad: ['', [Validators.required, Validators.maxLength(50)]],
+      numPasaporte: ['', [Validators.required, Validators.maxLength(20)]],
+      contrasena: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(100)]],
+      usuario: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
       rolId: ['', [Validators.required]]
+    });
+
+    // Inicializar formulario de empleado
+    this.empleadoForm = this.fb.group({
+      hotelId: ['', [Validators.required]]
     });
   }
 
   ngOnInit(): void {
     this.cargarUsuarios();
     this.cargarRoles();
-  }
-
-  ngAfterViewInit(): void {
+    this.cargarHoteles();
     this.initModales();
   }
 
   ngOnDestroy(): void {
+    this.limpiarTemporizadores();
     this.destroyModales();
   }
 
   private initModales(): void {
     if (typeof window !== 'undefined' && (window as any).bootstrap) {
-      if (this.detallesModalRef?.nativeElement) {
-        this.detallesModalInstance = new (window as any).bootstrap.Modal(this.detallesModalRef.nativeElement);
+      const detallesElement = document.getElementById('detallesModal');
+      const confirmarElement = document.getElementById('confirmarEliminarModal');
+      
+      if (detallesElement) {
+        this.detallesModalInstance = new (window as any).bootstrap.Modal(detallesElement);
       }
-      if (this.confirmarModalRef?.nativeElement) {
-        this.confirmarModalInstance = new (window as any).bootstrap.Modal(this.confirmarModalRef.nativeElement);
+      if (confirmarElement) {
+        this.confirmarModalInstance = new (window as any).bootstrap.Modal(confirmarElement);
       }
     }
   }
@@ -96,153 +122,172 @@ export class Usuarios implements OnInit, OnDestroy, AfterViewInit {
   private destroyModales(): void {
     if (this.detallesModalInstance) {
       this.detallesModalInstance.dispose();
+      this.detallesModalInstance = null;
     }
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.dispose();
+      this.confirmarModalInstance = null;
     }
   }
 
-  // Método para obtener mensajes de error
-  getErrorMessage(campo: string): string {
-    const control = this.usuarioForm.get(campo);
-    if (!control) return '';
-    
-    if (control.hasError('required')) {
-      return 'Este campo es requerido';
-    } else if (control.hasError('minlength')) {
-      const requiredLength = control.getError('minlength').requiredLength;
-      return `Debe tener al menos ${requiredLength} caracteres`;
-    } else if (control.hasError('email')) {
-      return 'Correo electrónico inválido';
-    } else if (control.hasError('pattern')) {
-      return 'Formato incorrecto';
-    }
-    
-    return '';
+  private limpiarTemporizadores(): void {
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
   }
 
-  // Cancelar edición
-  cancelarEdicion(): void {
-    this.modoEdicion = false;
-    this.usuarioEditando = null;
-    this.usuarioForm.reset();
-    this.usuarioForm.markAsPristine();
-    this.usuarioForm.markAsUntouched();
+  private mostrarExito(mensaje: string): void {
+    this.mostrarMensajeExito = true;
+    this.mensajeExito = mensaje;
+    if (this.timeoutExito) clearTimeout(this.timeoutExito);
+    this.timeoutExito = setTimeout(() => {
+      this.mostrarMensajeExito = false;
+      this.mensajeExito = '';
+    }, 4000);
   }
 
-  // Cargar roles dinámicamente desde la base de datos
+  private mostrarError(mensaje: string): void {
+    this.mostrarMensajeError = true;
+    this.mensajeError = mensaje;
+    if (this.timeoutError) clearTimeout(this.timeoutError);
+    this.timeoutError = setTimeout(() => {
+      this.mostrarMensajeError = false;
+      this.mensajeError = '';
+    }, 5000);
+  }
+
+  private mostrarInfo(mensaje: string): void {
+    this.mostrarMensajeInfo = true;
+    this.mensajeInfo = mensaje;
+    if (this.timeoutInfo) clearTimeout(this.timeoutInfo);
+    this.timeoutInfo = setTimeout(() => {
+      this.mostrarMensajeInfo = false;
+      this.mensajeInfo = '';
+    }, 3000);
+  }
+
   cargarRoles(): void {
     this.cargandoRoles = true;
     this.rolService.getRoles().subscribe({
       next: (roles: Roles[]) => {
         this.roles = roles || [];
         this.cargandoRoles = false;
-        console.log('Roles cargados:', this.roles);
       },
-      error: (error: any) => {
-        console.error('Error cargando roles:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar los roles');
+      error: (error: Error) => {
+        console.error('Error al cargar roles', error);
+        this.mostrarError(error.message || 'Error al cargar los roles');
         this.cargandoRoles = false;
         this.roles = [];
       }
     });
   }
 
-  // Cargar usuarios
-  cargarUsuarios(): void {
-    this.cargando = true;
-    this.usuarioService.getUsuarios().subscribe({
-      next: (usuarios: Usuario[]) => {
-        this.usuarios = usuarios || [];
-        this.usuariosFiltrados = [...this.usuarios];
-        this.totalUsuarios = this.usuarios.length;
-        this.cargando = false;
-        console.log('Usuarios cargados:', this.usuarios);
+  cargarHoteles(): void {
+    this.cargandoHoteles = true;
+    this.hotelService.getHoteles().subscribe({
+      next: (hoteles: Hotel[]) => {
+        this.hoteles = hoteles || [];
+        this.cargandoHoteles = false;
       },
-      error: (error: any) => {
-        console.error('Error cargando usuarios:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar los usuarios');
-        this.cargando = false;
-        this.usuarios = [];
-        this.usuariosFiltrados = [];
+      error: (error: Error) => {
+        console.error('Error al cargar hoteles', error);
+        this.mostrarError(error.message || 'Error al cargar los hoteles');
+        this.cargandoHoteles = false;
+        this.hoteles = [];
       }
     });
   }
 
-  // Obtener nombre del rol
+  cargarUsuarios(): void {
+    this.cargando = true;
+    this.limpiarTemporizadores();
+    
+    this.usuarioService.getUsuarios().subscribe({
+      next: (usuarios: any[]) => {
+        this.usuarios = usuarios || [];
+        this.usuariosFiltrados = [...this.usuarios];
+        this.totalUsuarios = this.usuarios.length;
+        this.cargando = false;
+        this.paginaActual = 1;
+        
+        if (usuarios.length === 0) {
+          this.mostrarInfo('No se encontraron usuarios registrados');
+        }
+      },
+      error: (error: Error) => {
+        console.error('Error al cargar usuarios', error);
+        this.cargando = false;
+        this.mostrarError(error.message || 'Error al cargar los usuarios');
+      }
+    });
+  }
+
   obtenerNombreRol(rolId?: number): string {
     if (!rolId) return 'Sin rol asignado';
-    
     const rol = this.roles.find(r => r.id === rolId);
-    
-    if (!rol) {
-      console.warn(`Rol con ID ${rolId} no encontrado`);
-      return 'Rol no encontrado';
-    }
-    
-    return rol.nombre;
+    return rol ? rol.nombre : 'Rol no encontrado';
   }
 
-  // Filtrar usuarios por texto
-  filtrarUsuarios(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.filtroTexto = input.value.toLowerCase().trim();
-    this.aplicarFiltros();
+  obtenerNombreHotel(hotelId?: number): string {
+    if (!hotelId) return 'Sin hotel asignado';
+    const hotel = this.hoteles.find(h => h.id === hotelId);
+    return hotel ? hotel.nombre : 'Hotel no encontrado';
   }
 
-  // Filtrar por rol - ACEPTA number | undefined
-  filtrarPorRol(rolId: number | undefined): void {
-    this.filtroRol = rolId === undefined || rolId === 0 ? null : rolId;
-    this.aplicarFiltros();
-  }
-
-  private aplicarFiltros(): void {
-    let resultado = [...this.usuarios];
-    
-    // Filtrar por rol
-    if (this.filtroRol) {
-      resultado = resultado.filter(u => u.roles?.id === this.filtroRol);
-    }
-    
-    // Filtrar por texto
-    if (this.filtroTexto) {
-      resultado = resultado.filter(usuario =>
-        usuario.nombre.toLowerCase().includes(this.filtroTexto) ||
-        usuario.apellidos.toLowerCase().includes(this.filtroTexto) ||
-        usuario.usuario.toLowerCase().includes(this.filtroTexto) ||
-        usuario.email.toLowerCase().includes(this.filtroTexto) ||
-        this.obtenerNombreRol(usuario.roles?.id).toLowerCase().includes(this.filtroTexto)
-      );
-    }
-    
-    this.usuariosFiltrados = resultado;
-  }
-
-  // Nuevo registro
-  nuevoRegistro(): void {
+  mostrarFormulario(tipo: 'normal' | 'empleado' = 'normal'): void {
+    this.formularioVisible = true;
     this.modoEdicion = false;
+    this.esUsuarioEmpleado = tipo === 'empleado';
     this.usuarioEditando = null;
-    
-    this.usuarioForm.reset({
-      nombre: '',
-      apellidos: '',
-      telefono: '',
-      nacionalidad: '',
-      numPasaporte: '',
-      contrasena: '',
-      usuario: '',
-      email: '',
-      rolId: ''
-    });
-    
+    this.usuarioForm.reset();
+    this.empleadoForm.reset();
     this.usuarioForm.markAsPristine();
     this.usuarioForm.markAsUntouched();
+    this.empleadoForm.markAsPristine();
+    this.empleadoForm.markAsUntouched();
+    
+    this.limpiarTemporizadores();
   }
 
-  // Editar usuario
+  cerrarFormulario(): void {
+    this.formularioVisible = false;
+    this.modoEdicion = false;
+    this.esUsuarioEmpleado = false;
+    this.usuarioEditando = null;
+    this.usuarioForm.reset();
+    this.empleadoForm.reset();
+    this.limpiarTemporizadores();
+  }
+
+  filtrarUsuarios(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const filtro = input.value.toLowerCase().trim();
+    
+    if (filtro) {
+      this.usuariosFiltrados = this.usuarios.filter(usuario =>
+        usuario.nombre.toLowerCase().includes(filtro) ||
+        usuario.apellidos.toLowerCase().includes(filtro) ||
+        usuario.usuario.toLowerCase().includes(filtro) ||
+        usuario.email.toLowerCase().includes(filtro) ||
+        this.obtenerNombreRol(usuario.roles?.id).toLowerCase().includes(filtro)
+      );
+      
+      if (this.usuariosFiltrados.length === 0) {
+        this.mostrarInfo(`No se encontraron usuarios con "${filtro}"`);
+      }
+    } else {
+      this.usuariosFiltrados = [...this.usuarios];
+    }
+    
+    this.paginaActual = 1;
+  }
+
   editarUsuario(usuario: Usuario): void {
     this.modoEdicion = true;
+    this.esUsuarioEmpleado = false;
     this.usuarioEditando = usuario;
+    this.formularioVisible = true;
+    this.limpiarTemporizadores();
     
     this.usuarioForm.patchValue({
       nombre: usuario.nombre,
@@ -255,185 +300,186 @@ export class Usuarios implements OnInit, OnDestroy, AfterViewInit {
       email: usuario.email,
       rolId: usuario.roles?.id || ''
     });
+    
+    this.usuarioForm.markAsPristine();
+    Object.keys(this.usuarioForm.controls).forEach(key => {
+      this.usuarioForm.get(key)?.markAsUntouched();
+    });
   }
 
-  // Guardar usuario
   guardarUsuario(): void {
-    // Marcar todos los controles como tocados para mostrar errores
-    Object.keys(this.usuarioForm.controls).forEach(key => {
-      const control = this.usuarioForm.get(key);
-      control?.markAsTouched();
-    });
-
     if (this.usuarioForm.invalid) {
-      this.mostrarNotificacion('error', 
-        'Formulario inválido', 
-        'Completa todos los campos requeridos correctamente.'
-      );
+      Object.keys(this.usuarioForm.controls).forEach(key => {
+        const control = this.usuarioForm.get(key);
+        control?.markAsTouched();
+      });
+      this.mostrarError('Por favor, complete correctamente todos los campos obligatorios del usuario.');
       return;
     }
 
-    // Verificar que haya roles disponibles
-    if (this.roles.length === 0) {
-      this.mostrarNotificacion('error', 
-        'Error', 
-        'No hay roles disponibles en la base de datos.'
-      );
+    if (this.esUsuarioEmpleado && this.empleadoForm.invalid) {
+      Object.keys(this.empleadoForm.controls).forEach(key => {
+        const control = this.empleadoForm.get(key);
+        control?.markAsTouched();
+      });
+      this.mostrarError('Por favor, seleccione un hotel para el empleado.');
       return;
     }
 
     this.guardando = true;
     const usuarioData = this.usuarioForm.value;
+    const nombreCompleto = `${usuarioData.nombre} ${usuarioData.apellidos}`;
 
-    // Usar aserción no nula para id en modo edición
-    if (this.modoEdicion && this.usuarioEditando && this.usuarioEditando.id !== undefined) {
-      this.usuarioService.update(this.usuarioEditando.id!, usuarioData).subscribe({
+    if (this.modoEdicion && this.usuarioEditando) {
+      if (!this.usuarioEditando.id) {
+        console.error('No se puede actualizar: ID no definido');
+        this.guardando = false;
+        this.mostrarError('Error: No se pudo identificar el usuario a actualizar');
+        return;
+      }
+
+      this.usuarioService.update(this.usuarioEditando.id, usuarioData).subscribe({
         next: () => {
           this.cargarUsuarios();
           this.guardando = false;
-          this.nuevoRegistro();
-          this.mostrarNotificacion('success', 
-            'Usuario actualizado',
-            `Usuario "${usuarioData.nombre}" actualizado correctamente.`
-          );
+          this.cerrarFormulario();
+          this.mostrarExito(`✅ Usuario "${nombreCompleto}" actualizado correctamente`);
         },
-        error: (error: any) => {
-          console.error('Error actualizando usuario:', error);
+        error: (error: Error) => {
+          console.error('Error al actualizar usuario', error);
           this.guardando = false;
-          this.mostrarNotificacion('error', 
-            'Error', 
-            'No se pudo actualizar el usuario. Intenta nuevamente.'
-          );
+          this.mostrarError(error.message || 'Error al actualizar el usuario');
+        }
+      });
+    } else if (this.esUsuarioEmpleado) {
+      const empleadoData = this.empleadoForm.value;
+      const hotelId = empleadoData.hotelId ? Number(empleadoData.hotelId) : null;
+      
+      if (!hotelId) {
+        this.guardando = false;
+        this.mostrarError('Debe seleccionar un hotel válido');
+        return;
+      }
+      
+      // Enviar solo los campos que espera el backend
+      const usuarioEmpleadoRequest = {
+        nombre: usuarioData.nombre.trim(),
+        apellidos: usuarioData.apellidos.trim(),
+        telefono: usuarioData.telefono.trim(),
+        nacionalidad: usuarioData.nacionalidad.trim(),
+        numPasaporte: usuarioData.numPasaporte.trim(),
+        contrasena: usuarioData.contrasena,
+        usuario: usuarioData.usuario.trim().toLowerCase(),
+        email: usuarioData.email.trim().toLowerCase(),
+        hotelId: hotelId
+      };
+      
+      console.log('Enviando al backend:', JSON.stringify(usuarioEmpleadoRequest, null, 2));
+      
+      this.usuarioService.createUsuarioEmpleado(usuarioEmpleadoRequest).subscribe({
+        next: (response) => {
+          console.log('Respuesta del backend:', response);
+          this.cargarUsuarios();
+          this.guardando = false;
+          this.cerrarFormulario();
+          this.mostrarExito(`✅ Usuario empleado "${nombreCompleto}" creado correctamente`);
+          this.paginaActual = 1;
+        },
+        error: (error: Error) => {
+          console.error('Error al crear usuario empleado', error);
+          this.guardando = false;
+          this.mostrarError(error.message || 'Error al crear el usuario empleado');
         }
       });
     } else {
-      this.usuarioService.create(usuarioData).subscribe({
+      // Crear usuario normal - incluir rolId
+      const usuarioNormalRequest = {
+        nombre: usuarioData.nombre,
+        apellidos: usuarioData.apellidos,
+        telefono: usuarioData.telefono,
+        nacionalidad: usuarioData.nacionalidad,
+        numPasaporte: usuarioData.numPasaporte,
+        contrasena: usuarioData.contrasena,
+        usuario: usuarioData.usuario,
+        email: usuarioData.email,
+        rolId: usuarioData.rolId ? Number(usuarioData.rolId) : 1
+      };
+      
+      this.usuarioService.create(usuarioNormalRequest).subscribe({
         next: () => {
           this.cargarUsuarios();
           this.guardando = false;
-          this.nuevoRegistro();
-          this.mostrarNotificacion('success', 
-            'Usuario creado',
-            `Usuario "${usuarioData.nombre}" creado correctamente.`
-          );
+          this.cerrarFormulario();
+          this.mostrarExito(`✅ Usuario "${nombreCompleto}" creado correctamente`);
+          this.paginaActual = 1;
         },
-        error: (error: any) => {
-          console.error('Error creando usuario:', error);
+        error: (error: Error) => {
+          console.error('Error al crear usuario', error);
           this.guardando = false;
-          this.mostrarNotificacion('error', 
-            'Error', 
-            'No se pudo crear el usuario. Intenta nuevamente.'
-          );
+          this.mostrarError(error.message || 'Error al crear el usuario');
         }
       });
     }
   }
 
-  // Método para ver detalles de un usuario
   verDetalles(usuario: Usuario): void {
     this.usuarioDetalles = usuario;
     if (this.detallesModalInstance) {
       this.detallesModalInstance.show();
-    } else {
-      // Fallback si no se inicializó el modal
-      const modalElement = document.getElementById('detallesModal');
-      if (modalElement) {
-        const modal = new (window as any).bootstrap.Modal(modalElement);
-        modal.show();
-      }
     }
   }
 
-  // Método para preparar la eliminación de un usuario
   eliminarUsuario(usuario: Usuario): void {
     this.usuarioAEliminar = usuario;
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.show();
-    } else {
-      // Fallback si no se inicializó el modal
-      const modalElement = document.getElementById('confirmarEliminarModal');
-      if (modalElement) {
-        const modal = new (window as any).bootstrap.Modal(modalElement);
-        modal.show();
-      }
     }
   }
 
-  // Método para confirmar la eliminación
   confirmarEliminar(): void {
-    if (!this.usuarioAEliminar || this.usuarioAEliminar.id === undefined) {
-      this.mostrarNotificacion('error', 'Error', 'No se puede eliminar el usuario porque no tiene un ID válido.');
-      return;
-    }
-
-    this.guardando = true;
-    
-    // Usar aserción no nula para id
-    this.usuarioService.delete(this.usuarioAEliminar.id!).subscribe({
-      next: () => {
-        this.guardando = false;
-        this.mostrarNotificacion('success', 
-          'Usuario eliminado', 
-          `El usuario "${this.usuarioAEliminar!.nombre}" ha sido eliminado correctamente.`
-        );
-        this.cargarUsuarios(); // Recargar la lista
-        
-        if (this.confirmarModalInstance) {
-          this.confirmarModalInstance.hide();
+    if (this.usuarioAEliminar && this.usuarioAEliminar.id) {
+      const nombreCompleto = `${this.usuarioAEliminar.nombre} ${this.usuarioAEliminar.apellidos}`;
+      
+      this.usuarioService.delete(this.usuarioAEliminar.id).subscribe({
+        next: () => {
+          const index = this.usuarios.findIndex(u => u.id === this.usuarioAEliminar!.id);
+          if (index !== -1) {
+            this.usuarios.splice(index, 1);
+            this.usuariosFiltrados = [...this.usuarios];
+            this.totalUsuarios = this.usuarios.length;
+          }
+          
+          if (this.confirmarModalInstance) {
+            this.confirmarModalInstance.hide();
+          }
+          
+          if (this.usuarioEditando?.id === this.usuarioAEliminar?.id) {
+            this.cerrarFormulario();
+          }
+          
+          this.mostrarExito(`🗑️ Usuario "${nombreCompleto}" eliminado correctamente`);
+          
+          if (this.usuarios.length === 0) {
+            this.mostrarInfo('No hay usuarios registrados');
+          }
+        },
+        error: (error: Error) => {
+          console.error('Error al eliminar usuario', error);
+          this.mostrarError(error.message || 'Error al eliminar el usuario');
+          
+          if (this.confirmarModalInstance) {
+            this.confirmarModalInstance.hide();
+          }
         }
-        this.usuarioAEliminar = null;
-      },
-      error: (error: any) => {
-        console.error('Error eliminando usuario:', error);
-        this.guardando = false;
-        this.mostrarNotificacion('error', 
-          'Error', 
-          'No se pudo eliminar el usuario. Intenta nuevamente.'
-        );
+      });
+    } else {
+      console.error('No se puede eliminar: usuario o ID no definido');
+      this.mostrarError('Error: No se pudo identificar el usuario a eliminar');
+      
+      if (this.confirmarModalInstance) {
+        this.confirmarModalInstance.hide();
       }
-    });
-  }
-
-  // Mostrar notificación
-  private mostrarNotificacion(tipo: 'success' | 'info' | 'warning' | 'error', titulo: string, mensaje: string): void {
-    const toastId = 'notification-' + Date.now();
-    const toast = document.createElement('div');
-    toast.id = toastId;
-    toast.className = `toast align-items-center text-bg-${tipo === 'error' ? 'danger' : tipo} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    
-    const iconos = {
-      success: 'bi-check-circle-fill',
-      info: 'bi-info-circle-fill',
-      warning: 'bi-exclamation-triangle-fill',
-      error: 'bi-x-circle-fill'
-    };
-    
-    toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">
-          <i class="bi ${iconos[tipo]} me-2"></i>
-          <strong>${titulo}</strong><br>
-          <small>${mensaje}</small>
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-    
-    const container = document.querySelector('.toast-container') || (() => {
-      const newContainer = document.createElement('div');
-      newContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-      newContainer.style.zIndex = '1055';
-      document.body.appendChild(newContainer);
-      return newContainer;
-    })();
-    
-    container.appendChild(toast);
-    const bsToast = new (window as any).bootstrap.Toast(toast);
-    bsToast.show();
-    
-    toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    }
+    this.usuarioAEliminar = null;
   }
 }

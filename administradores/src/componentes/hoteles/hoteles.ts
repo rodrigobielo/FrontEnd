@@ -1,3 +1,13 @@
+// En el componente, elimina estas líneas:
+// - import { UsuarioService } from '../../servicios/usuario.service';
+// - import { Usuario } from '../../modelos/usuario.model';
+// - cargandoAdministradores: boolean = false;
+// - administradores: Usuario[] = [];
+// - cargarAdministradores()
+// - administradorId del formulario
+
+// Versión corregida:
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -8,12 +18,10 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { HotelService } from '../../servicios/hotel.service';
 import { CiudadService } from '../../servicios/ciudades.service';
 import { CategoriaService } from '../../servicios/categoria.service';
-import { UsuarioService } from '../../servicios/usuario.service';
 
 // Modelos
 import { Ciudad } from '../../modelos/ciudad.model';
 import { Categoria } from '../../modelos/categoria.model';
-import { Usuario } from '../../modelos/usuario.model';
 import { Hotel } from '../../modelos/hotel.model';
 
 @Component({
@@ -31,7 +39,6 @@ export class Hoteles implements OnInit, OnDestroy {
   cargando: boolean = false;
   cargandoCiudades: boolean = false;
   cargandoCategorias: boolean = false;
-  cargandoAdministradores: boolean = false;
   formularioVisible: boolean = false;
   filtroCategoria: number | null = null;
   
@@ -46,7 +53,6 @@ export class Hoteles implements OnInit, OnDestroy {
   // Datos
   ciudades: Ciudad[] = [];
   categorias: Categoria[] = [];
-  administradores: Usuario[] = [];
   hoteles: Hotel[] = [];
   hotelesFiltrados: Hotel[] = [];
   hotelEditando: Hotel | null = null;
@@ -73,24 +79,23 @@ export class Hoteles implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private hotelService: HotelService,
     private ciudadService: CiudadService,
-    private categoriaService: CategoriaService,
-    private usuarioService: UsuarioService
+    private categoriaService: CategoriaService
   ) {
     this.hotelForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       descripcion: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
-      contactos: ['', [Validators.required, Validators.minLength(10)]],
+      correo: ['', [Validators.required, Validators.email]],
+      telefono: ['', [Validators.required, Validators.minLength(8)]],
+      contactos: ['', [Validators.maxLength(500)]],
       precio: [0, [Validators.required, Validators.min(0.01), Validators.max(10000)]],
       ciudadId: ['', [Validators.required]],
-      categoriaId: ['', [Validators.required]],
-      administradorId: ['', [Validators.required]]
+      categoriaId: ['', [Validators.required]]
     });
   }
 
   ngOnInit(): void {
     this.cargarCiudades();
     this.cargarCategorias();
-    this.cargarAdministradores();
     this.cargarHoteles();
     this.initModales();
   }
@@ -168,17 +173,17 @@ export class Hoteles implements OnInit, OnDestroy {
     this.hotelForm.reset({
       nombre: '',
       descripcion: '',
+      correo: '',
+      telefono: '',
       contactos: '',
       precio: 0,
       ciudadId: '',
-      categoriaId: '',
-      administradorId: ''
+      categoriaId: ''
     });
     this.hotelForm.markAsPristine();
     this.hotelForm.markAsUntouched();
     this.limpiarTemporizadores();
     
-    // Scroll suave al formulario
     setTimeout(() => {
       const formulario = document.querySelector('.modern-form');
       if (formulario) {
@@ -197,8 +202,11 @@ export class Hoteles implements OnInit, OnDestroy {
 
   cargarCiudades(): void {
     this.cargandoCiudades = true;
-    this.ciudadService.getCiudades().subscribe({
+    console.log('Cargando ciudades para el select de hoteles...');
+    
+    this.ciudadService.getAll().subscribe({
       next: (ciudades: Ciudad[]) => {
+        console.log('Ciudades cargadas:', ciudades);
         this.ciudades = ciudades || [];
         this.cargandoCiudades = false;
         
@@ -209,7 +217,7 @@ export class Hoteles implements OnInit, OnDestroy {
       error: (error: any) => {
         console.error('Error cargando ciudades:', error);
         this.cargandoCiudades = false;
-        this.mostrarError('Error al cargar las ciudades');
+        this.mostrarError('Error al cargar las ciudades: ' + (error.message || 'Error desconocido'));
         this.ciudades = [];
       }
     });
@@ -231,29 +239,6 @@ export class Hoteles implements OnInit, OnDestroy {
         this.cargandoCategorias = false;
         this.mostrarError('Error al cargar las categorías');
         this.categorias = [];
-      }
-    });
-  }
-
-  cargarAdministradores(): void {
-    this.cargandoAdministradores = true;
-    this.usuarioService.getUsuarios().subscribe({
-      next: (usuarios: Usuario[]) => {
-        this.administradores = (usuarios || []).filter((usuario: Usuario) => 
-          usuario.roles?.nombre?.toLowerCase().includes('admin') || 
-          usuario.roles?.nombre?.toLowerCase().includes('administrador')
-        );
-        this.cargandoAdministradores = false;
-        
-        if (this.administradores.length === 0) {
-          this.mostrarInfo('No hay administradores disponibles.');
-        }
-      },
-      error: (error: any) => {
-        console.error('Error cargando administradores:', error);
-        this.cargandoAdministradores = false;
-        this.mostrarError('Error al cargar los administradores');
-        this.administradores = [];
       }
     });
   }
@@ -322,7 +307,9 @@ export class Hoteles implements OnInit, OnDestroy {
       resultado = resultado.filter(hotel =>
         hotel.nombre.toLowerCase().includes(filtro) ||
         hotel.descripcion.toLowerCase().includes(filtro) ||
-        hotel.contactos.toLowerCase().includes(filtro) ||
+        hotel.correo?.toLowerCase().includes(filtro) ||
+        hotel.telefono?.toLowerCase().includes(filtro) ||
+        (hotel.contactos && hotel.contactos.toLowerCase().includes(filtro)) ||
         hotel.ciudades?.nombre.toLowerCase().includes(filtro) ||
         hotel.categorias?.nombre.toLowerCase().includes(filtro)
       );
@@ -369,11 +356,12 @@ export class Hoteles implements OnInit, OnDestroy {
     this.hotelForm.patchValue({
       nombre: hotel.nombre,
       descripcion: hotel.descripcion,
-      contactos: hotel.contactos,
+      correo: hotel.correo || '',
+      telefono: hotel.telefono || '',
+      contactos: hotel.contactos || '',
       precio: hotel.precio || 0,
       ciudadId: hotel.ciudades?.id || '',
-      categoriaId: hotel.categorias?.id || '',
-      administradorId: hotel.usuarios?.id || ''
+      categoriaId: hotel.categorias?.id || ''
     });
     
     this.hotelForm.markAsPristine();
@@ -381,7 +369,6 @@ export class Hoteles implements OnInit, OnDestroy {
       this.hotelForm.get(key)?.markAsUntouched();
     });
     
-    // Scroll suave al formulario
     setTimeout(() => {
       const formulario = document.querySelector('.modern-form');
       if (formulario) {
@@ -407,11 +394,12 @@ export class Hoteles implements OnInit, OnDestroy {
     const hotelParaEnviar = {
       nombre: hotelData.nombre,
       descripcion: hotelData.descripcion,
-      contactos: hotelData.contactos,
+      correo: hotelData.correo,
+      telefono: hotelData.telefono,
+      contactos: hotelData.contactos || '',
       precio: hotelData.precio,
       ciudades: { id: hotelData.ciudadId },
       categorias: { id: hotelData.categoriaId },
-      usuarios: { id: hotelData.administradorId },
       habitaciones: []
     };
 

@@ -148,33 +148,93 @@
                   </div>
                 </div>
 
-                <!-- Campo: Contactos -->
+                <!-- Campos de Contacto - Email y Teléfono -->
+                <div class="row g-3 mb-3">
+                  <!-- Correo Electrónico -->
+                  <div class="col-md-6">
+                    <label for="correo" class="form-label fw-bold">
+                      <i class="bi bi-envelope-fill me-1 text-warning"></i>
+                      Correo Electrónico <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-at"></i>
+                      </span>
+                      <input 
+                        type="email" 
+                        class="form-control" 
+                        id="correo"
+                        formControlName="correo"
+                        [ngClass]="{
+                          'is-invalid': hotelForm.get('correo')?.invalid && 
+                                       (hotelForm.get('correo')?.dirty || hotelForm.get('correo')?.touched)
+                        }"
+                        placeholder="reservas@hotel.com"
+                      >
+                    </div>
+                    @if (hotelForm.get('correo')?.hasError('required') && 
+                         (hotelForm.get('correo')?.dirty || hotelForm.get('correo')?.touched)) {
+                      <div class="text-danger small mt-1">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        El correo es obligatorio
+                      </div>
+                    }
+                    @if (hotelForm.get('correo')?.hasError('email')) {
+                      <div class="text-danger small mt-1">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Ingresa un correo electrónico válido
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Teléfono -->
+                  <div class="col-md-6">
+                    <label for="telefono" class="form-label fw-bold">
+                      <i class="bi bi-telephone-fill me-1 text-warning"></i>
+                      Teléfono <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-phone"></i>
+                      </span>
+                      <input 
+                        type="tel" 
+                        class="form-control" 
+                        id="telefono"
+                        formControlName="telefono"
+                        [ngClass]="{
+                          'is-invalid': hotelForm.get('telefono')?.invalid && 
+                                       (hotelForm.get('telefono')?.dirty || hotelForm.get('telefono')?.touched)
+                        }"
+                        placeholder="+54 11 1234-5678"
+                      >
+                    </div>
+                    @if (hotelForm.get('telefono')?.hasError('required') && 
+                         (hotelForm.get('telefono')?.dirty || hotelForm.get('telefono')?.touched)) {
+                      <div class="text-danger small mt-1">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        El teléfono es obligatorio
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Campo: Contactos adicionales (opcional) -->
                 <div class="mb-3">
                   <label for="contactos" class="form-label fw-bold">
-                    <i class="bi bi-telephone-fill me-1 text-warning"></i>
-                    Contactos <span class="text-danger">*</span>
+                    <i class="bi bi-info-circle-fill me-1 text-warning"></i>
+                    Información adicional de contacto
                   </label>
                   <textarea 
                     class="form-control" 
                     id="contactos"
                     formControlName="contactos"
-                    [ngClass]="{
-                      'is-invalid': hotelForm.get('contactos')?.invalid && 
-                                   (hotelForm.get('contactos')?.dirty || hotelForm.get('contactos')?.touched)
-                    }"
                     rows="2"
-                    placeholder="Teléfono: +54 11 1234-5678&#10;Email: reservas@hotel.com&#10;Dirección: Calle Principal 123"
+                    placeholder="WhatsApp: +54 11 9876-5432&#10;Instagram: @hotel&#10;Facebook: /hoteloficial"
                   ></textarea>
-                  @if (hotelForm.get('contactos')?.hasError('required') && 
-                       (hotelForm.get('contactos')?.dirty || hotelForm.get('contactos')?.touched)) {
-                    <div class="text-danger small mt-1">
-                      <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                      Los contactos son obligatorios
-                    </div>
-                  }
                   <div class="form-text">
                     <i class="bi bi-info-circle me-1"></i>
-                    Incluye teléfono, email y dirección (uno por línea)
+                    Información de contacto adicional (redes sociales, WhatsApp, etc.)
                   </div>
                 </div>
 
@@ -218,10 +278,10 @@
                   }
                 </div>
 
-                <!-- Campos en fila -->
+                <!-- Campos en fila (Ciudad y Categoría) -->
                 <div class="row g-3 mb-3">
                   <!-- Ciudad -->
-                  <div class="col-md-4">
+                  <div class="col-md-6">
                     <label for="ciudadId" class="form-label fw-bold">
                       <i class="bi bi-building-fill me-1 text-warning"></i>
                       Ciudad <span class="text-danger">*</span>
@@ -264,7 +324,7 @@
                   </div>
 
                   <!-- Categoría -->
-                  <div class="col-md-4">
+                  <div class="col-md-6">
                     <label for="categoriaId" class="form-label fw-bold">
                       <i class="bi bi-star-fill me-1 text-warning"></i>
                       Categoría <span class="text-danger">*</span>
@@ -310,49 +370,6 @@
                       }
                     }
                   </div>
-
-                  <!-- Administrador -->
-                  <div class="col-md-4">
-                    <label for="administradorId" class="form-label fw-bold">
-                      <i class="bi bi-person-badge-fill me-1 text-warning"></i>
-                      Administrador <span class="text-danger">*</span>
-                    </label>
-                    @if (cargandoAdministradores) {
-                      <div class="alert alert-info py-2">
-                        <div class="spinner-border spinner-border-sm me-2" role="status">
-                          <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        Cargando administradores...
-                      </div>
-                    } @else if (administradores.length === 0) {
-                      <div class="alert alert-warning py-2">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        No hay administradores disponibles.
-                      </div>
-                    } @else {
-                      <select 
-                        class="form-select form-select-lg" 
-                        id="administradorId"
-                        formControlName="administradorId"
-                        [ngClass]="{
-                          'is-invalid': hotelForm.get('administradorId')?.invalid && 
-                                       (hotelForm.get('administradorId')?.dirty || hotelForm.get('administradorId')?.touched)
-                        }"
-                      >
-                        <option value="" disabled selected>👤 Selecciona un administrador</option>
-                        @for (admin of administradores; track admin.id) {
-                          <option [value]="admin.id">{{ admin.nombre }} {{ admin.apellidos }}</option>
-                        }
-                      </select>
-                      @if (hotelForm.get('administradorId')?.hasError('required') && 
-                           (hotelForm.get('administradorId')?.dirty || hotelForm.get('administradorId')?.touched)) {
-                        <div class="text-danger small mt-1">
-                          <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                          Debes seleccionar un administrador
-                        </div>
-                      }
-                    }
-                  </div>
                 </div>
 
                 <!-- Botones -->
@@ -360,7 +377,7 @@
                   <button 
                     type="submit" 
                     class="btn btn-warning flex-fill py-2"
-                    [disabled]="hotelForm.invalid || guardando || ciudades.length === 0 || categorias.length === 0 || administradores.length === 0"
+                    [disabled]="hotelForm.invalid || guardando || ciudades.length === 0 || categorias.length === 0"
                   >
                     @if (guardando) {
                       <span class="spinner-border spinner-border-sm me-2"></span>
@@ -473,7 +490,7 @@
                 <table class="table table-hover mb-0">
                   <thead class="table-light">
                     <tr>
-                      <th width="25%">
+                      <th width="30%">
                         <i class="bi bi-house-fill me-1"></i> Hotel
                       </th>
                       <th width="20%">
@@ -485,7 +502,10 @@
                       <th width="15%">
                         <i class="bi bi-currency-dollar me-1"></i> Precio
                       </th>
-                      <th width="25%" class="text-center">
+                      <th width="20%">
+                        <i class="bi bi-envelope-fill me-1"></i> Contacto
+                      </th>
+                      <th width="15%" class="text-center">
                         <i class="bi bi-tools"></i> Acciones
                       </th>
                     </tr>
@@ -519,6 +539,18 @@
                         <td class="align-middle">
                           <span class="fw-bold text-warning">${{ hotel.precio | number:'1.2-2' }}</span>
                           <small class="text-muted d-block">USD/noche</small>
+                        </td>
+                        <td class="align-middle">
+                          <div>
+                            <small class="d-block text-truncate" style="max-width: 180px;">
+                              <i class="bi bi-envelope-fill me-1 text-warning"></i>
+                              {{ hotel.correo || 'No registrado' }}
+                            </small>
+                            <small class="d-block">
+                              <i class="bi bi-telephone-fill me-1 text-warning"></i>
+                              {{ hotel.telefono || 'No registrado' }}
+                            </small>
+                          </div>
                         </td>
                         <td class="align-middle text-center">
                           <div class="btn-group btn-group-sm">
@@ -600,8 +632,16 @@
               <span class="ms-2 fw-bold">${{ hotelDetalles.precio | number:'1.2-2' }} USD/noche</span>
             </div>
             <div class="mb-2 p-2 bg-light rounded">
-              <strong><i class="bi bi-telephone-fill me-1 text-warning"></i> Contactos:</strong>
-              <pre class="mt-2 bg-white p-2 rounded small mb-0">{{ hotelDetalles.contactos }}</pre>
+              <strong><i class="bi bi-envelope-fill me-1 text-warning"></i> Correo:</strong>
+              <span class="ms-2">{{ hotelDetalles.correo || 'No registrado' }}</span>
+            </div>
+            <div class="mb-2 p-2 bg-light rounded">
+              <strong><i class="bi bi-telephone-fill me-1 text-warning"></i> Teléfono:</strong>
+              <span class="ms-2">{{ hotelDetalles.telefono || 'No registrado' }}</span>
+            </div>
+            <div class="mb-2 p-2 bg-light rounded">
+              <strong><i class="bi bi-info-circle-fill me-1 text-warning"></i> Contactos adicionales:</strong>
+              <pre class="mt-2 bg-white p-2 rounded small mb-0">{{ hotelDetalles.contactos || 'No especificado' }}</pre>
             </div>
             <div class="p-2 bg-light rounded">
               <strong><i class="bi bi-card-text me-1 text-warning"></i> Descripción:</strong>

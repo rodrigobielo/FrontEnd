@@ -79,6 +79,7 @@ export class Ciudades implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    console.log('=== INICIANDO COMPONENTE CIUDADES ===');
     this.cargarProvincias();
     this.cargarCiudades();
     this.initModales();
@@ -150,13 +151,13 @@ export class Ciudades implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Cargar provincias
-   */
   cargarProvincias(): void {
     this.cargandoProvincias = true;
+    console.log('Cargando provincias...');
+    
     this.provinciaService.getAll().subscribe({
       next: (data: ProvinciaSimple[]) => {
+        console.log('Provincias cargadas:', data);
         this.provincias = data;
         this.cargandoProvincias = false;
         
@@ -167,21 +168,21 @@ export class Ciudades implements OnInit, OnDestroy {
       error: (error: any) => {
         console.error('Error al cargar provincias:', error);
         this.cargandoProvincias = false;
-        this.mostrarError('Error al cargar las provincias');
+        this.mostrarError('Error al cargar las provincias: ' + (error.message || 'Error desconocido'));
         this.provincias = [];
       }
     });
   }
 
-  /**
-   * Cargar ciudades
-   */
   cargarCiudades(): void {
     this.cargando = true;
     this.limpiarTemporizadores();
     
+    console.log('Cargando ciudades...');
+    
     this.ciudadService.getAll().subscribe({
       next: (data: Ciudad[]) => {
+        console.log('Ciudades recibidas del backend:', data);
         this.ciudades = data;
         this.ciudadesFiltradas = [...this.ciudades];
         this.totalCiudades = this.ciudades.length;
@@ -190,6 +191,8 @@ export class Ciudades implements OnInit, OnDestroy {
         
         if (data.length === 0) {
           this.mostrarInfo('No se encontraron ciudades registradas');
+        } else {
+          console.log(`✅ ${data.length} ciudad(es) cargada(s) correctamente`);
         }
       },
       error: (error: any) => {
@@ -203,18 +206,12 @@ export class Ciudades implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Obtener nombre de provincia por ID
-   */
   obtenerNombreProvincia(provinciaId: number): string {
-    if (!provinciaId) return 'Sin provincia';
+    if (!provinciaId || provinciaId === 0) return 'Sin provincia';
     const provincia = this.provincias.find(p => p.id === provinciaId);
     return provincia ? provincia.nombre : `Provincia ${provinciaId}`;
   }
 
-  /**
-   * Mostrar formulario
-   */
   mostrarFormulario(): void {
     this.formularioVisible = true;
     this.modoEdicion = false;
@@ -228,7 +225,6 @@ export class Ciudades implements OnInit, OnDestroy {
     this.ciudadForm.markAsUntouched();
     this.limpiarTemporizadores();
     
-    // Scroll suave al formulario
     setTimeout(() => {
       const formulario = document.querySelector('.modern-form');
       if (formulario) {
@@ -237,9 +233,6 @@ export class Ciudades implements OnInit, OnDestroy {
     }, 100);
   }
 
-  /**
-   * Cerrar formulario
-   */
   cerrarFormulario(): void {
     this.formularioVisible = false;
     this.modoEdicion = false;
@@ -248,18 +241,11 @@ export class Ciudades implements OnInit, OnDestroy {
     this.limpiarTemporizadores();
   }
 
-  /**
-   * Aplicar filtros
-   */
   private aplicarFiltros(filtroTexto: string): void {
     let resultado = [...this.ciudades];
     
     if (this.filtroProvincia > 0) {
       resultado = resultado.filter(c => c.provinciaId === this.filtroProvincia);
-      const nombreProvincia = this.obtenerNombreProvincia(this.filtroProvincia);
-      if (resultado.length === 0 && this.ciudades.length > 0) {
-        this.mostrarInfo(`No hay ciudades en la provincia "${nombreProvincia}"`);
-      }
     }
     
     if (filtroTexto && filtroTexto.trim()) {
@@ -269,28 +255,18 @@ export class Ciudades implements OnInit, OnDestroy {
         ciudad.descripcion.toLowerCase().includes(filtro) ||
         this.obtenerNombreProvincia(ciudad.provinciaId).toLowerCase().includes(filtro)
       );
-      
-      if (resultado.length === 0) {
-        this.mostrarInfo(`No se encontraron ciudades con "${filtro}"`);
-      }
     }
     
     this.ciudadesFiltradas = resultado;
     this.paginaActual = 1;
   }
 
-  /**
-   * Filtrar ciudades por búsqueda
-   */
   filtrarCiudades(event: Event): void {
     const input = event.target as HTMLInputElement;
     const filtro = input.value;
     this.aplicarFiltros(filtro);
   }
 
-  /**
-   * Filtrar ciudades por provincia
-   */
   filtrarPorProvincia(provinciaId: number): void {
     this.filtroProvincia = provinciaId;
     
@@ -301,13 +277,14 @@ export class Ciudades implements OnInit, OnDestroy {
       this.mostrarInfo('Mostrando todas las ciudades');
     }
     
-    this.aplicarFiltros('');
+    const searchInput = document.querySelector('.search-box input') as HTMLInputElement;
+    const filtroTexto = searchInput ? searchInput.value : '';
+    this.aplicarFiltros(filtroTexto);
   }
 
-  /**
-   * Editar ciudad
-   */
   editarCiudad(ciudad: Ciudad): void {
+    console.log('Editando ciudad:', ciudad);
+    
     this.modoEdicion = true;
     this.ciudadEditando = ciudad;
     this.formularioVisible = true;
@@ -324,7 +301,6 @@ export class Ciudades implements OnInit, OnDestroy {
       this.ciudadForm.get(key)?.markAsUntouched();
     });
     
-    // Scroll suave al formulario
     setTimeout(() => {
       const formulario = document.querySelector('.modern-form');
       if (formulario) {
@@ -333,31 +309,50 @@ export class Ciudades implements OnInit, OnDestroy {
     }, 100);
   }
 
-  /**
-   * Guardar ciudad
-   */
   guardarCiudad(): void {
+    Object.keys(this.ciudadForm.controls).forEach(key => {
+      const control = this.ciudadForm.get(key);
+      control?.markAsTouched();
+    });
+
     if (this.ciudadForm.invalid) {
-      Object.keys(this.ciudadForm.controls).forEach(key => {
-        const control = this.ciudadForm.get(key);
-        control?.markAsTouched();
-      });
+      console.log('Formulario inválido:', this.ciudadForm.errors);
       this.mostrarError('Complete todos los campos obligatorios correctamente');
       return;
     }
 
-    this.guardando = true;
-    const ciudadData: CiudadDTO = this.ciudadForm.value;
+    const formValue = this.ciudadForm.value;
+    const provinciaId = Number(formValue.provinciaId);
+    
+    if (!provinciaId || provinciaId <= 0 || isNaN(provinciaId)) {
+      this.mostrarError('Debe seleccionar una provincia válida');
+      return;
+    }
+    
+    const ciudadData: CiudadDTO = {
+      nombre: formValue.nombre.trim(),
+      descripcion: formValue.descripcion.trim(),
+      provinciaId: provinciaId
+    };
+    
     const nombreCiudad = ciudadData.nombre;
     
-    if (this.modoEdicion && this.ciudadEditando) {
+    console.log('=== GUARDANDO CIUDAD ===');
+    console.log('Datos a enviar:', ciudadData);
+    
+    this.guardando = true;
+    
+    if (this.modoEdicion && this.ciudadEditando && this.ciudadEditando.id) {
       this.ciudadService.update(this.ciudadEditando.id, ciudadData).subscribe({
         next: (ciudadActualizada: Ciudad) => {
+          console.log('Ciudad actualizada:', ciudadActualizada);
           const index = this.ciudades.findIndex(c => c.id === ciudadActualizada.id);
           if (index !== -1) {
             this.ciudades[index] = ciudadActualizada;
           }
-          this.aplicarFiltros('');
+          const searchInput = document.querySelector('.search-box input') as HTMLInputElement;
+          const filtroTexto = searchInput ? searchInput.value : '';
+          this.aplicarFiltros(filtroTexto);
           this.guardando = false;
           this.cerrarFormulario();
           this.mostrarExito(`✅ Ciudad "${nombreCiudad}" actualizada correctamente`);
@@ -371,14 +366,12 @@ export class Ciudades implements OnInit, OnDestroy {
     } else {
       this.ciudadService.create(ciudadData).subscribe({
         next: (nuevaCiudad: Ciudad) => {
+          console.log('Ciudad creada:', nuevaCiudad);
           this.ciudades.unshift(nuevaCiudad);
           this.totalCiudades = this.ciudades.length;
-          
-          // Aplicar filtro si estaba activo
-          if (this.filtroProvincia === 0 || nuevaCiudad.provinciaId === this.filtroProvincia) {
-            this.ciudadesFiltradas.unshift(nuevaCiudad);
-          }
-          
+          const searchInput = document.querySelector('.search-box input') as HTMLInputElement;
+          const filtroTexto = searchInput ? searchInput.value : '';
+          this.aplicarFiltros(filtroTexto);
           this.guardando = false;
           this.cerrarFormulario();
           this.mostrarExito(`✅ Ciudad "${nombreCiudad}" creada correctamente`);
@@ -393,9 +386,6 @@ export class Ciudades implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Ver detalles
-   */
   verDetalles(ciudad: Ciudad): void {
     this.ciudadDetalles = ciudad;
     if (this.detallesModalInstance) {
@@ -403,9 +393,6 @@ export class Ciudades implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Eliminar ciudad
-   */
   eliminarCiudad(ciudad: Ciudad): void {
     this.ciudadAEliminar = ciudad;
     if (this.confirmarModalInstance) {
@@ -413,22 +400,24 @@ export class Ciudades implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Confirmar eliminación
-   */
   confirmarEliminar(): void {
     if (!this.ciudadAEliminar) return;
     
     const ciudadAEliminar = this.ciudadAEliminar;
     const nombreCiudad = ciudadAEliminar.nombre;
     
+    console.log('Eliminando ciudad:', ciudadAEliminar);
+    
     this.ciudadService.delete(ciudadAEliminar.id).subscribe({
       next: () => {
+        console.log('Ciudad eliminada correctamente');
         const index = this.ciudades.findIndex(c => c.id === ciudadAEliminar.id);
         if (index !== -1) {
           this.ciudades.splice(index, 1);
           this.totalCiudades = this.ciudades.length;
-          this.aplicarFiltros('');
+          const searchInput = document.querySelector('.search-box input') as HTMLInputElement;
+          const filtroTexto = searchInput ? searchInput.value : '';
+          this.aplicarFiltros(filtroTexto);
           
           if (this.confirmarModalInstance) {
             this.confirmarModalInstance.hide();
@@ -450,7 +439,17 @@ export class Ciudades implements OnInit, OnDestroy {
         console.error('Error al eliminar ciudad:', error);
         this.mostrarError(error.message || 'Error al eliminar la ciudad');
         this.ciudadAEliminar = null;
+        if (this.confirmarModalInstance) {
+          this.confirmarModalInstance.hide();
+        }
       }
     });
+  }
+
+  recargarDatos(): void {
+    console.log('Recargando datos...');
+    this.cargarProvincias();
+    this.cargarCiudades();
+    this.mostrarInfo('🔄 Actualizando datos...');
   }
 }

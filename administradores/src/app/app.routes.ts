@@ -83,19 +83,19 @@ export const routes: Routes = [
       // Tipos de habitación del hotel
       {
         path: 'tipos-habitaciones',
-        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.TiposHabitaciones)
+        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.tiposHabitaciones)
       },
       {
         path: 'tipos-habitaciones/nuevo',
-        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.TiposHabitaciones)
+        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.tiposHabitaciones)
       },
       {
         path: 'tipos-habitaciones/:tipoId',
-        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.TiposHabitaciones)
+        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.tiposHabitaciones)
       },
       {
         path: 'tipos-habitaciones/:tipoId/editar',
-        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.TiposHabitaciones)
+        loadComponent: () => import('../componentes/tipos-habitaciones/tipos-habitaciones').then(m => m.tiposHabitaciones)
       },
       
       // Reservas del hotel

@@ -1,7 +1,8 @@
+// ciudades.service.ts - Versión CORREGIDA
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Ciudad, CiudadDTO } from '../modelos/ciudad.model';
 
 @Injectable({
@@ -12,80 +13,106 @@ export class CiudadService {
 
   constructor(private http: HttpClient) { }
 
-  private transformCiudadResponse(data: any): Ciudad {
-    console.log('Transformando respuesta de ciudad:', data);
-    
+  private transformarRespuesta(data: any): Ciudad {
     return {
       id: data.id || 0,
       nombre: data.nombre || '',
       descripcion: data.descripcion || '',
-      provinciaId: data.provincias ? data.provincias.id : (data.provinciaId || 0)
+      provinciaId: data.provincias ? data.provincias.id : (data.provinciaId || 0),
+      provincias: data.provincias
     };
   }
 
   getAll(): Observable<Ciudad[]> {
     return this.http.get<any[]>(`${this.apiUrl}/Listar`).pipe(
-      map(ciudades => {
-        console.log('Respuesta cruda de ciudades:', ciudades);
-        return ciudades.map(ciudad => this.transformCiudadResponse(ciudad));
-      })
+      map(response => {
+        if (!response || !Array.isArray(response)) return [];
+        return response.map(item => this.transformarRespuesta(item));
+      }),
+      catchError(this.manejarError)
     );
   }
 
-  // MÉTODO FALTANTE AÑADIDO
-  getCiudades(): Observable<Ciudad[]> {
-    return this.getAll().pipe(
-      catchError((error: any) => {
-        console.error('Error obteniendo ciudades:', error);
-        // Retornar datos mock en caso de error
-        return of([
-          { id: 1, nombre: 'San Salvador de Jujuy', provinciaId: 1, descripcion: 'Capital de la provincia de Jujuy' },
-          { id: 2, nombre: 'Salta Capital', provinciaId: 2, descripcion: 'Ciudad ubicada en el Valle de Lerma' },
-          { id: 3, nombre: 'Mendoza', provinciaId: 3, descripcion: 'Principal ciudad de la región de Cuyo' },
-          { id: 4, nombre: 'Buenos Aires', provinciaId: 4, descripcion: 'Capital federal de Argentina' },
-          { id: 5, nombre: 'Córdoba', provinciaId: 5, descripcion: 'Segunda ciudad más poblada de Argentina' },
-          { id: 6, nombre: 'Rosario', provinciaId: 6, descripcion: 'Importante ciudad portuaria' },
-          { id: 7, nombre: 'Bariloche', provinciaId: 7, descripcion: 'Ciudad turística en la Patagonia' }
-        ]);
-      })
-    );
-  }
-
-  getById(id: number): Observable<Ciudad> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
-      map(ciudad => this.transformCiudadResponse(ciudad))
-    );
-  }
-
-  create(ciudad: CiudadDTO): Observable<Ciudad> {
-    const ciudadBackend = {
-      nombre: ciudad.nombre,
-      descripcion: ciudad.descripcion,
-      provincias: { id: ciudad.provinciaId }
+  // SOLUCIÓN CORRECTA: Enviar provincia como objeto con ID
+  create(ciudadDTO: CiudadDTO): Observable<Ciudad> {
+    if (!ciudadDTO.provinciaId || ciudadDTO.provinciaId <= 0) {
+      return throwError(() => new Error('Debe seleccionar una provincia válida'));
+    }
+    
+    // Crear un objeto provincia con SOLO el ID
+    const provincia = {
+      id: ciudadDTO.provinciaId
     };
     
-    console.log('Enviando ciudad al backend:', ciudadBackend);
+    // Enviar la ciudad con la provincia anidada
+    const ciudadBackend = {
+      nombre: ciudadDTO.nombre,
+      descripcion: ciudadDTO.descripcion,
+      provincias: provincia  // ← Aquí enviamos el objeto provincia
+    };
     
-    return this.http.post<any>(`${this.apiUrl}/Crear`, ciudadBackend).pipe(
-      map(ciudad => this.transformCiudadResponse(ciudad))
+    console.log('=== ENVIANDO CIUDAD AL BACKEND ===');
+    console.log('Datos a enviar:', JSON.stringify(ciudadBackend, null, 2));
+    
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    
+    return this.http.post<any>(`${this.apiUrl}/Crear`, ciudadBackend, httpOptions).pipe(
+      map(response => {
+        console.log('Respuesta exitosa:', response);
+        return this.transformarRespuesta(response);
+      }),
+      catchError(this.manejarError)
     );
   }
 
-  update(id: number, ciudad: CiudadDTO): Observable<Ciudad> {
-    const ciudadBackend = {
-      nombre: ciudad.nombre,
-      descripcion: ciudad.descripcion,
-      provincias: { id: ciudad.provinciaId }
+  update(id: number, ciudadDTO: CiudadDTO): Observable<Ciudad> {
+    if (!ciudadDTO.provinciaId || ciudadDTO.provinciaId <= 0) {
+      return throwError(() => new Error('Debe seleccionar una provincia válida'));
+    }
+    
+    const provincia = {
+      id: ciudadDTO.provinciaId
     };
     
-    console.log('Actualizando ciudad:', ciudadBackend);
+    const ciudadBackend = {
+      nombre: ciudadDTO.nombre,
+      descripcion: ciudadDTO.descripcion,
+      provincias: provincia
+    };
+    
+    console.log('=== ACTUALIZANDO CIUDAD ===');
+    console.log('ID:', id);
+    console.log('Datos a enviar:', JSON.stringify(ciudadBackend, null, 2));
     
     return this.http.put<any>(`${this.apiUrl}/${id}`, ciudadBackend).pipe(
-      map(ciudad => this.transformCiudadResponse(ciudad))
+      map(response => this.transformarRespuesta(response)),
+      catchError(this.manejarError)
     );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.manejarError)
+    );
+  }
+
+  private manejarError(error: any): Observable<never> {
+    console.error('=== ERROR EN SERVICIO CIUDAD ===');
+    console.error('Status:', error.status);
+    console.error('Mensaje:', error.message);
+    
+    let mensajeError = 'Error al procesar la ciudad';
+    
+    if (error.error && typeof error.error === 'string') {
+      mensajeError = error.error;
+    } else if (error.error && error.error.message) {
+      mensajeError = error.error.message;
+    }
+    
+    return throwError(() => new Error(mensajeError));
   }
 }

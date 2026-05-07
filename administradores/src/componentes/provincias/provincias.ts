@@ -6,7 +6,7 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { ProvinciaService } from '../../servicios/provincia.service';
 import { RegionService } from '../../servicios/region.service';
 import { Region } from '../../modelos/region.model';
-import { Provincia } from '../../modelos/provincia.model';
+import { Provincia, ProvinciaSimple } from '../../modelos/provincia.model';
 
 @Component({
   selector: 'app-provincias',
@@ -47,7 +47,7 @@ export class Provincias implements OnInit, OnDestroy {
   paginaActual: number = 1;
   elementosPorPagina: number = 10;
   
-  // Temporizadores para mensajes
+  // Temporizadores
   private timeoutExito: any;
   private timeoutError: any;
   private timeoutInfo: any;
@@ -117,6 +117,7 @@ export class Provincias implements OnInit, OnDestroy {
       next: (regiones: Region[]) => {
         this.regiones = regiones;
         this.cargandoRegiones = false;
+        console.log('Regiones cargadas:', this.regiones);
         if (regiones.length === 0) {
           this.mostrarInfo('No hay regiones disponibles. Debes crear regiones primero.');
         }
@@ -130,26 +131,37 @@ export class Provincias implements OnInit, OnDestroy {
   }
 
   /**
-   * Cargar todas las provincias
+   * Cargar todas las provincias - CORREGIDO
    */
   cargarProvincias(): void {
     this.cargando = true;
+    console.log('Iniciando carga de provincias...');
+    
     this.provinciaService.obtenerProvincias().subscribe({
       next: (provincias: Provincia[]) => {
+        console.log('Provincias recibidas del backend:', provincias);
+        
+        // Asignar directamente, ya que el servicio ya debería mapear correctamente
         this.provincias = provincias;
         this.provinciasFiltradas = [...this.provincias];
-        this.totalProvincias = provincias.length;
+        this.totalProvincias = this.provincias.length;
         this.cargando = false;
         this.paginaActual = 1;
         
+        console.log('Provincias procesadas:', this.provincias);
+        
         if (provincias.length === 0) {
           this.mostrarInfo('No se encontraron provincias registradas');
+        } else {
+          this.mostrarExito(`✅ ${provincias.length} provincia(s) cargadas correctamente`);
         }
       },
       error: (error: Error) => {
         console.error('Error al cargar provincias:', error);
         this.cargando = false;
         this.mostrarError(error.message || 'Error al cargar las provincias');
+        this.provincias = [];
+        this.provinciasFiltradas = [];
       }
     });
   }
@@ -188,7 +200,6 @@ export class Provincias implements OnInit, OnDestroy {
     this.provinciaForm.markAsPristine();
     this.provinciaForm.markAsUntouched();
     
-    // Scroll suave al formulario
     setTimeout(() => {
       const formulario = document.querySelector('.modern-form');
       if (formulario) {
@@ -216,8 +227,7 @@ export class Provincias implements OnInit, OnDestroy {
     
     if (filtro) {
       this.provinciasFiltradas = this.provincias.filter(provincia =>
-        provincia.nombre.toLowerCase().includes(filtro) ||
-        this.obtenerNombreRegion(provincia).toLowerCase().includes(filtro)
+        provincia.nombre.toLowerCase().includes(filtro)
       );
       if (this.provinciasFiltradas.length === 0) {
         this.mostrarInfo(`No se encontraron provincias con "${filtro}"`);
@@ -270,7 +280,6 @@ export class Provincias implements OnInit, OnDestroy {
       this.provinciaForm.get(key)?.markAsUntouched();
     });
     
-    // Scroll suave al formulario
     setTimeout(() => {
       const formulario = document.querySelector('.modern-form');
       if (formulario) {
@@ -309,10 +318,9 @@ export class Provincias implements OnInit, OnDestroy {
           this.provinciasFiltradas = [...this.provincias];
           this.totalProvincias = this.provincias.length;
           this.guardando = false;
-          this.cerrarFormulario(); // Cerrar formulario automáticamente
+          this.cerrarFormulario();
           this.mostrarExito(`✅ Provincia "${nombre}" actualizada correctamente`);
           
-          // Mantener el filtro si estaba activo
           if (this.filtroRegion > 0) {
             this.filtrarPorRegion(this.filtroRegion);
           }
@@ -329,7 +337,6 @@ export class Provincias implements OnInit, OnDestroy {
           this.provincias.unshift(nuevaProvincia);
           this.totalProvincias = this.provincias.length;
           
-          // Aplicar filtro si estaba activo
           if (this.filtroRegion > 0 && nuevaProvincia.regiones?.id === this.filtroRegion) {
             this.provinciasFiltradas.unshift(nuevaProvincia);
           } else if (this.filtroRegion === 0) {
@@ -337,10 +344,8 @@ export class Provincias implements OnInit, OnDestroy {
           }
           
           this.guardando = false;
-          this.cerrarFormulario(); // Cerrar formulario automáticamente
+          this.cerrarFormulario();
           this.mostrarExito(`✅ Provincia "${nombre}" creada correctamente`);
-          
-          // Resetear página a la primera para ver la nueva provincia
           this.paginaActual = 1;
         },
         error: (error: Error) => {
@@ -356,7 +361,8 @@ export class Provincias implements OnInit, OnDestroy {
    * Ver detalles
    */
   verDetalles(provincia: Provincia): void {
-    const detalles = `📍 PROVINCIA: ${provincia.nombre}\n\n🗺️ Región: ${this.obtenerNombreRegion(provincia)}\n\n📅 ID: ${provincia.id || 'Nuevo'}`;
+    const nombreRegion = provincia.regiones?.nombre || 'Sin región asignada';
+    const detalles = `📍 PROVINCIA: ${provincia.nombre}\n\n🗺️ Región: ${nombreRegion}\n\n📅 ID: ${provincia.id}`;
     alert(detalles);
   }
 
@@ -400,7 +406,6 @@ export class Provincias implements OnInit, OnDestroy {
           
           this.mostrarExito(`🗑️ Provincia "${nombreProvincia}" eliminada correctamente`);
           
-          // Si no quedan provincias, mostrar mensaje
           if (this.provincias.length === 0) {
             this.mostrarInfo('No hay provincias registradas');
           }

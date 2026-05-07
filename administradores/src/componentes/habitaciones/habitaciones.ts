@@ -39,6 +39,15 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   cargandoTiposHabitacion: boolean = false;
   filtroHotel: number | null = null;
   filtroTexto: string = '';
+  formularioVisible: boolean = false;
+  
+  // Mensajes tipo toast
+  mensajeExito: string = '';
+  mensajeError: string = '';
+  mensajeInfo: string = '';
+  mostrarMensajeExito: boolean = false;
+  mostrarMensajeError: boolean = false;
+  mostrarMensajeInfo: boolean = false;
   
   // Datos
   habitaciones: Habitacion[] = [];
@@ -60,7 +69,6 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('confirmarEliminarModal') confirmarModalRef!: ElementRef;
 
   constructor() {
-    // Formulario de habitación con valores por defecto
     this.habitacionForm = this.fb.group({
       precioNoche: [null, [
         Validators.required,
@@ -90,6 +98,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     this.destroyModales();
+    this.limpiarTemporizadores();
   }
 
   private initModales(): void {
@@ -112,6 +121,37 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private limpiarTemporizadores(): void {
+    // Para compatibilidad con los timeout (se manejan en mostrar mensajes)
+  }
+
+  private mostrarExito(mensaje: string): void {
+    this.mostrarMensajeExito = true;
+    this.mensajeExito = mensaje;
+    setTimeout(() => {
+      this.mostrarMensajeExito = false;
+      this.mensajeExito = '';
+    }, 4000);
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.mostrarMensajeError = true;
+    this.mensajeError = mensaje;
+    setTimeout(() => {
+      this.mostrarMensajeError = false;
+      this.mensajeError = '';
+    }, 5000);
+  }
+
+  private mostrarInfo(mensaje: string): void {
+    this.mostrarMensajeInfo = true;
+    this.mensajeInfo = mensaje;
+    setTimeout(() => {
+      this.mostrarMensajeInfo = false;
+      this.mensajeInfo = '';
+    }, 3000);
+  }
+
   // Cargar hoteles
   cargarHoteles(): void {
     this.cargandoHoteles = true;
@@ -122,7 +162,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error: any) => {
         console.error('Error cargando hoteles:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar los hoteles');
+        this.mostrarError('No se pudieron cargar los hoteles');
         this.cargandoHoteles = false;
         this.hoteles = [];
       }
@@ -139,7 +179,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error: any) => {
         console.error('Error cargando tipos de habitación:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar los tipos de habitación');
+        this.mostrarError('No se pudieron cargar los tipos de habitación');
         this.cargandoTiposHabitacion = false;
         this.tiposHabitacion = [];
       }
@@ -155,10 +195,14 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         this.habitacionesFiltradas = [...this.habitaciones];
         this.totalHabitaciones = this.habitaciones.length;
         this.cargando = false;
+        
+        if (habitaciones.length === 0) {
+          this.mostrarInfo('No se encontraron habitaciones registradas');
+        }
       },
       error: (error: any) => {
         console.error('Error cargando habitaciones:', error);
-        this.mostrarNotificacion('error', 'Error', 'No se pudieron cargar las habitaciones');
+        this.mostrarError('No se pudieron cargar las habitaciones');
         this.cargando = false;
         this.habitaciones = [];
         this.habitacionesFiltradas = [];
@@ -173,7 +217,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     this.aplicarFiltros();
   }
 
-  // Filtrar por hotel - ACEPTA number | undefined
+  // Filtrar por hotel
   filtrarPorHotel(hotelId: number | undefined): void {
     this.filtroHotel = hotelId === undefined || hotelId === 0 ? null : hotelId;
     this.aplicarFiltros();
@@ -182,12 +226,10 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   private aplicarFiltros(): void {
     let resultado = [...this.habitaciones];
     
-    // Filtrar por hotel
     if (this.filtroHotel) {
       resultado = resultado.filter(h => h.hoteles?.id === this.filtroHotel);
     }
     
-    // Filtrar por texto
     if (this.filtroTexto) {
       resultado = resultado.filter(habitacion => {
         const texto = this.filtroTexto;
@@ -201,6 +243,10 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
                nombreCiudad.includes(texto) ||
                nombreTipo.includes(texto);
       });
+      
+      if (this.filtroTexto && resultado.length === 0 && this.habitaciones.length > 0) {
+        this.mostrarInfo(`No se encontraron habitaciones con "${this.filtroTexto}"`);
+      }
     }
     
     this.habitacionesFiltradas = resultado;
@@ -210,6 +256,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   nuevoRegistro(): void {
     this.modoEdicion = false;
     this.habitacionEditando = null;
+    this.formularioVisible = true;
     
     this.habitacionForm.reset({
       precioNoche: null,
@@ -225,6 +272,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   // Cancelar edición
   cancelarEdicion(): void {
+    this.formularioVisible = false;
     this.modoEdicion = false;
     this.habitacionEditando = null;
     this.habitacionForm.reset();
@@ -236,6 +284,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   editarHabitacion(habitacion: Habitacion): void {
     this.modoEdicion = true;
     this.habitacionEditando = habitacion;
+    this.formularioVisible = true;
     
     this.habitacionForm.patchValue({
       precioNoche: habitacion.precioNoche,
@@ -248,59 +297,41 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   // Guardar habitación
   guardarHabitacion(): void {
-    // Marcar todos los controles como tocados para mostrar errores
     Object.keys(this.habitacionForm.controls).forEach(key => {
       const control = this.habitacionForm.get(key);
       control?.markAsTouched();
     });
 
     if (this.habitacionForm.invalid) {
-      this.mostrarNotificacion('error', 
-        'Formulario inválido', 
-        'Completa todos los campos requeridos correctamente.'
-      );
+      this.mostrarError('Completa todos los campos requeridos correctamente.');
       return;
     }
 
-    // Verificar que haya hoteles y tipos disponibles
     if (this.hoteles.length === 0) {
-      this.mostrarNotificacion('error', 
-        'Error', 
-        'No hay hoteles disponibles en la base de datos.'
-      );
+      this.mostrarError('No hay hoteles disponibles en la base de datos.');
       return;
     }
 
     if (this.tiposHabitacion.length === 0) {
-      this.mostrarNotificacion('error', 
-        'Error', 
-        'No hay tipos de habitación disponibles en la base de datos.'
-      );
+      this.mostrarError('No hay tipos de habitación disponibles en la base de datos.');
       return;
     }
 
     this.guardando = true;
     const habitacionData = this.habitacionForm.value;
 
-    // Usar aserción no nula para id en modo edición
     if (this.modoEdicion && this.habitacionEditando && this.habitacionEditando.id !== undefined) {
       this.habitacionService.updateHabitacion(this.habitacionEditando.id!, habitacionData).subscribe({
         next: () => {
           this.cargarHabitaciones();
           this.guardando = false;
-          this.nuevoRegistro();
-          this.mostrarNotificacion('success', 
-            'Habitación actualizada',
-            `Habitación actualizada correctamente.`
-          );
+          this.cancelarEdicion();
+          this.mostrarExito('Habitación actualizada correctamente');
         },
         error: (error: any) => {
           console.error('Error actualizando habitación:', error);
           this.guardando = false;
-          this.mostrarNotificacion('error', 
-            'Error', 
-            'No se pudo actualizar la habitación. Intenta nuevamente.'
-          );
+          this.mostrarError('No se pudo actualizar la habitación');
         }
       });
     } else {
@@ -308,19 +339,13 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         next: () => {
           this.cargarHabitaciones();
           this.guardando = false;
-          this.nuevoRegistro();
-          this.mostrarNotificacion('success', 
-            'Habitación creada',
-            `Habitación creada correctamente.`
-          );
+          this.cancelarEdicion();
+          this.mostrarExito('Habitación creada correctamente');
         },
         error: (error: any) => {
           console.error('Error creando habitación:', error);
           this.guardando = false;
-          this.mostrarNotificacion('error', 
-            'Error', 
-            'No se pudo crear la habitación. Intenta nuevamente.'
-          );
+          this.mostrarError('No se pudo crear la habitación');
         }
       });
     }
@@ -329,7 +354,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   // Toggle disponibilidad
   toggleDisponibilidad(habitacion: Habitacion): void {
     if (!habitacion.id) {
-      this.mostrarNotificacion('error', 'Error', 'No se puede cambiar la disponibilidad de una habitación sin ID');
+      this.mostrarError('No se puede cambiar la disponibilidad');
       return;
     }
 
@@ -340,70 +365,46 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       next: () => {
         this.cargarHabitaciones();
         this.guardando = false;
-        this.mostrarNotificacion('success', 
-          'Disponibilidad actualizada',
-          `La habitación ahora está ${nuevaDisponibilidad ? 'disponible' : 'no disponible'}.`
-        );
+        this.mostrarExito(`Habitación ahora está ${nuevaDisponibilidad ? 'disponible' : 'no disponible'}`);
       },
       error: (error: any) => {
         console.error('Error cambiando disponibilidad:', error);
         this.guardando = false;
-        this.mostrarNotificacion('error', 
-          'Error', 
-          'No se pudo cambiar la disponibilidad. Intenta nuevamente.'
-        );
+        this.mostrarError('No se pudo cambiar la disponibilidad');
       }
     });
   }
 
-  // Método para ver detalles de una habitación
+  // Ver detalles
   verDetalles(habitacion: Habitacion): void {
     this.habitacionDetalles = habitacion;
     if (this.detallesModalInstance) {
       this.detallesModalInstance.show();
-    } else {
-      // Fallback si no se inicializó el modal
-      const modalElement = document.getElementById('detallesModal');
-      if (modalElement) {
-        const modal = new (window as any).bootstrap.Modal(modalElement);
-        modal.show();
-      }
     }
   }
 
-  // Método para preparar la eliminación de una habitación
+  // Eliminar habitación
   eliminarHabitacion(habitacion: Habitacion): void {
     this.habitacionAEliminar = habitacion;
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.show();
-    } else {
-      // Fallback si no se inicializó el modal
-      const modalElement = document.getElementById('confirmarEliminarModal');
-      if (modalElement) {
-        const modal = new (window as any).bootstrap.Modal(modalElement);
-        modal.show();
-      }
     }
   }
 
-  // Método para confirmar la eliminación
+  // Confirmar eliminación
   confirmarEliminar(): void {
     if (!this.habitacionAEliminar || this.habitacionAEliminar.id === undefined) {
-      this.mostrarNotificacion('error', 'Error', 'No se puede eliminar la habitación porque no tiene un ID válido.');
+      this.mostrarError('No se puede eliminar la habitación');
       return;
     }
 
     this.guardando = true;
     
-    // Usar aserción no nula para id
     this.habitacionService.deleteHabitacion(this.habitacionAEliminar.id!).subscribe({
       next: () => {
         this.guardando = false;
-        this.mostrarNotificacion('success', 
-          'Habitación eliminada', 
-          `La habitación ha sido eliminada correctamente.`
-        );
-        this.cargarHabitaciones(); // Recargar la lista
+        this.mostrarExito('Habitación eliminada correctamente');
+        this.cargarHabitaciones();
         
         if (this.confirmarModalInstance) {
           this.confirmarModalInstance.hide();
@@ -413,54 +414,22 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       error: (error: any) => {
         console.error('Error eliminando habitación:', error);
         this.guardando = false;
-        this.mostrarNotificacion('error', 
-          'Error', 
-          'No se pudo eliminar la habitación. Intenta nuevamente.'
-        );
+        this.mostrarError('No se pudo eliminar la habitación');
       }
     });
   }
-
-  // Mostrar notificación
-  private mostrarNotificacion(tipo: 'success' | 'info' | 'warning' | 'error', titulo: string, mensaje: string): void {
-    const toastId = 'notification-' + Date.now();
-    const toast = document.createElement('div');
-    toast.id = toastId;
-    toast.className = `toast align-items-center text-bg-${tipo === 'error' ? 'danger' : tipo} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    
-    const iconos = {
-      success: 'bi-check-circle-fill',
-      info: 'bi-info-circle-fill',
-      warning: 'bi-exclamation-triangle-fill',
-      error: 'bi-x-circle-fill'
-    };
-    
-    toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">
-          <i class="bi ${iconos[tipo]} me-2"></i>
-          <strong>${titulo}</strong><br>
-          <small>${mensaje}</small>
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-    
-    const container = document.querySelector('.toast-container') || (() => {
-      const newContainer = document.createElement('div');
-      newContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-      newContainer.style.zIndex = '1055';
-      document.body.appendChild(newContainer);
-      return newContainer;
-    })();
-    
-    container.appendChild(toast);
-    const bsToast = new (window as any).bootstrap.Toast(toast);
-    bsToast.show();
-    
-    toast.addEventListener('hidden.bs.toast', () => toast.remove());
+  // Método para formatear precios en XAF (Franco CFA)
+formatXAF(precio: number | null | undefined): string {
+  if (precio === null || precio === undefined) {
+    return '0 XAF';
   }
+  
+  // Formatear el número con separadores de miles
+  const precioFormateado = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(precio);
+  
+  return `${precioFormateado} XAF`;
+}
 }
