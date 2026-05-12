@@ -12,6 +12,8 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
+  // ==================== MÉTODOS DE AUTENTICACIÓN ====================
+  
   // Método de login
   login(credentials: any): Observable<any> {
     const loginData = {
@@ -40,24 +42,32 @@ export class ApiService {
       );
   }
 
-  // MÉTODO PARA OBTENER HOTEL POR ID - USANDO TU ENDPOINT REAL
+  // Verificar conexión
+  verificarConexion(): Observable<boolean> {
+    return this.http.get(`${this.apiUrl}/Usuarios/Listar`)
+      .pipe(
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  // ==================== MÉTODOS PARA HOTELES ====================
+  
+  // Obtener hotel por ID
   getHotelInfoById(hotelId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}hotel/info/${hotelId}`)
       .pipe(
         map(response => {
           console.log('Respuesta del servidor (hotel info):', response);
           
-          // Verificar la estructura de tu respuesta
           if (response && response.success === true && response.data) {
             return response.data;
           }
           
-          // Si la respuesta es directamente el hotel
           if (response && response.id) {
             return response;
           }
           
-          // Si hay un mensaje de error
           if (response && response.message) {
             throw new Error(response.message);
           }
@@ -68,18 +78,75 @@ export class ApiService {
       );
   }
 
-  // Método para verificar conexión
-  verificarConexion(): Observable<boolean> {
-    return this.http.get(`${this.apiUrl}/Usuarios/Listar`)
+  // Obtener todos los hoteles
+  getHoteles(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Hoteles/Listar`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // ==================== MÉTODOS PARA EMPLEADOS ====================
+  
+  // Obtener empleado por ID de usuario (relación Usuario -> Empleado)
+  getEmpleadoByUsuarioId(usuarioId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/empleados/usuario/${usuarioId}`)
       .pipe(
-        map(() => true),
-        catchError(() => of(false))
+        map(response => {
+          console.log('Respuesta del servidor (empleado por usuario):', response);
+          
+          // Procesar diferentes estructuras de respuesta
+          if (response && response.success === true && response.data) {
+            return response.data;
+          }
+          
+          if (response && response.idEmpleado) {
+            return response;
+          }
+          
+          return response;
+        }),
+        catchError(this.handleError)
       );
   }
 
-  // Métodos CRUD para usuarios
+  // Obtener todos los empleados de un hotel
+  getEmpleadosPorHotel(hotelId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/hoteles/${hotelId}/empleados`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Obtener todos los empleados
+  getEmpleados(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Empleados/Listar`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Crear empleado
+  crearEmpleado(empleado: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Empleados/Crear`, empleado)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Actualizar empleado
+  actualizarEmpleado(id: number, empleado: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/Empleados/Actualizar/${id}`, empleado)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Eliminar empleado
+  eliminarEmpleado(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/Empleados/Eliminar/${id}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // ==================== MÉTODOS CRUD PARA USUARIOS ====================
+  
   getUsuarios(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/Usuarios/Listar`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getUsuarioById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Usuarios/Obtener/${id}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -98,7 +165,8 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // Métodos CRUD para habitaciones
+  // ==================== MÉTODOS CRUD PARA HABITACIONES ====================
+  
   getHabitaciones(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/Habitaciones/Listar`)
       .pipe(catchError(this.handleError));
@@ -106,15 +174,28 @@ export class ApiService {
 
   getHabitacionesPorHotel(hotelId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/hoteles/${hotelId}/habitaciones`)
+      .pipe(
+        map(response => {
+          console.log(`Habitaciones del hotel ${hotelId}:`, response);
+          return response;
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  getHabitacionById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Habitaciones/Obtener/${id}`)
       .pipe(catchError(this.handleError));
   }
 
   crearHabitacion(habitacion: any): Observable<any> {
+    console.log('Creando habitación:', habitacion);
     return this.http.post<any>(`${this.apiUrl}/Habitaciones/Crear`, habitacion)
       .pipe(catchError(this.handleError));
   }
 
   actualizarHabitacion(id: number, habitacion: any): Observable<any> {
+    console.log(`Actualizando habitación ${id}:`, habitacion);
     return this.http.put<any>(`${this.apiUrl}/Habitaciones/Actualizar/${id}`, habitacion)
       .pipe(catchError(this.handleError));
   }
@@ -124,7 +205,13 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // Métodos CRUD para reservas
+  toggleDisponibilidad(id: number, disponible: boolean): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/Habitaciones/${id}/disponibilidad`, { disponible })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ==================== MÉTODOS CRUD PARA RESERVAS ====================
+  
   getReservas(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/Reservas/Listar`)
       .pipe(catchError(this.handleError));
@@ -132,6 +219,11 @@ export class ApiService {
 
   getReservasPorHotel(hotelId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/hoteles/${hotelId}/reservas`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getReservaById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Reservas/Obtener/${id}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -150,7 +242,20 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // Métodos CRUD para clientes
+  updateEstadoReserva(id: number, estado: string, codigo: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/Reservas/${id}/estado`, { estado, codigo })
+      .pipe(catchError(this.handleError));
+  }
+
+  asignarHabitacionAReserva(reservaId: number, habitacionId: number, codigo: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/Reservas/${reservaId}/asignar-habitacion`, { 
+      habitacionId, 
+      codigo 
+    }).pipe(catchError(this.handleError));
+  }
+
+  // ==================== MÉTODOS CRUD PARA CLIENTES ====================
+  
   getClientes(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/Clientes/Listar`)
       .pipe(catchError(this.handleError));
@@ -176,7 +281,8 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // Métodos CRUD para pagos
+  // ==================== MÉTODOS CRUD PARA PAGOS ====================
+  
   getPagos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/Pagos/Listar`)
       .pipe(catchError(this.handleError));
@@ -202,7 +308,8 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // Métodos CRUD para tipos de habitación
+  // ==================== MÉTODOS CRUD PARA TIPOS DE HABITACIÓN ====================
+  
   getTiposHabitacion(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/TiposHabitacion/Listar`)
       .pipe(catchError(this.handleError));
@@ -210,6 +317,11 @@ export class ApiService {
 
   getTiposHabitacionPorHotel(hotelId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/hoteles/${hotelId}/tipos-habitacion`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getTipoHabitacionById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/TiposHabitacion/Obtener/${id}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -228,7 +340,22 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // Métodos CRUD para fotos
+  // ==================== MÉTODOS CRUD PARA CIUDADES ====================
+  
+  getCiudades(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Ciudades/Listar`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // ==================== MÉTODOS CRUD PARA CATEGORÍAS ====================
+  
+  getCategorias(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Categorias/Listar`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // ==================== MÉTODOS CRUD PARA FOTOS ====================
+  
   getFotos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/Fotos/Listar`)
       .pipe(catchError(this.handleError));
@@ -249,6 +376,20 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
+  // ==================== MÉTODOS PARA DASHBOARD Y ESTADÍSTICAS ====================
+  
+  getEstadisticasHotel(hotelId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/hoteles/${hotelId}/estadisticas`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getReservasRecientes(hotelId: number, limite: number = 10): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/hoteles/${hotelId}/reservas/recientes?limite=${limite}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // ==================== MANEJO DE ERRORES ====================
+  
   private handleError(error: HttpErrorResponse) {
     console.error('Error en ApiService:', error);
     
@@ -261,7 +402,7 @@ export class ApiService {
     } else {
       switch (error.status) {
         case 0:
-          errorMessage = 'Error de conexión con el servidor';
+          errorMessage = 'Error de conexión con el servidor. Verifica que el backend esté corriendo.';
           break;
         case 400:
           errorMessage = error.error?.message || 'Solicitud inválida';
@@ -275,7 +416,7 @@ export class ApiService {
           errorMessage = 'No tiene permisos para realizar esta acción';
           break;
         case 404:
-          errorMessage = 'Recurso no encontrado';
+          errorMessage = error.error?.message || 'Recurso no encontrado';
           break;
         case 409:
           errorMessage = error.error?.message || 'Conflicto con los datos existentes';
@@ -285,7 +426,7 @@ export class ApiService {
           errorDetails = error.error?.errors;
           break;
         case 500:
-          errorMessage = 'Error interno del servidor';
+          errorMessage = error.error?.message || 'Error interno del servidor';
           break;
         default:
           errorMessage = error.error?.message || `Error ${error.status}: ${error.message}`;

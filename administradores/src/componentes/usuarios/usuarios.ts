@@ -10,7 +10,7 @@ import { RolService } from '../../servicios/rol.service';
 import { HotelService } from '../../servicios/hotel.service';
 
 // Modelos
-import { Usuario, createEmptyUsuarioForm, createEmptyEmpleadoForm } from '../../modelos/usuario.model';
+import { Usuario, UsuarioCompletoResponse, mapCompletoToUsuario } from '../../modelos/usuario.model';
 import { Roles } from '../../modelos/roles.model';
 import { Hotel } from '../../modelos/hotel.model';
 
@@ -89,7 +89,8 @@ export class Usuarios implements OnInit, OnDestroy {
 
     // Inicializar formulario de empleado
     this.empleadoForm = this.fb.group({
-      hotelId: ['', [Validators.required]]
+      hotelId: ['', [Validators.required]],
+      rolEmpleado: ['', [Validators.maxLength(100)]]
     });
   }
 
@@ -198,21 +199,54 @@ export class Usuarios implements OnInit, OnDestroy {
     });
   }
 
+  // ✅ NUEVO: Cargar usuarios con detalles de empleado y hotel
   cargarUsuarios(): void {
     this.cargando = true;
     this.limpiarTemporizadores();
     
+    // Usar el endpoint de usuarios empleados que trae toda la información
+    this.usuarioService.getAllUsuariosEmpleados().subscribe({
+      next: (response: any) => {
+        let usuariosCompletos: UsuarioCompletoResponse[] = [];
+        
+        // Manejar diferentes formatos de respuesta
+        if (Array.isArray(response)) {
+          usuariosCompletos = response;
+        } else if (response.usuarios && Array.isArray(response.usuarios)) {
+          usuariosCompletos = response.usuarios;
+        } else if (response.data && Array.isArray(response.data)) {
+          usuariosCompletos = response.data;
+        }
+        
+        // Mapear los datos completos al formato Usuario
+        this.usuarios = usuariosCompletos.map(completo => mapCompletoToUsuario(completo));
+        this.usuariosFiltrados = [...this.usuarios];
+        this.totalUsuarios = this.usuarios.length;
+        this.cargando = false;
+        this.paginaActual = 1;
+        
+        console.log('Usuarios cargados con hoteles:', this.usuarios);
+        
+        if (this.usuarios.length === 0) {
+          this.mostrarInfo('No se encontraron usuarios registrados');
+        }
+      },
+      error: (error: Error) => {
+        console.error('Error al cargar usuarios con detalles', error);
+        // Fallback: cargar usuarios normales
+        this.cargarUsuariosNormales();
+      }
+    });
+  }
+
+  // Fallback: cargar usuarios normales
+  private cargarUsuariosNormales(): void {
     this.usuarioService.getUsuarios().subscribe({
       next: (usuarios: any[]) => {
         this.usuarios = usuarios || [];
         this.usuariosFiltrados = [...this.usuarios];
         this.totalUsuarios = this.usuarios.length;
         this.cargando = false;
-        this.paginaActual = 1;
-        
-        if (usuarios.length === 0) {
-          this.mostrarInfo('No se encontraron usuarios registrados');
-        }
       },
       error: (error: Error) => {
         console.error('Error al cargar usuarios', error);
@@ -228,10 +262,20 @@ export class Usuarios implements OnInit, OnDestroy {
     return rol ? rol.nombre : 'Rol no encontrado';
   }
 
-  obtenerNombreHotel(hotelId?: number): string {
-    if (!hotelId) return 'Sin hotel asignado';
-    const hotel = this.hoteles.find(h => h.id === hotelId);
-    return hotel ? hotel.nombre : 'Hotel no encontrado';
+  // ✅ MEJORADO: Obtener nombre del hotel directamente del objeto usuario
+  obtenerNombreHotel(usuario: Usuario): string {
+    if (usuario.empleado?.hotel?.nombre) {
+      return usuario.empleado.hotel.nombre;
+    }
+    return 'No empleado';
+  }
+
+  // Método para obtener el badge del hotel
+  obtenerBadgeHotel(usuario: Usuario): string {
+    if (usuario.empleado?.hotel?.nombre) {
+      return `🏨 ${usuario.empleado.hotel.nombre}`;
+    }
+    return '👤 No empleado';
   }
 
   mostrarFormulario(tipo: 'normal' | 'empleado' = 'normal'): void {
@@ -245,6 +289,13 @@ export class Usuarios implements OnInit, OnDestroy {
     this.usuarioForm.markAsUntouched();
     this.empleadoForm.markAsPristine();
     this.empleadoForm.markAsUntouched();
+    
+    if (this.esUsuarioEmpleado) {
+      this.empleadoForm.patchValue({
+        hotelId: '',
+        rolEmpleado: ''
+      });
+    }
     
     this.limpiarTemporizadores();
   }
@@ -269,7 +320,8 @@ export class Usuarios implements OnInit, OnDestroy {
         usuario.apellidos.toLowerCase().includes(filtro) ||
         usuario.usuario.toLowerCase().includes(filtro) ||
         usuario.email.toLowerCase().includes(filtro) ||
-        this.obtenerNombreRol(usuario.roles?.id).toLowerCase().includes(filtro)
+        this.obtenerNombreRol(usuario.roles?.id).toLowerCase().includes(filtro) ||
+        (usuario.empleado?.hotel?.nombre?.toLowerCase().includes(filtro))
       );
       
       if (this.usuariosFiltrados.length === 0) {
@@ -284,7 +336,7 @@ export class Usuarios implements OnInit, OnDestroy {
 
   editarUsuario(usuario: Usuario): void {
     this.modoEdicion = true;
-    this.esUsuarioEmpleado = false;
+    this.esUsuarioEmpleado = !!usuario.empleado;
     this.usuarioEditando = usuario;
     this.formularioVisible = true;
     this.limpiarTemporizadores();
@@ -301,9 +353,20 @@ export class Usuarios implements OnInit, OnDestroy {
       rolId: usuario.roles?.id || ''
     });
     
+    if (this.esUsuarioEmpleado && usuario.empleado) {
+      this.empleadoForm.patchValue({
+        hotelId: usuario.empleado.hotel?.id || '',
+        rolEmpleado: usuario.empleado.rolEmpleado || ''
+      });
+    }
+    
     this.usuarioForm.markAsPristine();
     Object.keys(this.usuarioForm.controls).forEach(key => {
       this.usuarioForm.get(key)?.markAsUntouched();
+    });
+    this.empleadoForm.markAsPristine();
+    Object.keys(this.empleadoForm.controls).forEach(key => {
+      this.empleadoForm.get(key)?.markAsUntouched();
     });
   }
 
@@ -320,7 +383,9 @@ export class Usuarios implements OnInit, OnDestroy {
     if (this.esUsuarioEmpleado && this.empleadoForm.invalid) {
       Object.keys(this.empleadoForm.controls).forEach(key => {
         const control = this.empleadoForm.get(key);
-        control?.markAsTouched();
+        if (key !== 'rolEmpleado') {
+          control?.markAsTouched();
+        }
       });
       this.mostrarError('Por favor, seleccione un hotel para el empleado.');
       return;
@@ -332,25 +397,54 @@ export class Usuarios implements OnInit, OnDestroy {
 
     if (this.modoEdicion && this.usuarioEditando) {
       if (!this.usuarioEditando.id) {
-        console.error('No se puede actualizar: ID no definido');
         this.guardando = false;
         this.mostrarError('Error: No se pudo identificar el usuario a actualizar');
         return;
       }
 
-      this.usuarioService.update(this.usuarioEditando.id, usuarioData).subscribe({
-        next: () => {
-          this.cargarUsuarios();
-          this.guardando = false;
-          this.cerrarFormulario();
-          this.mostrarExito(`✅ Usuario "${nombreCompleto}" actualizado correctamente`);
-        },
-        error: (error: Error) => {
-          console.error('Error al actualizar usuario', error);
-          this.guardando = false;
-          this.mostrarError(error.message || 'Error al actualizar el usuario');
-        }
-      });
+      if (this.esUsuarioEmpleado && this.usuarioEditando) {
+        const empleadoData = this.empleadoForm.value;
+        const updateRequest = {
+          nombre: usuarioData.nombre,
+          apellidos: usuarioData.apellidos,
+          telefono: usuarioData.telefono,
+          nacionalidad: usuarioData.nacionalidad,
+          numPasaporte: usuarioData.numPasaporte,
+          usuario: usuarioData.usuario,
+          email: usuarioData.email,
+          hotelId: empleadoData.hotelId ? Number(empleadoData.hotelId) : null,
+          rolEmpleado: empleadoData.rolEmpleado || null,
+          rolId: usuarioData.rolId ? Number(usuarioData.rolId) : null
+        };
+        
+        this.usuarioService.updateUsuarioEmpleado(this.usuarioEditando.id, updateRequest).subscribe({
+          next: () => {
+            this.cargarUsuarios();
+            this.guardando = false;
+            this.cerrarFormulario();
+            this.mostrarExito(`✅ Usuario empleado "${nombreCompleto}" actualizado correctamente`);
+          },
+          error: (error: Error) => {
+            console.error('Error al actualizar usuario empleado', error);
+            this.mostrarError(error.message || 'Error al actualizar el usuario');
+            this.guardando = false;
+          }
+        });
+      } else {
+        this.usuarioService.update(this.usuarioEditando.id, usuarioData).subscribe({
+          next: () => {
+            this.cargarUsuarios();
+            this.guardando = false;
+            this.cerrarFormulario();
+            this.mostrarExito(`✅ Usuario "${nombreCompleto}" actualizado correctamente`);
+          },
+          error: (error: Error) => {
+            console.error('Error al actualizar usuario', error);
+            this.guardando = false;
+            this.mostrarError(error.message || 'Error al actualizar el usuario');
+          }
+        });
+      }
     } else if (this.esUsuarioEmpleado) {
       const empleadoData = this.empleadoForm.value;
       const hotelId = empleadoData.hotelId ? Number(empleadoData.hotelId) : null;
@@ -361,7 +455,6 @@ export class Usuarios implements OnInit, OnDestroy {
         return;
       }
       
-      // Enviar solo los campos que espera el backend
       const usuarioEmpleadoRequest = {
         nombre: usuarioData.nombre.trim(),
         apellidos: usuarioData.apellidos.trim(),
@@ -371,14 +464,13 @@ export class Usuarios implements OnInit, OnDestroy {
         contrasena: usuarioData.contrasena,
         usuario: usuarioData.usuario.trim().toLowerCase(),
         email: usuarioData.email.trim().toLowerCase(),
-        hotelId: hotelId
+        hotelId: hotelId,
+        rolEmpleado: empleadoData.rolEmpleado?.trim() || null,
+        rolId: usuarioData.rolId ? Number(usuarioData.rolId) : null
       };
       
-      console.log('Enviando al backend:', JSON.stringify(usuarioEmpleadoRequest, null, 2));
-      
       this.usuarioService.createUsuarioEmpleado(usuarioEmpleadoRequest).subscribe({
-        next: (response) => {
-          console.log('Respuesta del backend:', response);
+        next: () => {
           this.cargarUsuarios();
           this.guardando = false;
           this.cerrarFormulario();
@@ -392,7 +484,6 @@ export class Usuarios implements OnInit, OnDestroy {
         }
       });
     } else {
-      // Crear usuario normal - incluir rolId
       const usuarioNormalRequest = {
         nombre: usuarioData.nombre,
         apellidos: usuarioData.apellidos,
@@ -422,6 +513,7 @@ export class Usuarios implements OnInit, OnDestroy {
     }
   }
 
+  // ✅ MEJORADO: Ver detalles con toda la información del hotel
   verDetalles(usuario: Usuario): void {
     this.usuarioDetalles = usuario;
     if (this.detallesModalInstance) {
@@ -440,44 +532,55 @@ export class Usuarios implements OnInit, OnDestroy {
     if (this.usuarioAEliminar && this.usuarioAEliminar.id) {
       const nombreCompleto = `${this.usuarioAEliminar.nombre} ${this.usuarioAEliminar.apellidos}`;
       
-      this.usuarioService.delete(this.usuarioAEliminar.id).subscribe({
-        next: () => {
-          const index = this.usuarios.findIndex(u => u.id === this.usuarioAEliminar!.id);
-          if (index !== -1) {
-            this.usuarios.splice(index, 1);
-            this.usuariosFiltrados = [...this.usuarios];
-            this.totalUsuarios = this.usuarios.length;
+      // Si tiene empleado, usar eliminación completa
+      if (this.usuarioAEliminar.empleado?.idEmpleado) {
+        this.usuarioService.deleteUsuarioEmpleado(this.usuarioAEliminar.id).subscribe({
+          next: () => {
+            const index = this.usuarios.findIndex(u => u.id === this.usuarioAEliminar!.id);
+            if (index !== -1) {
+              this.usuarios.splice(index, 1);
+              this.usuariosFiltrados = [...this.usuarios];
+              this.totalUsuarios = this.usuarios.length;
+            }
+            
+            if (this.confirmarModalInstance) {
+              this.confirmarModalInstance.hide();
+            }
+            
+            this.mostrarExito(`🗑️ Usuario "${nombreCompleto}" eliminado correctamente`);
+          },
+          error: (error: Error) => {
+            console.error('Error al eliminar usuario empleado', error);
+            this.mostrarError(error.message || 'Error al eliminar el usuario');
+            if (this.confirmarModalInstance) {
+              this.confirmarModalInstance.hide();
+            }
           }
-          
-          if (this.confirmarModalInstance) {
-            this.confirmarModalInstance.hide();
+        });
+      } else {
+        this.usuarioService.delete(this.usuarioAEliminar.id).subscribe({
+          next: () => {
+            const index = this.usuarios.findIndex(u => u.id === this.usuarioAEliminar!.id);
+            if (index !== -1) {
+              this.usuarios.splice(index, 1);
+              this.usuariosFiltrados = [...this.usuarios];
+              this.totalUsuarios = this.usuarios.length;
+            }
+            
+            if (this.confirmarModalInstance) {
+              this.confirmarModalInstance.hide();
+            }
+            
+            this.mostrarExito(`🗑️ Usuario "${nombreCompleto}" eliminado correctamente`);
+          },
+          error: (error: Error) => {
+            console.error('Error al eliminar usuario', error);
+            this.mostrarError(error.message || 'Error al eliminar el usuario');
+            if (this.confirmarModalInstance) {
+              this.confirmarModalInstance.hide();
+            }
           }
-          
-          if (this.usuarioEditando?.id === this.usuarioAEliminar?.id) {
-            this.cerrarFormulario();
-          }
-          
-          this.mostrarExito(`🗑️ Usuario "${nombreCompleto}" eliminado correctamente`);
-          
-          if (this.usuarios.length === 0) {
-            this.mostrarInfo('No hay usuarios registrados');
-          }
-        },
-        error: (error: Error) => {
-          console.error('Error al eliminar usuario', error);
-          this.mostrarError(error.message || 'Error al eliminar el usuario');
-          
-          if (this.confirmarModalInstance) {
-            this.confirmarModalInstance.hide();
-          }
-        }
-      });
-    } else {
-      console.error('No se puede eliminar: usuario o ID no definido');
-      this.mostrarError('Error: No se pudo identificar el usuario a eliminar');
-      
-      if (this.confirmarModalInstance) {
-        this.confirmarModalInstance.hide();
+        });
       }
     }
     this.usuarioAEliminar = null;

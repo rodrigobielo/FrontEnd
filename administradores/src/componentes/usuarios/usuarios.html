@@ -1,4 +1,4 @@
-<!-- usuarios.html - Completo y corregido -->
+<!-- usuarios.html - Versión corregida sin errores de TypeScript -->
 <div class="container-fluid py-4">
   <!-- Encabezado de la página -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -10,7 +10,7 @@
       <p class="text-muted mb-0">Administra los usuarios del sistema hotelero</p>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary me-2" routerLink="/dashboard">
+      <button class="btn btn-outline-secondary" routerLink="/dashboard">
         <i class="bi bi-arrow-left me-1"></i> Volver
       </button>
       <div class="btn-group">
@@ -126,8 +126,7 @@
                 </button>
               </div>
             </div>
-          } 
-          @else if (usuarios.length > 0 && usuariosFiltrados.length === 0) {
+          } @else if (usuarios.length > 0 && usuariosFiltrados.length === 0) {
             <div class="text-center py-5">
               <i class="bi bi-search display-1 text-muted"></i>
               <h5 class="text-muted mt-3 mb-2">🔍 No se encontraron resultados</h5>
@@ -136,8 +135,7 @@
                 <i class="bi bi-arrow-clockwise me-1"></i> Limpiar búsqueda
               </button>
             </div>
-          }
-          @else if (usuariosFiltrados.length > 0) {
+          } @else if (usuariosFiltrados.length > 0) {
             <div class="table-responsive">
               <table class="table table-hover mb-0">
                 <thead class="table-light">
@@ -145,14 +143,14 @@
                     <th width="25%">
                       <i class="bi bi-person-fill me-1"></i> Usuario
                     </th>
-                    <th width="25%">
+                    <th width="20%">
                       <i class="bi bi-envelope-fill me-1"></i> Email
                     </th>
                     <th width="15%">
                       <i class="bi bi-person-rolodex me-1"></i> Rol
                     </th>
-                    <th width="15%">
-                      <i class="bi bi-building me-1"></i> Hotel
+                    <th width="20%">
+                      <i class="bi bi-building me-1"></i> Hotel / Empresa
                     </th>
                     <th width="20%" class="text-center">
                       <i class="bi bi-tools"></i> Acciones
@@ -167,26 +165,28 @@
                           <i class="bi bi-person-circle text-primary fs-5"></i>
                           <div>
                             <strong>{{ usuario.nombre }} {{ usuario.apellidos }}</strong>
-                            <br><small class="text-muted">@{{ usuario.usuario }}</small>
+                            <br>
+                            <small class="text-muted">@{{ usuario.usuario }}</small>
                           </div>
                         </div>
                       </td>
                       <td class="align-middle">
-                        {{ usuario.email }}
+                        <small>{{ usuario.email }}</small>
                       </td>
                       <td class="align-middle">
-                        <span class="badge bg-info-subtle text-info-emphasis">
+                        <span class="badge bg-info-subtle text-info-emphasis px-3 py-2">
+                          <i class="bi bi-person-rolodex me-1"></i>
                           {{ obtenerNombreRol(usuario.roles?.id) }}
                         </span>
                       </td>
                       <td class="align-middle">
-                        @if (usuario.empleado?.hotel?.id) {
-                          <span class="badge bg-success-subtle text-success-emphasis">
+                        @if (usuario.empleado?.hotel?.nombre) {
+                          <span class="badge bg-success-subtle text-success-emphasis px-3 py-2">
                             <i class="bi bi-building me-1"></i>
-                            {{ obtenerNombreHotel(usuario.empleado?.hotel?.id) }}
+                            <strong>{{ usuario.empleado?.hotel?.nombre }}</strong>
                           </span>
                         } @else {
-                          <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                          <span class="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2">
                             <i class="bi bi-person me-1"></i>
                             No empleado
                           </span>
@@ -216,11 +216,24 @@
       
       @if (usuariosFiltrados.length > 0 && !cargando) {
         <div class="card-footer bg-white border-0 py-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">
-              <i class="bi bi-info-circle me-1"></i>
-              Mostrando {{ usuariosFiltrados.length }} de {{ totalUsuarios }} usuarios
-            </small>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex gap-2">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Mostrando {{ usuariosFiltrados.length }} de {{ totalUsuarios }} usuarios
+              </small>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+              <label class="text-muted small mb-0">Mostrar:</label>
+              <select class="form-select form-select-sm" style="width: 80px;" [(ngModel)]="elementosPorPagina" (change)="paginaActual = 1">
+                <option [value]="5">5</option>
+                <option [value]="10">10</option>
+                <option [value]="25">25</option>
+                <option [value]="50">50</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-2 d-flex justify-content-center">
             <pagination-controls 
               (pageChange)="paginaActual = $event"
               [autoHide]="true"
@@ -236,8 +249,8 @@
 
   <!-- Modal para crear/editar usuario -->
   @if (formularioVisible) {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-      <div class="modal-dialog modal-lg">
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header" [ngClass]="esUsuarioEmpleado ? 'bg-success' : 'bg-primary'">
             <h5 class="modal-title text-white">
@@ -264,10 +277,7 @@
                     type="text" 
                     class="form-control" 
                     formControlName="nombre"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('nombre')?.invalid && 
-                                   (usuarioForm.get('nombre')?.dirty || usuarioForm.get('nombre')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('nombre')?.invalid && (usuarioForm.get('nombre')?.dirty || usuarioForm.get('nombre')?.touched)"
                     placeholder="Ej: Juan"
                   >
                   @if (usuarioForm.get('nombre')?.invalid && (usuarioForm.get('nombre')?.dirty || usuarioForm.get('nombre')?.touched)) {
@@ -286,10 +296,7 @@
                     type="text" 
                     class="form-control" 
                     formControlName="apellidos"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('apellidos')?.invalid && 
-                                   (usuarioForm.get('apellidos')?.dirty || usuarioForm.get('apellidos')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('apellidos')?.invalid && (usuarioForm.get('apellidos')?.dirty || usuarioForm.get('apellidos')?.touched)"
                     placeholder="Ej: Pérez García"
                   >
                   @if (usuarioForm.get('apellidos')?.invalid && (usuarioForm.get('apellidos')?.dirty || usuarioForm.get('apellidos')?.touched)) {
@@ -312,10 +319,7 @@
                     type="tel" 
                     class="form-control" 
                     formControlName="telefono"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('telefono')?.invalid && 
-                                   (usuarioForm.get('telefono')?.dirty || usuarioForm.get('telefono')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('telefono')?.invalid && (usuarioForm.get('telefono')?.dirty || usuarioForm.get('telefono')?.touched)"
                     placeholder="Ej: +34 600 123 456"
                   >
                   @if (usuarioForm.get('telefono')?.invalid && (usuarioForm.get('telefono')?.dirty || usuarioForm.get('telefono')?.touched)) {
@@ -334,10 +338,7 @@
                     type="text" 
                     class="form-control" 
                     formControlName="nacionalidad"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('nacionalidad')?.invalid && 
-                                   (usuarioForm.get('nacionalidad')?.dirty || usuarioForm.get('nacionalidad')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('nacionalidad')?.invalid && (usuarioForm.get('nacionalidad')?.dirty || usuarioForm.get('nacionalidad')?.touched)"
                     placeholder="Ej: Española"
                   >
                   @if (usuarioForm.get('nacionalidad')?.invalid && (usuarioForm.get('nacionalidad')?.dirty || usuarioForm.get('nacionalidad')?.touched)) {
@@ -360,10 +361,7 @@
                     type="text" 
                     class="form-control" 
                     formControlName="numPasaporte"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('numPasaporte')?.invalid && 
-                                   (usuarioForm.get('numPasaporte')?.dirty || usuarioForm.get('numPasaporte')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('numPasaporte')?.invalid && (usuarioForm.get('numPasaporte')?.dirty || usuarioForm.get('numPasaporte')?.touched)"
                     placeholder="Ej: AB1234567"
                   >
                   @if (usuarioForm.get('numPasaporte')?.invalid && (usuarioForm.get('numPasaporte')?.dirty || usuarioForm.get('numPasaporte')?.touched)) {
@@ -382,10 +380,7 @@
                     type="text" 
                     class="form-control" 
                     formControlName="usuario"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('usuario')?.invalid && 
-                                   (usuarioForm.get('usuario')?.dirty || usuarioForm.get('usuario')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('usuario')?.invalid && (usuarioForm.get('usuario')?.dirty || usuarioForm.get('usuario')?.touched)"
                     placeholder="Ej: juan.perez"
                   >
                   @if (usuarioForm.get('usuario')?.invalid && (usuarioForm.get('usuario')?.dirty || usuarioForm.get('usuario')?.touched)) {
@@ -408,10 +403,7 @@
                     type="email" 
                     class="form-control" 
                     formControlName="email"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('email')?.invalid && 
-                                   (usuarioForm.get('email')?.dirty || usuarioForm.get('email')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('email')?.invalid && (usuarioForm.get('email')?.dirty || usuarioForm.get('email')?.touched)"
                     placeholder="Ej: juan.perez@example.com"
                   >
                   @if (usuarioForm.get('email')?.hasError('required') && (usuarioForm.get('email')?.dirty || usuarioForm.get('email')?.touched)) {
@@ -436,10 +428,7 @@
                     type="password" 
                     class="form-control" 
                     formControlName="contrasena"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('contrasena')?.invalid && 
-                                   (usuarioForm.get('contrasena')?.dirty || usuarioForm.get('contrasena')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('contrasena')?.invalid && (usuarioForm.get('contrasena')?.dirty || usuarioForm.get('contrasena')?.touched)"
                     placeholder="Mínimo 6 caracteres"
                   >
                   @if (usuarioForm.get('contrasena')?.hasError('required') && (usuarioForm.get('contrasena')?.dirty || usuarioForm.get('contrasena')?.touched)) {
@@ -477,10 +466,7 @@
                   <select 
                     class="form-select" 
                     formControlName="rolId"
-                    [ngClass]="{
-                      'is-invalid': usuarioForm.get('rolId')?.invalid && 
-                                   (usuarioForm.get('rolId')?.dirty || usuarioForm.get('rolId')?.touched)
-                    }"
+                    [class.is-invalid]="usuarioForm.get('rolId')?.invalid && (usuarioForm.get('rolId')?.dirty || usuarioForm.get('rolId')?.touched)"
                   >
                     <option value="" disabled>Selecciona un rol</option>
                     @for (rol of roles; track rol.id) {
@@ -524,10 +510,7 @@
                       <select 
                         class="form-select" 
                         formControlName="hotelId"
-                        [ngClass]="{
-                          'is-invalid': empleadoForm.get('hotelId')?.invalid && 
-                                       (empleadoForm.get('hotelId')?.dirty || empleadoForm.get('hotelId')?.touched)
-                        }"
+                        [class.is-invalid]="empleadoForm.get('hotelId')?.invalid && (empleadoForm.get('hotelId')?.dirty || empleadoForm.get('hotelId')?.touched)"
                       >
                         <option value="" disabled>Selecciona un hotel</option>
                         @for (hotel of hoteles; track hotel.id) {
@@ -541,6 +524,21 @@
                         </div>
                       }
                     }
+                  </div>
+
+                  <!-- Campo para rol de empleado (opcional) -->
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">
+                      <i class="bi bi-person-rolodex me-1 text-success"></i>
+                      Rol del Empleado (opcional)
+                    </label>
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      formControlName="rolEmpleado"
+                      placeholder="Ej: Recepcionista, Gerente, Administrador"
+                    >
+                    <small class="text-muted">Especifique el cargo o posición del empleado en el hotel</small>
                   </div>
                 </div>
               }
@@ -588,7 +586,7 @@
     </div>
   }
 
-  <!-- Modal de detalles del usuario -->
+  <!-- Modal de detalles del usuario - CORREGIDO -->
   <div class="modal fade" id="detallesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -605,38 +603,80 @@
               <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3">
                 <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
               </div>
+              <h4 class="text-primary mt-2 mb-0">{{ usuarioDetalles.nombre }} {{ usuarioDetalles.apellidos }}</h4>
+              <p class="text-muted">@{{ usuarioDetalles.usuario }}</p>
             </div>
-            <h4 class="text-primary mb-3 text-center">{{ usuarioDetalles.nombre }} {{ usuarioDetalles.apellidos }}</h4>
-            <div class="mb-2 p-2 bg-light rounded">
-              <strong><i class="bi bi-person-rolodex me-1 text-primary"></i> Nombre de usuario:</strong>
-              <span class="ms-2">@{{ usuarioDetalles.usuario }}</span>
-            </div>
-            <div class="mb-2 p-2 bg-light rounded">
-              <strong><i class="bi bi-envelope-fill me-1 text-primary"></i> Email:</strong>
-              <span class="ms-2">{{ usuarioDetalles.email }}</span>
-            </div>
-            <div class="mb-2 p-2 bg-light rounded">
-              <strong><i class="bi bi-telephone-fill me-1 text-primary"></i> Teléfono:</strong>
-              <span class="ms-2">{{ usuarioDetalles.telefono }}</span>
-            </div>
-            <div class="mb-2 p-2 bg-light rounded">
-              <strong><i class="bi bi-globe-americas me-1 text-primary"></i> Nacionalidad:</strong>
-              <span class="ms-2">{{ usuarioDetalles.nacionalidad }}</span>
-            </div>
-            <div class="mb-2 p-2 bg-light rounded">
-              <strong><i class="bi bi-passport-fill me-1 text-primary"></i> Pasaporte:</strong>
-              <span class="ms-2">{{ usuarioDetalles.numPasaporte }}</span>
-            </div>
-            <div class="mb-2 p-2 bg-light rounded">
-              <strong><i class="bi bi-person-rolodex me-1 text-primary"></i> Rol:</strong>
-              <span class="ms-2">{{ obtenerNombreRol(usuarioDetalles.roles?.id) }}</span>
-            </div>
-            @if (usuarioDetalles.empleado?.hotel?.id) {
-              <div class="mb-2 p-2 bg-success-subtle rounded border border-success-subtle">
-                <strong><i class="bi bi-building me-1 text-success"></i> Hotel asignado:</strong>
-                <span class="ms-2">{{ obtenerNombreHotel(usuarioDetalles.empleado?.hotel?.id) }}</span>
+            
+            <div class="row g-2">
+              <div class="col-12">
+                <div class="info-item p-2 bg-light rounded">
+                  <i class="bi bi-envelope-fill text-primary"></i>
+                  <strong>Email:</strong>
+                  <span>{{ usuarioDetalles.email }}</span>
+                </div>
               </div>
-            }
+              <div class="col-12">
+                <div class="info-item p-2 bg-light rounded">
+                  <i class="bi bi-telephone-fill text-primary"></i>
+                  <strong>Teléfono:</strong>
+                  <span>{{ usuarioDetalles.telefono || 'No registrado' }}</span>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="info-item p-2 bg-light rounded">
+                  <i class="bi bi-globe-americas text-primary"></i>
+                  <strong>Nacionalidad:</strong>
+                  <span>{{ usuarioDetalles.nacionalidad || 'No registrada' }}</span>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="info-item p-2 bg-light rounded">
+                  <i class="bi bi-passport-fill text-primary"></i>
+                  <strong>Pasaporte:</strong>
+                  <span>{{ usuarioDetalles.numPasaporte || 'No registrado' }}</span>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="info-item p-2 bg-light rounded">
+                  <i class="bi bi-person-rolodex text-primary"></i>
+                  <strong>Rol:</strong>
+                  <span class="badge bg-info">{{ obtenerNombreRol(usuarioDetalles.roles?.id) }}</span>
+                </div>
+              </div>
+              
+              <!-- Información de empleado y hotel - CON OPERADORES DE SEGURIDAD -->
+              @if (usuarioDetalles.empleado?.idEmpleado) {
+                <div class="col-12 mt-2">
+                  <div class="info-item bg-success-subtle border border-success p-2 rounded">
+                    <i class="bi bi-briefcase-fill text-success"></i>
+                    <strong>Datos de Empleado:</strong>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item ps-3 p-2 bg-light rounded">
+                    <i class="bi bi-building text-success"></i>
+                    <strong>Hotel asignado:</strong>
+                    <span class="fw-bold text-success">{{ usuarioDetalles.empleado?.hotel?.nombre || 'Cargando...' }}</span>
+                  </div>
+                </div>
+                @if (usuarioDetalles.empleado?.rolEmpleado) {
+                  <div class="col-12">
+                    <div class="info-item ps-3 p-2 bg-light rounded">
+                      <i class="bi bi-person-badge text-success"></i>
+                      <strong>Rol en el Hotel:</strong>
+                      <span class="badge bg-success">{{ usuarioDetalles.empleado?.rolEmpleado || 'No especificado' }}</span>
+                    </div>
+                  </div>
+                }
+              } @else {
+                <div class="col-12 mt-2">
+                  <div class="info-item bg-secondary-subtle border border-secondary p-2 rounded text-center">
+                    <i class="bi bi-person me-1"></i>
+                    <strong>Usuario normal</strong> - No es empleado del hotel
+                  </div>
+                </div>
+              }
+            </div>
           }
         </div>
         <div class="modal-footer">

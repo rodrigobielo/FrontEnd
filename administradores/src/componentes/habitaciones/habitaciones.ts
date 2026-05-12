@@ -6,12 +6,11 @@ import { HttpClientModule } from '@angular/common/http';
 
 // Servicios
 import { HabitacionService } from '../../servicios/habitacion.service';
-import { HotelService } from '../../servicios/hotel.service';
 import { TipoHabitacionService } from '../../servicios/tipo-habitacion.service';
+import { AuthService } from '../../servicios/auth.service';
 
 // Modelos
-import { Habitacion, HabitacionFormData } from '../../modelos/habitacion.model';
-import { Hotel } from '../../modelos/hotel.model';
+import { Habitacion } from '../../modelos/habitacion.model';
 import { TipoHabitacion } from '../../modelos/tipo-habitacion.model';
 
 @Component({
@@ -24,8 +23,8 @@ import { TipoHabitacion } from '../../modelos/tipo-habitacion.model';
 export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   // Inyección de servicios
   private habitacionService = inject(HabitacionService);
-  private hotelService = inject(HotelService);
   private tipoHabitacionService = inject(TipoHabitacionService);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   
   // Formulario
@@ -35,11 +34,14 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   modoEdicion: boolean = false;
   guardando: boolean = false;
   cargando: boolean = false;
-  cargandoHoteles: boolean = false;
   cargandoTiposHabitacion: boolean = false;
-  filtroHotel: number | null = null;
   filtroTexto: string = '';
   formularioVisible: boolean = false;
+  
+  // Datos del hotel del empleado logueado
+  hotelId: number | null = null;
+  nombreHotel: string = '';
+  empleadoId: number | null = null;
   
   // Mensajes tipo toast
   mensajeExito: string = '';
@@ -52,7 +54,6 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
   // Datos
   habitaciones: Habitacion[] = [];
   habitacionesFiltradas: Habitacion[] = [];
-  hoteles: Hotel[] = [];
   tiposHabitacion: TipoHabitacion[] = [];
   habitacionEditando: Habitacion | null = null;
   habitacionDetalles: Habitacion | null = null;
@@ -72,8 +73,8 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     this.habitacionForm = this.fb.group({
       precioNoche: [null, [
         Validators.required,
-        Validators.min(0),
-        Validators.max(10000)
+        Validators.min(1000),
+        Validators.max(10000000)
       ]],
       disponibilidad: [true],
       caracteristicas: ['', [
@@ -81,13 +82,12 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         Validators.minLength(10),
         Validators.maxLength(500)
       ]],
-      hotelId: ['', [Validators.required]],
       tipoHabitacionId: ['', [Validators.required]]
     });
   }
 
   ngOnInit(): void {
-    this.cargarHoteles();
+    this.obtenerHotelDelEmpleado();
     this.cargarTiposHabitacion();
     this.cargarHabitaciones();
   }
@@ -98,7 +98,6 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     this.destroyModales();
-    this.limpiarTemporizadores();
   }
 
   private initModales(): void {
@@ -119,10 +118,6 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.dispose();
     }
-  }
-
-  private limpiarTemporizadores(): void {
-    // Para compatibilidad con los timeout (se manejan en mostrar mensajes)
   }
 
   private mostrarExito(mensaje: string): void {
@@ -152,21 +147,62 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     }, 3000);
   }
 
-  // Cargar hoteles
-  cargarHoteles(): void {
-    this.cargandoHoteles = true;
-    this.hotelService.getHoteles().subscribe({
-      next: (hoteles: Hotel[]) => {
-        this.hoteles = hoteles || [];
-        this.cargandoHoteles = false;
-      },
-      error: (error: any) => {
-        console.error('Error cargando hoteles:', error);
-        this.mostrarError('No se pudieron cargar los hoteles');
-        this.cargandoHoteles = false;
-        this.hoteles = [];
+  /**
+   * Obtener el hotel asignado al empleado que ha iniciado sesión
+   * Basado en las relaciones:
+   * Usuario -> Empleado -> Hoteles
+   */
+  private obtenerHotelDelEmpleado(): void {
+    try {
+      // Obtener el usuario actual desde el servicio de autenticación
+      const currentUser = this.authService.getCurrentUser();
+      
+      if (!currentUser) {
+        this.mostrarError('No se encontró información del usuario logueado');
+        this.redirigirALogin();
+        return;
       }
-    });
+      
+      // Obtener el hotel asociado al empleado
+      // El AuthService debería tener un método que obtenga el empleado con su hotel
+      this.authService.getEmpleadoConHotel().subscribe({
+        next: (empleado: any) => {
+          if (empleado && empleado.hotel && empleado.hotel.id) {
+            this.hotelId = empleado.hotel.id;
+            this.nombreHotel = empleado.hotel.nombre || 'Hotel';
+            this.empleadoId = empleado.idEmpleado;
+            
+            console.log('Hotel asignado al empleado:', {
+              empleadoId: this.empleadoId,
+              hotelId: this.hotelId,
+              nombreHotel: this.nombreHotel
+            });
+            
+            // Una vez que tenemos el hotel, cargamos las habitaciones
+            this.cargarHabitaciones();
+          } else {
+            this.mostrarError('El empleado no tiene un hotel asignado');
+            this.hotelId = null;
+            this.nombreHotel = 'Sin hotel asignado';
+          }
+        },
+        error: (error) => {
+          console.error('Error al obtener el empleado:', error);
+          this.mostrarError('No se pudo obtener la información del empleado');
+          this.hotelId = null;
+          this.nombreHotel = 'Error al cargar hotel';
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error al obtener hotel del empleado:', error);
+      this.mostrarError('Error al identificar el hotel del empleado');
+    }
+  }
+  
+  private redirigirALogin(): void {
+    // Redirigir al login si es necesario
+    // this.router.navigate(['/login']);
   }
 
   // Cargar tipos de habitación
@@ -176,6 +212,10 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       next: (tipos: TipoHabitacion[]) => {
         this.tiposHabitacion = tipos || [];
         this.cargandoTiposHabitacion = false;
+        
+        if (tipos.length === 0) {
+          this.mostrarInfo('No hay tipos de habitación disponibles. Contacta al administrador.');
+        }
       },
       error: (error: any) => {
         console.error('Error cargando tipos de habitación:', error);
@@ -186,10 +226,20 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // Cargar habitaciones
+  /**
+   * Cargar habitaciones SOLO del hotel asignado al empleado
+   * Relación: Hoteles (id = hotelId) -> Habitaciones
+   */
   cargarHabitaciones(): void {
+    if (!this.hotelId) {
+      this.mostrarError('No se puede cargar habitaciones: Empleado sin hotel asignado');
+      this.cargando = false;
+      return;
+    }
+    
     this.cargando = true;
-    this.habitacionService.getHabitaciones().subscribe({
+    // Usar el método que filtra por hotel
+    this.habitacionService.getHabitacionesPorHotel(this.hotelId).subscribe({
       next: (habitaciones: Habitacion[]) => {
         this.habitaciones = habitaciones || [];
         this.habitacionesFiltradas = [...this.habitaciones];
@@ -197,7 +247,9 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         this.cargando = false;
         
         if (habitaciones.length === 0) {
-          this.mostrarInfo('No se encontraron habitaciones registradas');
+          this.mostrarInfo(`No hay habitaciones registradas para ${this.nombreHotel}`);
+        } else {
+          console.log(`Se cargaron ${habitaciones.length} habitaciones del hotel ${this.nombreHotel}`);
         }
       },
       error: (error: any) => {
@@ -217,31 +269,19 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     this.aplicarFiltros();
   }
 
-  // Filtrar por hotel
-  filtrarPorHotel(hotelId: number | undefined): void {
-    this.filtroHotel = hotelId === undefined || hotelId === 0 ? null : hotelId;
-    this.aplicarFiltros();
-  }
-
   private aplicarFiltros(): void {
     let resultado = [...this.habitaciones];
-    
-    if (this.filtroHotel) {
-      resultado = resultado.filter(h => h.hoteles?.id === this.filtroHotel);
-    }
     
     if (this.filtroTexto) {
       resultado = resultado.filter(habitacion => {
         const texto = this.filtroTexto;
-        const caracteristicas = habitacion.caracteristicas.toLowerCase();
-        const nombreHotel = habitacion.hoteles?.nombre?.toLowerCase() || '';
-        const nombreCiudad = habitacion.hoteles?.ciudades?.nombre?.toLowerCase() || '';
+        const caracteristicas = habitacion.caracteristicas?.toLowerCase() || '';
         const nombreTipo = habitacion.tiposHabitaciones?.nombre?.toLowerCase() || '';
+        const precio = habitacion.precioNoche?.toString() || '';
 
         return caracteristicas.includes(texto) ||
-               nombreHotel.includes(texto) ||
-               nombreCiudad.includes(texto) ||
-               nombreTipo.includes(texto);
+               nombreTipo.includes(texto) ||
+               precio.includes(texto);
       });
       
       if (this.filtroTexto && resultado.length === 0 && this.habitaciones.length > 0) {
@@ -254,6 +294,11 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   // Nuevo registro
   nuevoRegistro(): void {
+    if (!this.hotelId) {
+      this.mostrarError('No se puede crear habitación: Empleado sin hotel asignado');
+      return;
+    }
+    
     this.modoEdicion = false;
     this.habitacionEditando = null;
     this.formularioVisible = true;
@@ -262,7 +307,6 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       precioNoche: null,
       disponibilidad: true,
       caracteristicas: '',
-      hotelId: '',
       tipoHabitacionId: ''
     });
     
@@ -276,12 +320,16 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
     this.modoEdicion = false;
     this.habitacionEditando = null;
     this.habitacionForm.reset();
-    this.habitacionForm.markAsPristine();
-    this.habitacionForm.markAsUntouched();
   }
 
   // Editar habitación
   editarHabitacion(habitacion: Habitacion): void {
+    // Verificar que la habitación pertenezca al hotel del empleado
+    if (habitacion.hoteles?.id !== this.hotelId) {
+      this.mostrarError('No puedes editar habitaciones de otro hotel');
+      return;
+    }
+    
     this.modoEdicion = true;
     this.habitacionEditando = habitacion;
     this.formularioVisible = true;
@@ -290,39 +338,52 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       precioNoche: habitacion.precioNoche,
       disponibilidad: habitacion.disponibilidad,
       caracteristicas: habitacion.caracteristicas,
-      hotelId: habitacion.hoteles?.id || '',
       tipoHabitacionId: habitacion.tiposHabitaciones?.id || ''
     });
   }
 
-  // Guardar habitación
+  /**
+   * Guardar habitación (crear o actualizar)
+   * IMPORTANTE: Se asigna automáticamente el hotelId del empleado
+   */
   guardarHabitacion(): void {
+    // Marcar todos los campos como tocados para mostrar validaciones
     Object.keys(this.habitacionForm.controls).forEach(key => {
       const control = this.habitacionForm.get(key);
       control?.markAsTouched();
     });
 
     if (this.habitacionForm.invalid) {
-      this.mostrarError('Completa todos los campos requeridos correctamente.');
+      this.mostrarError('Por favor, completa todos los campos requeridos correctamente.');
       return;
     }
 
-    if (this.hoteles.length === 0) {
-      this.mostrarError('No hay hoteles disponibles en la base de datos.');
+    if (!this.hotelId) {
+      this.mostrarError('No se puede guardar: Empleado sin hotel asignado');
       return;
     }
 
     if (this.tiposHabitacion.length === 0) {
-      this.mostrarError('No hay tipos de habitación disponibles en la base de datos.');
+      this.mostrarError('No hay tipos de habitación disponibles');
       return;
     }
 
     this.guardando = true;
-    const habitacionData = this.habitacionForm.value;
+    
+    // Construir el objeto de datos con el hotelId del empleado
+    const habitacionData = {
+      precioNoche: this.habitacionForm.get('precioNoche')?.value,
+      disponibilidad: this.habitacionForm.get('disponibilidad')?.value,
+      caracteristicas: this.habitacionForm.get('caracteristicas')?.value,
+      tipoHabitacionId: this.habitacionForm.get('tipoHabitacionId')?.value,
+      hotelId: this.hotelId  // Asignar automáticamente el hotel del empleado
+    };
 
-    if (this.modoEdicion && this.habitacionEditando && this.habitacionEditando.id !== undefined) {
-      this.habitacionService.updateHabitacion(this.habitacionEditando.id!, habitacionData).subscribe({
-        next: () => {
+    if (this.modoEdicion && this.habitacionEditando && this.habitacionEditando.id) {
+      // Actualizar habitación existente
+      this.habitacionService.updateHabitacion(this.habitacionEditando.id, habitacionData).subscribe({
+        next: (response) => {
+          console.log('Habitación actualizada:', response);
           this.cargarHabitaciones();
           this.guardando = false;
           this.cancelarEdicion();
@@ -331,12 +392,14 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         error: (error: any) => {
           console.error('Error actualizando habitación:', error);
           this.guardando = false;
-          this.mostrarError('No se pudo actualizar la habitación');
+          this.mostrarError(error.error?.message || 'No se pudo actualizar la habitación');
         }
       });
     } else {
+      // Crear nueva habitación
       this.habitacionService.createHabitacion(habitacionData).subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('Habitación creada:', response);
           this.cargarHabitaciones();
           this.guardando = false;
           this.cancelarEdicion();
@@ -345,7 +408,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
         error: (error: any) => {
           console.error('Error creando habitación:', error);
           this.guardando = false;
-          this.mostrarError('No se pudo crear la habitación');
+          this.mostrarError(error.error?.message || 'No se pudo crear la habitación');
         }
       });
     }
@@ -357,6 +420,12 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       this.mostrarError('No se puede cambiar la disponibilidad');
       return;
     }
+    
+    // Verificar que la habitación pertenezca al hotel del empleado
+    if (habitacion.hoteles?.id !== this.hotelId) {
+      this.mostrarError('No puedes modificar habitaciones de otro hotel');
+      return;
+    }
 
     const nuevaDisponibilidad = !habitacion.disponibilidad;
     this.guardando = true;
@@ -365,7 +434,7 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       next: () => {
         this.cargarHabitaciones();
         this.guardando = false;
-        this.mostrarExito(`Habitación ahora está ${nuevaDisponibilidad ? 'disponible' : 'no disponible'}`);
+        this.mostrarExito(`Habitación ${nuevaDisponibilidad ? 'disponible' : 'no disponible'}`);
       },
       error: (error: any) => {
         console.error('Error cambiando disponibilidad:', error);
@@ -385,6 +454,12 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   // Eliminar habitación
   eliminarHabitacion(habitacion: Habitacion): void {
+    // Verificar que la habitación pertenezca al hotel del empleado
+    if (habitacion.hoteles?.id !== this.hotelId) {
+      this.mostrarError('No puedes eliminar habitaciones de otro hotel');
+      return;
+    }
+    
     this.habitacionAEliminar = habitacion;
     if (this.confirmarModalInstance) {
       this.confirmarModalInstance.show();
@@ -393,14 +468,14 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
 
   // Confirmar eliminación
   confirmarEliminar(): void {
-    if (!this.habitacionAEliminar || this.habitacionAEliminar.id === undefined) {
+    if (!this.habitacionAEliminar || !this.habitacionAEliminar.id) {
       this.mostrarError('No se puede eliminar la habitación');
       return;
     }
 
     this.guardando = true;
     
-    this.habitacionService.deleteHabitacion(this.habitacionAEliminar.id!).subscribe({
+    this.habitacionService.deleteHabitacion(this.habitacionAEliminar.id).subscribe({
       next: () => {
         this.guardando = false;
         this.mostrarExito('Habitación eliminada correctamente');
@@ -414,22 +489,22 @@ export class Habitaciones implements OnInit, OnDestroy, AfterViewInit {
       error: (error: any) => {
         console.error('Error eliminando habitación:', error);
         this.guardando = false;
-        this.mostrarError('No se pudo eliminar la habitación');
+        this.mostrarError(error.error?.message || 'No se pudo eliminar la habitación');
       }
     });
   }
-  // Método para formatear precios en XAF (Franco CFA)
-formatXAF(precio: number | null | undefined): string {
-  if (precio === null || precio === undefined) {
-    return '0 XAF';
+
+  // Formatear precios en XAF
+  formatXAF(precio: number | null | undefined): string {
+    if (precio === null || precio === undefined) {
+      return '0 XAF';
+    }
+    
+    const precioFormateado = new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(precio);
+    
+    return `${precioFormateado} XAF`;
   }
-  
-  // Formatear el número con separadores de miles
-  const precioFormateado = new Intl.NumberFormat('fr-FR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(precio);
-  
-  return `${precioFormateado} XAF`;
-}
 }

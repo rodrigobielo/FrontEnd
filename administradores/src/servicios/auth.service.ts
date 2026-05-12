@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 @Injectable({
@@ -14,6 +14,8 @@ export class AuthService {
   private currentHotelSubject = new BehaviorSubject<any>(null);
   public currentHotel$ = this.currentHotelSubject.asObservable();
   private currentHotelId: number | null = null;
+  private currentEmpleadoSubject = new BehaviorSubject<any>(null);
+  public currentEmpleado$ = this.currentEmpleadoSubject.asObservable();
 
   constructor(
     private apiService: ApiService,
@@ -21,6 +23,7 @@ export class AuthService {
   ) {
     this.loadStoredUser();
     this.loadStoredHotel();
+    this.loadStoredEmpleado();
   }
 
   // MÉTODOS DE AUTENTICACIÓN
@@ -53,6 +56,7 @@ export class AuthService {
     if (this.isAdminHotel() && response.usuario.hotelId) {
       this.currentHotelId = response.usuario.hotelId;
       this.cargarHotelAsignado(response.usuario.hotelId, rememberMe);
+      this.cargarEmpleadoAsignado(response.usuario.id, rememberMe);
     } else {
       // Redirigir según rol
       this.redirectByRole(response.usuario.rol);
@@ -68,9 +72,13 @@ export class AuthService {
         const hotelData = {
           id: hotel.id,
           nombre: hotel.nombre,
+          descripcion: hotel.descripcion || '',
           direccion: hotel.direccion || '',
+          contactos: hotel.contactos || '',
           telefono: hotel.telefono || '',
-          email: hotel.email || ''
+          email: hotel.email || '',
+          ciudades: hotel.ciudades || null,
+          categorias: hotel.categorias || null
         };
         
         // Guardar en storage según la preferencia
@@ -94,6 +102,119 @@ export class AuthService {
         this.redirectByRole(user?.rol);
       }
     });
+  }
+
+  private cargarEmpleadoAsignado(usuarioId: number, rememberMe: boolean): void {
+    // Obtener el empleado asociado al usuario
+    this.apiService.getEmpleadoByUsuarioId(usuarioId).subscribe({
+      next: (empleado: any) => {
+        console.log('Empleado recibido del backend:', empleado);
+        
+        const empleadoData = {
+          idEmpleado: empleado.idEmpleado,
+          rolEmpleado: empleado.rolEmpleado,
+          usuario: empleado.usuario,
+          hotel: empleado.hotel
+        };
+        
+        // Guardar en storage según la preferencia
+        if (rememberMe) {
+          localStorage.setItem('current_empleado', JSON.stringify(empleadoData));
+        } else {
+          sessionStorage.setItem('current_empleado', JSON.stringify(empleadoData));
+        }
+        
+        this.currentEmpleadoSubject.next(empleadoData);
+        
+        // Si el hotel no está cargado aún, cargarlo desde el empleado
+        if (!this.currentHotelId && empleado.hotel) {
+          const hotelData = {
+            id: empleado.hotel.id,
+            nombre: empleado.hotel.nombre,
+            descripcion: empleado.hotel.descripcion || '',
+            contactos: empleado.hotel.contactos || '',
+            telefono: empleado.hotel.telefono || '',
+            email: empleado.hotel.email || ''
+          };
+          
+          if (rememberMe) {
+            localStorage.setItem('current_hotel', JSON.stringify(hotelData));
+          } else {
+            sessionStorage.setItem('current_hotel', JSON.stringify(hotelData));
+          }
+          
+          this.currentHotelSubject.next(hotelData);
+          this.currentHotelId = empleado.hotel.id;
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar el empleado:', error);
+      }
+    });
+  }
+
+  // NUEVO MÉTODO: Obtener empleado con hotel
+  getEmpleadoConHotel(): Observable<any> {
+    const usuarioId = this.getCurrentUserId();
+    if (!usuarioId) {
+      return throwError(() => new Error('No hay usuario logueado'));
+    }
+    
+    return this.apiService.getEmpleadoByUsuarioId(usuarioId).pipe(
+      map((empleado: any) => {
+        if (empleado && empleado.idEmpleado) {
+          // Actualizar el empleado en el subject
+          this.currentEmpleadoSubject.next(empleado);
+          
+          // Si el empleado tiene hotel, actualizarlo también
+          if (empleado.hotel && empleado.hotel.id) {
+            const hotelData = {
+              id: empleado.hotel.id,
+              nombre: empleado.hotel.nombre,
+              descripcion: empleado.hotel.descripcion || '',
+              contactos: empleado.hotel.contactos || '',
+              telefono: empleado.hotel.telefono || '',
+              email: empleado.hotel.email || '',
+              ciudades: empleado.hotel.ciudades,
+              categorias: empleado.hotel.categorias
+            };
+            
+            this.currentHotelSubject.next(hotelData);
+            this.currentHotelId = empleado.hotel.id;
+            
+            // Guardar en storage
+            const rememberMe = !!localStorage.getItem('current_hotel');
+            if (rememberMe) {
+              localStorage.setItem('current_hotel', JSON.stringify(hotelData));
+            } else {
+              sessionStorage.setItem('current_hotel', JSON.stringify(hotelData));
+            }
+          }
+        }
+        return empleado;
+      }),
+      catchError(error => {
+        console.error('Error al obtener empleado con hotel:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Obtener solo el empleado actual
+  getCurrentEmpleado(): any {
+    return this.currentEmpleadoSubject.value;
+  }
+
+  // Obtener el ID del empleado actual
+  getCurrentEmpleadoId(): number | null {
+    const empleado = this.getCurrentEmpleado();
+    return empleado ? empleado.idEmpleado : null;
+  }
+
+  // Obtener el ID del usuario actual
+  getCurrentUserId(): number | null {
+    const user = this.getCurrentUser();
+    return user ? user.id : null;
   }
 
   redirectByRole(rol: string): void {
@@ -133,6 +254,11 @@ export class AuthService {
       return user.hotelId;
     }
     
+    const empleado = this.getCurrentEmpleado();
+    if (empleado && empleado.hotel && empleado.hotel.id) {
+      return empleado.hotel.id;
+    }
+    
     return null;
   }
 
@@ -141,6 +267,12 @@ export class AuthService {
     if (hotel && hotel.nombre) {
       return hotel.nombre;
     }
+    
+    const empleado = this.getCurrentEmpleado();
+    if (empleado && empleado.hotel && empleado.hotel.nombre) {
+      return empleado.hotel.nombre;
+    }
+    
     return 'Hotel sin especificar';
   }
 
@@ -165,6 +297,7 @@ export class AuthService {
     this.clearStorage();
     this.currentUserSubject.next(null);
     this.currentHotelSubject.next(null);
+    this.currentEmpleadoSubject.next(null);
     this.currentHotelId = null;
     this.router.navigate(['/login']);
   }
@@ -217,13 +350,32 @@ export class AuthService {
     }
   }
 
+  private loadStoredEmpleado(): void {
+    try {
+      let empleadoStr = localStorage.getItem('current_empleado');
+      
+      if (!empleadoStr) {
+        empleadoStr = sessionStorage.getItem('current_empleado');
+      }
+      
+      if (empleadoStr) {
+        const empleado = JSON.parse(empleadoStr);
+        this.currentEmpleadoSubject.next(empleado);
+      }
+    } catch (error) {
+      console.error('Error al cargar empleado almacenado:', error);
+    }
+  }
+
   private clearStorage(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('current_user');
     localStorage.removeItem('current_hotel');
+    localStorage.removeItem('current_empleado');
     sessionStorage.removeItem('auth_token');
     sessionStorage.removeItem('current_user');
     sessionStorage.removeItem('current_hotel');
+    sessionStorage.removeItem('current_empleado');
   }
 
   // Método para actualizar los datos del hotel
@@ -242,6 +394,18 @@ export class AuthService {
     }
   }
 
+  // Método para actualizar los datos del empleado
+  actualizarEmpleado(empleadoData: any): void {
+    this.currentEmpleadoSubject.next(empleadoData);
+    
+    const rememberMe = !!localStorage.getItem('current_empleado');
+    if (rememberMe) {
+      localStorage.setItem('current_empleado', JSON.stringify(empleadoData));
+    } else {
+      sessionStorage.setItem('current_empleado', JSON.stringify(empleadoData));
+    }
+  }
+
   // Método para recargar los datos del hotel desde el servidor
   recargarHotel(): Observable<any> {
     const hotelId = this.getCurrentHotelId();
@@ -249,5 +413,14 @@ export class AuthService {
       return this.apiService.getHotelInfoById(hotelId);
     }
     return throwError(() => new Error('No hay hotel asignado'));
+  }
+
+  // Método para recargar los datos del empleado desde el servidor
+  recargarEmpleado(): Observable<any> {
+    const usuarioId = this.getCurrentUserId();
+    if (usuarioId) {
+      return this.apiService.getEmpleadoByUsuarioId(usuarioId);
+    }
+    return throwError(() => new Error('No hay usuario logueado'));
   }
 }

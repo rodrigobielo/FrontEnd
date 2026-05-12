@@ -258,6 +258,38 @@ export class ReservasComponent implements OnInit, OnDestroy, AfterViewInit {
     this.reservasFiltradas = resultado;
   }
 
+  // Obtener reservas filtradas por estado (para el tablero Kanban)
+  getReservasPorEstado(estado: string): Reserva[] {
+    return this.reservasFiltradas.filter(reserva => reserva.estadoReserva === estado);
+  }
+
+  // Método para rechazar rápidamente una reserva
+  rechazarReserva(reserva: Reserva): void {
+    this.reservaCambiarEstado = reserva;
+    this.estadoForm.reset({
+      nuevoEstado: ESTADOS_RESERVA.RECHAZADA,
+      codigo: reserva.codigo,
+      motivoRechazo: ''
+    });
+    if (this.estadoModalInstance) {
+      this.estadoModalInstance.show();
+    }
+  }
+
+  // Método para editar reserva
+  editarReserva(reserva: Reserva): void {
+    // Aquí puedes implementar la lógica de edición
+    // Por ejemplo, redirigir a una página de edición
+    // this.router.navigate(['/reservas/editar', reserva.id]);
+    this.mostrarInfo('Funcionalidad de edición en desarrollo');
+  }
+
+  // Método para limpiar la búsqueda
+  limpiarBusqueda(): void {
+    this.filtroTexto = '';
+    this.aplicarFiltros();
+  }
+
   // Cambiar estado de reserva
   cambiarEstadoReserva(reserva: Reserva): void {
     this.reservaCambiarEstado = reserva;

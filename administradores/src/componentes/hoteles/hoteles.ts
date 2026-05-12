@@ -1,13 +1,3 @@
-// En el componente, elimina estas líneas:
-// - import { UsuarioService } from '../../servicios/usuario.service';
-// - import { Usuario } from '../../modelos/usuario.model';
-// - cargandoAdministradores: boolean = false;
-// - administradores: Usuario[] = [];
-// - cargarAdministradores()
-// - administradorId del formulario
-
-// Versión corregida:
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';

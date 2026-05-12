@@ -223,55 +223,10 @@
             </ng-container>
           </div>
 
-          <!-- Estadísticas mejoradas -->
-          <div class="row mb-4">
-            <div class="col-lg-8 mb-4">
+          <!-- Estadísticas rápidas - Sección sin reservas recientes -->
+          <div class="row">
+            <div class="col-12 mb-4">
               <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-0">
-                  <h6 class="mb-0 fw-bold">
-                    <i class="bi bi-calendar-event me-2 text-primary"></i>
-                    Reservas Recientes
-                  </h6>
-                </div>
-                <div class="card-body p-0">
-                  <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                      <thead class="bg-light">
-                        <tr>
-                          <th class="border-0">Habitación</th>
-                          <th class="border-0">Cliente</th>
-                          <th class="border-0">Check-in</th>
-                          <th class="border-0">Check-out</th>
-                          <th class="border-0">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr *ngFor="let reserva of reservasRecientes">
-                          <td class="align-middle">{{reserva.habitacion}}</td>
-                          <td class="align-middle">{{reserva.cliente}}</td>
-                          <td class="align-middle">{{reserva.checkIn | date:'dd/MM'}}</td>
-                          <td class="align-middle">{{reserva.checkOut | date:'dd/MM'}}</td>
-                          <td class="align-middle">
-                            <span class="badge" [ngClass]="getEstadoBadgeClass(reserva.estado)">
-                              {{reserva.estado}}
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <div class="card-footer bg-white border-0">
-                  <button class="btn btn-sm btn-outline-primary" (click)="verTodasReservas()">
-                    Ver todas las reservas
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Estadísticas rápidas -->
-            <div class="col-lg-4 mb-4">
-              <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-0">
                   <h6 class="mb-0 fw-bold">
                     <i class="bi bi-speedometer me-2 text-primary"></i>
@@ -280,34 +235,40 @@
                 </div>
                 <div class="card-body">
                   <div class="row g-2">
-                    <div class="col-6 text-center mb-3">
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
                       <div class="p-3 bg-light rounded-3 stat-card">
                         <div class="h4 fw-bold text-success mb-1">{{formatFcfa(estadisticas.ingresosHoy)}}</div>
                         <small class="text-muted">Ingresos Hoy</small>
                       </div>
                     </div>
-                    <div class="col-6 text-center mb-3">
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
                       <div class="p-3 bg-light rounded-3 stat-card">
                         <div class="h4 fw-bold text-info mb-1">{{estadisticas.reservasPendientes}}</div>
                         <small class="text-muted">Reservas Pendientes</small>
                       </div>
                     </div>
-                    <div class="col-6 text-center mb-3">
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
                       <div class="p-3 bg-light rounded-3 stat-card">
                         <div class="h4 fw-bold text-warning mb-1">{{estadisticas.clientesNuevos}}</div>
                         <small class="text-muted">Clientes Nuevos (Mes)</small>
                       </div>
                     </div>
-                    <div class="col-6 text-center mb-3">
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
                       <div class="p-3 bg-light rounded-3 stat-card">
                         <div class="h4 fw-bold text-danger mb-1">{{estadisticas.pagosPendientes}}</div>
                         <small class="text-muted">Pagos Pendientes</small>
                       </div>
                     </div>
-                    <div class="col-6 text-center mb-3">
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
                       <div class="p-3 bg-light rounded-3 stat-card">
                         <div class="h4 fw-bold text-purple mb-1">{{estadisticas.fotosSubidas}}</div>
                         <small class="text-muted">Fotos Subidas (Mes)</small>
+                      </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
+                      <div class="p-3 bg-light rounded-3 stat-card">
+                        <div class="h4 fw-bold text-primary mb-1">{{estadisticas.ocupacion}}%</div>
+                        <small class="text-muted">Ocupación Actual</small>
                       </div>
                     </div>
                   </div>

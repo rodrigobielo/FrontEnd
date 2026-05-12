@@ -1,4 +1,4 @@
-// empleados.component.ts
+// empleados.component.ts - Versión corregida
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -12,7 +12,7 @@ import { HotelService } from '../../servicios/hotel.service';
 
 // Modelos
 import { EmpleadoResponse, EmpleadoCreate, Empleado } from '../../modelos/empleado.model';
-import { Usuario } from '../../modelos/usuario.model';
+import { Usuario, UsuarioResponse } from '../../modelos/usuario.model';
 import { Hotel } from '../../modelos/hotel.model';
 
 @Component({
@@ -33,10 +33,10 @@ export class Empleados implements OnInit, OnDestroy {
   cargandoHoteles: boolean = false;
   formularioVisible: boolean = false;
   
-  // Datos - Cambiar a EmpleadoResponse[]
+  // Datos - Usar UsuarioResponse[] en lugar de Usuario[]
   empleados: EmpleadoResponse[] = [];
   empleadosFiltrados: EmpleadoResponse[] = [];
-  usuariosDisponibles: Usuario[] = [];
+  usuariosDisponibles: UsuarioResponse[] = [];  // ← Cambiado a UsuarioResponse[]
   hoteles: Hotel[] = [];
   empleadoAEliminar: EmpleadoResponse | null = null;
   
@@ -129,7 +129,7 @@ export class Empleados implements OnInit, OnDestroy {
     this.cargando = true;
     this.empleadoService.getEmpleados().subscribe({
       next: (empleados: EmpleadoResponse[]) => {
-        this.empleados = empleados;
+        this.empleados = empleados || [];
         this.aplicarFiltros();
         this.totalEmpleados = this.empleados.length;
         this.cargando = false;
@@ -151,12 +151,13 @@ export class Empleados implements OnInit, OnDestroy {
 
   /**
    * Cargar todos los usuarios
+   * SOLUCIÓN: Cambiar el tipo a UsuarioResponse[]
    */
   cargarUsuarios(): void {
     this.cargandoUsuarios = true;
     this.usuarioService.getUsuarios().subscribe({
-      next: (usuarios: Usuario[]) => {
-        this.usuariosDisponibles = usuarios;
+      next: (usuarios: UsuarioResponse[]) => {  // ← Cambiado a UsuarioResponse[]
+        this.usuariosDisponibles = usuarios || [];
         this.cargandoUsuarios = false;
       },
       error: (error: any) => {
@@ -175,7 +176,7 @@ export class Empleados implements OnInit, OnDestroy {
     this.cargandoHoteles = true;
     this.hotelService.getHoteles().subscribe({
       next: (hoteles: Hotel[]) => {
-        this.hoteles = hoteles;
+        this.hoteles = hoteles || [];
         this.cargandoHoteles = false;
       },
       error: (error: any) => {
@@ -260,15 +261,20 @@ export class Empleados implements OnInit, OnDestroy {
   /**
    * Verificar si un usuario ya es empleado
    */
-  private isUsuarioEmpleado(usuarioId: number): boolean {
+  private isUsuarioEmpleado(usuarioId: number | undefined): boolean {
+    if (!usuarioId) return false;
     return this.empleados.some(emp => emp.usuario?.id === usuarioId);
   }
 
   /**
    * Obtener usuarios que no son empleados
+   * SOLUCIÓN: Filtrar usuarios con ID válido
    */
-  getUsuariosNoEmpleados(): Usuario[] {
-    return this.usuariosDisponibles.filter(usuario => !this.isUsuarioEmpleado(usuario.id));
+  getUsuariosNoEmpleados(): UsuarioResponse[] {  // ← Cambiado a UsuarioResponse[]
+    return this.usuariosDisponibles.filter(usuario => {
+      const usuarioId = usuario.id;
+      return usuarioId !== undefined && !this.isUsuarioEmpleado(usuarioId);
+    });
   }
 
   /**
@@ -304,7 +310,6 @@ export class Empleados implements OnInit, OnDestroy {
     const hotelSeleccionado = this.hoteles.find(h => h.id === idHotel);
     const nombreEmpleado = usuarioSeleccionado ? `${usuarioSeleccionado.nombre} ${usuarioSeleccionado.apellidos}` : 'Empleado';
 
-    // Cambiar el tipo de Empleado a EmpleadoResponse
     this.empleadoService.crearEmpleado(nuevoEmpleado).subscribe({
       next: (nuevoEmpleadoCreado: EmpleadoResponse) => {
         this.cargarEmpleados();
